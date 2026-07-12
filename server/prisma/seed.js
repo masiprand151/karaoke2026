@@ -17,6 +17,22 @@ async function main() {
   });
 
   console.log("✅ Default admin created");
+
+  // Buat 20 Room awal
+  const rooms = [];
+  for (let i = 1; i <= 20; i++) {
+    rooms.push({
+      name: `Room ${i}`,
+      capacity: i % 2 === 0 ? 6 : 4, // contoh kapasitas bergantian
+    });
+  }
+
+  await prisma.room.createMany({
+    data: rooms,
+    skipDuplicates: true, // biar tidak error kalau sudah ada
+  });
+
+  console.log("✅ 20 Rooms created");
 }
 
 main()

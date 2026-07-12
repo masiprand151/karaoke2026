@@ -1,0 +1,267 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+//////////////////////////////////////////////////////
+// ENUM
+//////////////////////////////////////////////////////
+
+enum UserRole {
+  admin
+  staff
+  cashier
+}
+
+enum TransactionStatus {
+  pending
+  paid
+  cancel
+}
+
+enum PaymentMethod {
+  cash
+  debit
+  credit
+  transfer
+  qris
+}
+
+//////////////////////////////////////////////////////
+// USER
+//////////////////////////////////////////////////////
+
+model User {
+  id       Int      @id @default(autoincrement())
+  username String   @unique
+  password String
+  role     UserRole
+
+  sessions Session[]
+}
+
+//////////////////////////////////////////////////////
+// ROOM
+//////////////////////////////////////////////////////
+
+model Room {
+  id       Int    @id @default(autoincrement())
+  name     String
+  capacity Int
+
+  pricings Pricing[]
+  sessions Session[]
+}
+
+//////////////////////////////////////////////////////
+// PRICING
+//////////////////////////////////////////////////////
+
+model Pricing {
+  id              Int       @id @default(autoincrement())
+
+  roomId          Int
+  room            Room      @relation(fields: [roomId], references: [id])
+
+  name            String
+  description     String?
+
+  baseRate        Decimal   @db.Decimal(12,2)
+
+  isHoliday       Boolean   @default(false)
+  isPromo         Boolean   @default(false)
+
+  startDate       DateTime?
+  endDate         DateTime?
+
+  taxRate         Decimal   @db.Decimal(5,2)
+  serviceCharge   Decimal   @db.Decimal(12,2)
+
+  transactions    Transaction[]
+  pricingFnbs     PricingFnb[]
+  pricingLadies   PricingLady[]
+}
+
+//////////////////////////////////////////////////////
+// SESSION
+//////////////////////////////////////////////////////
+
+model Session {
+  id                Int       @id @default(autoincrement())
+
+  userId            Int
+  user              User      @relation(fields: [userId], references: [id])
+
+  roomId            Int
+  room              Room      @relation(fields: [roomId], references: [id])
+
+  customerName      String
+
+  start             DateTime
+  end               DateTime
+
+  durationMinutes   Int
+  extendMinutes     Int
+  freeMinutes       Int
+
+  transaction       Transaction?
+
+  sessionFnbs       SessionFnb[]
+  sessionLadies     SessionLady[]
+}
+
+//////////////////////////////////////////////////////
+// TRANSACTION
+//////////////////////////////////////////////////////
+
+model Transaction {
+  id               Int                 @id @default(autoincrement())
+
+  number           String              @unique
+
+  sessionId        Int                 @unique
+  session          Session             @relation(fields: [sessionId], references: [id])
+
+  pricingId        Int
+  pricing          Pricing             @relation(fields: [pricingId], references: [id])
+
+  amount           Decimal             @db.Decimal(12,2)
+
+  taxAmount        Decimal             @db.Decimal(12,2)
+
+  serviceAmount    Decimal             @db.Decimal(12,2)
+
+  grandTotal       Decimal             @db.Decimal(12,2)
+
+  paymentMethod    PaymentMethod
+
+  status           TransactionStatus
+
+  createdAt        DateTime            @default(now())
+}
+
+//////////////////////////////////////////////////////
+// FNB
+//////////////////////////////////////////////////////
+
+model Fnb {
+  id            Int        @id @default(autoincrement())
+
+  name          String
+  description   String?
+
+  basePrice     Decimal    @db.Decimal(12,2)
+
+  taxRate       Decimal    @db.Decimal(5,2)
+
+  isPromo       Boolean    @default(false)
+
+  sessionFnbs   SessionFnb[]
+  pricingFnbs   PricingFnb[]
+}
+
+//////////////////////////////////////////////////////
+// SESSION FNB
+//////////////////////////////////////////////////////
+
+model SessionFnb {
+  id            Int       @id @default(autoincrement())
+
+  sessionId     Int
+  session       Session   @relation(fields: [sessionId], references: [id])
+
+  fnbId         Int
+  fnb           Fnb       @relation(fields: [fnbId], references: [id])
+
+  quantity      Int
+
+  unitPrice     Decimal   @db.Decimal(12,2)
+
+  taxAmount     Decimal   @db.Decimal(12,2)
+
+  totalAmount   Decimal   @db.Decimal(12,2)
+}
+
+//////////////////////////////////////////////////////
+// PRICING FNB
+//////////////////////////////////////////////////////
+
+model PricingFnb {
+  id             Int       @id @default(autoincrement())
+
+  pricingId      Int
+  pricing        Pricing   @relation(fields: [pricingId], references: [id])
+
+  fnbId          Int
+  fnb            Fnb       @relation(fields: [fnbId], references: [id])
+
+  quantity       Int
+
+  includeTax     Boolean   @default(false)
+}
+
+//////////////////////////////////////////////////////
+// LADY
+//////////////////////////////////////////////////////
+
+model Lady {
+  id              Int      @id @default(autoincrement())
+
+  name            String
+
+  description     String?
+
+  basePrice       Decimal   @db.Decimal(12,2)
+
+  isPromo         Boolean    @default(false)
+
+  sessionLadies   SessionLady[]
+  pricingLadies   PricingLady[]
+}
+
+//////////////////////////////////////////////////////
+// SESSION LADY
+//////////////////////////////////////////////////////
+
+model SessionLady {
+  id             Int       @id @default(autoincrement())
+
+  sessionId      Int
+  session        Session   @relation(fields: [sessionId], references: [id])
+
+  ladyId         Int
+  lady           Lady      @relation(fields: [ladyId], references: [id])
+
+  quantity       Int
+
+  unitPrice      Decimal   @db.Decimal(12,2)
+
+  totalAmount    Decimal   @db.Decimal(12,2)
+}
+
+//////////////////////////////////////////////////////
+// PRICING LADY
+//////////////////////////////////////////////////////
+
+model PricingLady {
+  id            Int       @id @default(autoincrement())
+
+  pricingId     Int
+  pricing       Pricing   @relation(fields: [pricingId], references: [id])
+
+  ladyId        Int
+  lady          Lady      @relation(fields: [ladyId], references: [id])
+
+  quantity      Int
+}

@@ -3,6 +3,7 @@ import Login from "./pages/Login";
 import Home from "./pages/Home";
 import { useEffect, useState } from "react";
 import Protected from "./components/Protected";
+import Checkin from "./pages/Checkin";
 
 function App() {
   const [user, setUser] = useState({});
@@ -22,6 +23,14 @@ function App() {
           element={
             <Protected>
               <Home />
+            </Protected>
+          }
+        />
+        <Route
+          path="/checkin/:roomId"
+          element={
+            <Protected>
+              <Checkin />
             </Protected>
           }
         />

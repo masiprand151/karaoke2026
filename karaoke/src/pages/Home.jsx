@@ -1,7 +1,6 @@
-import React from "react";
-import { useEffect } from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import api from "../utils/api";
+import { useNavigate } from "react-router-dom";
 
 import "./home.css";
 
@@ -9,6 +8,7 @@ function Home() {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   const fetchRooms = async () => {
     try {
@@ -28,7 +28,11 @@ function Home() {
       <h2 className="home-title">Daftar Room Karaoke</h2>
       <div className="room-grid">
         {rooms.map((room) => (
-          <div key={room.id} className="room-card active">
+          <div
+            key={room.id}
+            className="room-card stb"
+            onClick={() => navigate(`/checkin/${room.id}`)}
+          >
             <h3 className="room-name">{room.name}</h3>
             <p className="room-text">Name: MR.X</p>
             <p className="room-text">Timer: 00:00:00</p>

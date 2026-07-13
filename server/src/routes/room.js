@@ -14,4 +14,23 @@ route.get("/", async (req, res, next) => {
   }
 });
 
+route.get("/:id", async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+
+    const room = await prisma.room.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      room,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 module.exports = route;

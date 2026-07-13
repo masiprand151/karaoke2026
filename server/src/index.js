@@ -16,6 +16,7 @@ app.get("/", (req, res) => {
 
 app.use("/auth", require("./routes/auth"));
 app.use("/room", require("./routes/room"));
+app.use("/session", require("./routes/sessions"));
 
 // middleware error
 app.use((err, req, res, next) => {

@@ -33,16 +33,25 @@
   font-size: 14px;
   margin: 4px 0;
 }
-.room-card.active {
+.room-card.used {
   background: #20f64f;
 }
 
-.room-card.stb {
+.room-card.standby {
   background: #ecebeb;
+}
+
+.room-card.warn {
+  background: #e7d83b;
 }
 
 .room-card.close {
   background: #ee3e3e;
+}
+
+.room-card.offline {
+  color: #ecebeb !important;
+  background: #454545;
 }
 
 .room-card:hover {

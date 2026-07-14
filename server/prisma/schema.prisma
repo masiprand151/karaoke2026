@@ -29,6 +29,12 @@ enum TransactionStatus {
   paid
   cancel
 }
+enum RoomStatus {
+  used
+  maintenent
+  standby
+  offline
+}
 
 enum PaymentMethod {
   cash
@@ -59,6 +65,7 @@ model Room {
   id       Int    @id @default(autoincrement())
   name     String
   capacity Int
+  status RoomStatus @default(standby)
 
   pricings Pricing[]
   sessions Session[]
@@ -81,12 +88,11 @@ model Pricing {
 
   isHoliday       Boolean   @default(false)
   isPromo         Boolean   @default(false)
-
+  durationMinutes Int @default(120)
   startDate       DateTime?
   endDate         DateTime?
-
-  taxRate         Decimal   @db.Decimal(5,2)
-  serviceCharge   Decimal   @db.Decimal(12,2)
+  taxRate       Decimal @default(11.00) @db.Decimal(5,2) // %
+  serviceCharge Decimal @default(5.00)  @db.Decimal(5,2) // %
 
   transactions    Transaction[]
   pricingFnbs     PricingFnb[]
@@ -115,6 +121,7 @@ model Session {
   extendMinutes     Int
   freeMinutes       Int
 
+  createdAt DateTime @default(now())
   transaction       Transaction?
 
   sessionFnbs       SessionFnb[]
@@ -163,8 +170,8 @@ model Fnb {
 
   basePrice     Decimal    @db.Decimal(12,2)
 
-  taxRate       Decimal    @db.Decimal(5,2)
-
+  taxRate         Decimal   @db.Decimal(5,2)
+  serviceCharge   Decimal   @db.Decimal(12,2)
   isPromo       Boolean    @default(false)
 
   sessionFnbs   SessionFnb[]
@@ -187,8 +194,6 @@ model SessionFnb {
   quantity      Int
 
   unitPrice     Decimal   @db.Decimal(12,2)
-
-  taxAmount     Decimal   @db.Decimal(12,2)
 
   totalAmount   Decimal   @db.Decimal(12,2)
 }

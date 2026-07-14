@@ -29,8 +29,8 @@ CREATE TABLE `Pricing` (
     `isPromo` BOOLEAN NOT NULL DEFAULT false,
     `startDate` DATETIME(3) NULL,
     `endDate` DATETIME(3) NULL,
-    `taxRate` DECIMAL(5, 2) NOT NULL,
-    `serviceCharge` DECIMAL(12, 2) NOT NULL,
+    `taxRate` DECIMAL(5, 2) NOT NULL DEFAULT 11.00,
+    `serviceCharge` DECIMAL(5, 2) NOT NULL DEFAULT 5.00,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -76,6 +76,7 @@ CREATE TABLE `Fnb` (
     `description` VARCHAR(191) NULL,
     `basePrice` DECIMAL(12, 2) NOT NULL,
     `taxRate` DECIMAL(5, 2) NOT NULL,
+    `serviceCharge` DECIMAL(12, 2) NOT NULL,
     `isPromo` BOOLEAN NOT NULL DEFAULT false,
 
     PRIMARY KEY (`id`)
@@ -88,7 +89,6 @@ CREATE TABLE `SessionFnb` (
     `fnbId` INTEGER NOT NULL,
     `quantity` INTEGER NOT NULL,
     `unitPrice` DECIMAL(12, 2) NOT NULL,
-    `taxAmount` DECIMAL(12, 2) NOT NULL,
     `totalAmount` DECIMAL(12, 2) NOT NULL,
 
     PRIMARY KEY (`id`)

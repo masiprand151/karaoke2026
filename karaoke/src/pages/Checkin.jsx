@@ -3,76 +3,151 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import "./checkin.css";
 import api from "../utils/api";
+
 function Checkin() {
   const { roomId } = useParams();
-  const [customer, setCustomer] = useState("");
-  const [duration, setDuration] = useState(2);
   const navigate = useNavigate();
-  const [room, setRoom] = useState({});
 
-  const today = new Date();
-  const yyyy = today.getFullYear();
-  const mm = String(today.getMonth() + 1).padStart(2, "0"); // Months are 0-based
-  const dd = String(today.getDate()).padStart(2, "0");
+  const [room, setRoom] = useState(null);
+  const [pricingType, setPricingType] = useState("REGULAR");
 
-  const formattedToday = `${yyyy}-${mm}-${dd}`;
+  const [form, setForm] = useState({
+    customerName: "",
+    pricingId: "",
+    durationMinutes: 0,
+  });
+
+  const formattedToday = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await api.get(`/room/${roomId}`);
-        setRoom(res.room);
-      } catch (error) {
-        console.log(error.message);
-      }
-    })();
+    loadRoom();
   }, [roomId]);
+
+  const loadRoom = async () => {
+    try {
+      const res = await api.get(`/room/${roomId}`);
+
+      const roomData = res.room;
+
+      setRoom(roomData);
+
+      if (roomData.pricings.length > 0) {
+        const pricing = roomData.pricings[0];
+
+        setForm({
+          customerName: "",
+          pricingId: pricing.id,
+          durationMinutes: pricing.durationMinutes ?? 60,
+        });
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handlePricingChange = (e) => {
+    const pricingId = Number(e.target.value);
+
+    const pricing = room.pricings.find((p) => p.id === pricingId);
+
+    setPricingType(pricing.name.toUpperCase());
+
+    setForm((prev) => ({
+      ...prev,
+      pricingId,
+      durationMinutes: pricing.durationMinutes ?? 60,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const user = JSON.parse(window.localStorage.getItem("user"));
+      const res = await api.post("/session/checkin", {
+        roomId: Number(roomId),
+        pricingId: form.pricingId,
+        durationMinutes: form.durationMinutes,
+        customerName: form.customerName,
+        userId: user.id,
+      });
+      alert("Checkin succesfuly");
+      navigate("/");
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || err.message);
+    }
+  };
 
   return (
     <div className="checkin-container">
       <div className="checkin-card">
-        <h3>Checkin : {room?.name}</h3>
-        <form className="checkin-form">
+        <h3>Check In : {room?.name}</h3>
+
+        <form className="checkin-form" onSubmit={handleSubmit}>
           <div>
-            <label>Type</label>
-            <select>
-              <option value="regular">REGULAR</option>
+            <label>Paket</label>
+
+            <select value={form.pricingId} onChange={handlePricingChange}>
+              {room?.pricings.map((pricing) => (
+                <option key={pricing.id} value={pricing.id}>
+                  {pricing.name.toUpperCase()}
+                </option>
+              ))}
             </select>
           </div>
+
           <div>
-            <label>Date</label>
+            <label>Tanggal</label>
+
             <input type="date" value={formattedToday} disabled />
           </div>
 
           <div>
             <label>Customer</label>
+
             <input
               type="text"
-              value={customer}
-              onChange={(e) => setCustomer(e.target.value.toUpperCase())}
-            />
-          </div>
-          <div>
-            <label>Duration</label>
-            <input
-              type="number"
-              min={1}
-              max={10}
-              value={duration}
+              value={form.customerName}
+              required
               onChange={(e) =>
-                setDuration(
-                  e.target.value > 10
-                    ? 10
-                    : e.target.value < 1
-                      ? 1
-                      : e.target.value,
-                )
+                setForm((prev) => ({
+                  ...prev,
+                  customerName: e.target.value.toUpperCase(),
+                }))
               }
             />
           </div>
 
-          <button>Submit</button>
-          <button onClick={() => navigate("/")}>Cancel</button>
+          <div>
+            <label>Duration (hour)</label>
+
+            <input
+              type="number"
+              min={1}
+              max={12}
+              value={Number(form.durationMinutes) / 60}
+              onChange={(e) => {
+                const hour =
+                  Number(e.target.value) < 1
+                    ? 1
+                    : Number(e.target.value) >= 12
+                      ? 12
+                      : Number(e.target.value);
+
+                setForm((prev) => ({
+                  ...prev,
+                  durationMinutes: hour * 60,
+                }));
+              }}
+              disabled={pricingType !== "REGULAR"}
+            />
+          </div>
+          <button type="submit">Check In</button>
+
+          <button type="button" onClick={() => navigate("/")}>
+            Cancel
+          </button>
         </form>
       </div>
     </div>

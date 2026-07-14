@@ -4,7 +4,17 @@ const AppError = require("../helpers/AppError");
 
 route.get("/", async (req, res, next) => {
   try {
-    const rooms = await prisma.room.findMany();
+    const rooms = await prisma.room.findMany({
+      include: {
+        sessions: {
+          orderBy: {
+            createdAt: "desc",
+          },
+          take: 1,
+        },
+      },
+    });
+
     res.status(200).json({
       success: true,
       rooms,
@@ -21,6 +31,9 @@ route.get("/:id", async (req, res, next) => {
     const room = await prisma.room.findUnique({
       where: {
         id,
+      },
+      include: {
+        pricings: true,
       },
     });
 

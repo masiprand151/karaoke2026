@@ -1,0 +1,60 @@
+.preview-container {
+  display: flex;
+  /* justify-content: center; */
+  padding: 15px;
+}
+
+.preview-card {
+  background: #fff;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  width: 400px;
+}
+
+.preview-card h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.preview-card p {
+  margin: 6px 0;
+  color: #444;
+}
+
+.preview-table {
+  width: 100%;
+  margin-top: 15px;
+  border-collapse: collapse;
+}
+
+.preview-table td {
+  padding: 8px;
+  border-bottom: 1px solid #ddd;
+}
+
+.preview-table .grand-total td {
+  font-weight: bold;
+  color: #000;
+}
+
+.action {
+  padding-top: 15px;
+}
+
+.action button {
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s;
+
+  background: #ddd;
+  color: #333;
+}
+
+.action button:hover {
+  background: #bbb;
+}

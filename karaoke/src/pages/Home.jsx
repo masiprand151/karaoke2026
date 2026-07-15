@@ -59,6 +59,7 @@ function Home() {
               if (room.status !== "used") {
                 navigate(`/checkin/${room.id}`);
               }
+              navigate(`/preview/${room?.sessions?.[0].id}`);
             }}
           >
             <h3 className="room-name">{room.name}</h3>

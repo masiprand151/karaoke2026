@@ -4,6 +4,7 @@ import Home from "./pages/Home";
 import { useEffect, useState } from "react";
 import Protected from "./components/Protected";
 import Checkin from "./pages/Checkin";
+import Preview from "./pages/Preview";
 
 function App() {
   const [user, setUser] = useState({});
@@ -31,6 +32,14 @@ function App() {
           element={
             <Protected>
               <Checkin />
+            </Protected>
+          }
+        />
+        <Route
+          path="/preview/:sessionId"
+          element={
+            <Protected>
+              <Preview />
             </Protected>
           }
         />

@@ -110,4 +110,73 @@ route.post("/checkin", async (req, res, next) => {
   }
 });
 
+// Preview transaksi untuk sebuah session
+route.get("/preview/:sessionId", async (req, res) => {
+  const { sessionId } = req.params;
+
+  try {
+    const session = await prisma.session.findUnique({
+      where: { id: parseInt(sessionId) },
+      include: {
+        room: true,
+        transaction: true,
+        sessionFnbs: { include: { fnb: true } },
+        sessionLadies: { include: { lady: true } },
+      },
+    });
+
+    if (!session) return res.status(404).json({ error: "Session not found" });
+
+    // Ambil pricing dari transaksi atau default room pricing
+    let pricing = null;
+    if (session.transaction) {
+      pricing = await prisma.pricing.findUnique({
+        where: { id: session.transaction.pricingId },
+      });
+    } else {
+      pricing = await prisma.pricing.findFirst({
+        where: { roomId: session.roomId },
+      });
+    }
+
+    if (!pricing) return res.status(400).json({ error: "Pricing not found" });
+
+    // Hitung base amount
+    const amount = Number(pricing.baseRate);
+    const taxAmount = (amount * Number(pricing.taxRate)) / 100;
+    const serviceAmount = (amount * Number(pricing.serviceCharge)) / 100;
+
+    // Hitung F&B
+    let fnbTotal = 0;
+    session.sessionFnbs.forEach((sf) => {
+      fnbTotal += Number(sf.totalAmount);
+    });
+
+    // Hitung Lady
+    let ladyTotal = 0;
+    session.sessionLadies.forEach((sl) => {
+      ladyTotal += Number(sl.totalAmount);
+    });
+
+    const grandTotal =
+      amount + taxAmount + serviceAmount + fnbTotal + ladyTotal;
+
+    res.json({
+      ...session,
+      amount,
+      taxAmount,
+      serviceAmount,
+      fnbTotal,
+
+      pricing: pricing.name,
+      ladyTotal,
+      grandTotal,
+      status: session.transaction ? session.transaction.status : "pending",
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Billing preview error" });
+  }
+});
+
 module.exports = route;

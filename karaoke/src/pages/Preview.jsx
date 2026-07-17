@@ -3,6 +3,7 @@ import api from "../utils/api";
 import { useEffect, useState } from "react";
 
 import "./preview.css";
+import { formatRp } from "../utils/rupiah";
 
 export default function Preview() {
   const { sessionId } = useParams();
@@ -65,37 +66,41 @@ export default function Preview() {
             </tr>
             <tr>
               <td>Status</td>
-              <td>{data?.status} Jam</td>
+              <td>{data?.status}</td>
               <td></td>
             </tr>
             <tr>
               <td>Base Amount</td>
-              <td>Rp {data?.amount}</td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>Tax</td>
-              <td>Rp {data?.taxAmount}</td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>Service</td>
-              <td>Rp {data?.serviceAmount}</td>
+              <td>{formatRp(data?.amount)}</td>
               <td></td>
             </tr>
             <tr>
               <td>F&B</td>
-              <td>Rp {data?.fnbTotal}</td>
-              <td></td>
+              <td>{formatRp(data?.fnbTotal)}</td>
+              <td>
+                <button>Order</button>
+              </td>
             </tr>
             <tr>
               <td>Lady</td>
-              <td>Rp {data?.ladyTotal}</td>
+              <td>{formatRp(data?.ladyTotal)}</td>
+              <td>
+                <button>Order</button>
+              </td>
+            </tr>
+            <tr>
+              <td>Tax</td>
+              <td>{formatRp(data?.taxAmount)}</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>Service</td>
+              <td>{formatRp(data?.serviceAmount)}</td>
               <td></td>
             </tr>
             <tr className="grand-total">
               <td>Grand Total</td>
-              <td>Rp {data?.grandTotal}</td>
+              <td>{formatRp(data?.grandTotal)}</td>
               <td>
                 <button>Payment</button>
               </td>
@@ -104,6 +109,7 @@ export default function Preview() {
         </table>
         <div className="action">
           <button onClick={() => navigate(-1)}>back</button>
+          <button>checkout</button>
         </div>
       </div>
     </div>

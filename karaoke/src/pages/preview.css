@@ -41,20 +41,45 @@
 
 .action {
   padding-top: 15px;
+  gap: 8px;
+  display: flex;
 }
 
 .action button {
-  padding: 12px;
+  padding: 10px;
   border: none;
   border-radius: 6px;
   font-weight: bold;
   cursor: pointer;
   transition: background 0.3s;
 
-  background: #ddd;
+  color: #fff;
+}
+
+.action button:nth-child(1) {
+  background: #333;
+}
+
+.action button:nth-child(2) {
+  background: #e92e2e;
+}
+
+td button {
+  padding: 7px 12px;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s;
+
+  background: #15c750;
   color: #333;
 }
 
 .action button:hover {
+  background: #bbb;
+}
+
+td button:hover {
   background: #bbb;
 }

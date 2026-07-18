@@ -143,13 +143,17 @@ route.get("/preview/:sessionId", async (req, res) => {
 
     // Hitung base amount
     const amount = Number(pricing.baseRate);
-    const taxAmount = (amount * Number(pricing.taxRate)) / 100;
-    const serviceAmount = (amount * Number(pricing.serviceCharge)) / 100;
+    let taxAmount = (amount * Number(pricing.taxRate)) / 100;
+    let serviceAmount = (amount * Number(pricing.serviceCharge)) / 100;
 
-    // Hitung F&B
+    // Hitung F&B dengan tax & service
     let fnbTotal = 0;
     session.sessionFnbs.forEach((sf) => {
-      fnbTotal += Number(sf.totalAmount);
+      const subtotal = Number(sf.unitPrice) * sf.quantity;
+      taxAmount += (subtotal * Number(sf.fnb.taxRate)) / 100;
+      serviceAmount += (subtotal * Number(sf.fnb.serviceCharge)) / 100;
+      const total = subtotal + taxAmount + serviceAmount;
+      fnbTotal += total;
     });
 
     // Hitung Lady

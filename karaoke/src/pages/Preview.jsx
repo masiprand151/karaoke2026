@@ -70,15 +70,24 @@ export default function Preview() {
               <td></td>
             </tr>
             <tr>
-              <td>Base Amount</td>
+              <td>Room Amount</td>
               <td>{formatRp(data?.amount)}</td>
               <td></td>
+            </tr>
+            <tr>
+              <td>Room Dis</td>
+              <td>{formatRp(0)}</td>
+              <td>
+                <button>Edit</button>
+              </td>
             </tr>
             <tr>
               <td>F&B</td>
               <td>{formatRp(data?.fnbTotal)}</td>
               <td>
-                <button>Order</button>
+                <button onClick={() => navigate(`/fnb/order/${sessionId}`)}>
+                  Order
+                </button>
               </td>
             </tr>
             <tr>
@@ -110,6 +119,67 @@ export default function Preview() {
         <div className="action">
           <button onClick={() => navigate(-1)}>back</button>
           <button>checkout</button>
+        </div>
+      </div>
+      <div className="preview-card list-order">
+        <div className="half-table">
+          <h2>Preview F&B</h2>
+          <div className="table-wrapper">
+            <table className="sticky-table">
+              <thead>
+                <tr>
+                  <th>Nama</th>
+                  <th>Qty</th>
+                  <th>Harga</th>
+                  <th>Total</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data?.sessionFnbs?.map((sf) => (
+                  <tr key={sf.id}>
+                    <td>{sf.fnb?.name}</td>
+                    <td>{sf.quantity}</td>
+                    <td>{formatRp(sf.unitPrice)}</td>
+                    <td>{formatRp(sf.totalAmount)}</td>
+                    <td>
+                      <button>edit</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="half-table">
+          <h2>Preview Lady</h2>
+          <div className="table-wrapper">
+            <table className="sticky-table">
+              <thead>
+                <tr>
+                  <th>Nama</th>
+                  <th>Qty</th>
+                  <th>Harga</th>
+                  <th>Total</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data?.sessionLadies?.map((sl) => (
+                  <tr key={sl.id}>
+                    <td>{sl.lady?.name}</td>
+                    <td>{sl.quantity}</td>
+                    <td>{formatRp(sl.unitPrice)}</td>
+                    <td>{formatRp(sl.totalAmount)}</td>
+                    <td>
+                      <button>edit</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

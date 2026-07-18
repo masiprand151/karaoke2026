@@ -2,14 +2,19 @@
   display: flex;
   /* justify-content: center; */
   padding: 15px;
+  gap: 5px;
 }
 
 .preview-card {
   background: #fff;
-  padding: 25px;
+  padding: 8px 12px;
   border-radius: 12px;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
   width: 400px;
+}
+
+.preview-card.list-order {
+  flex: 1;
 }
 
 .preview-card h2 {
@@ -73,7 +78,7 @@ td button {
   transition: background 0.3s;
 
   background: #15c750;
-  color: #333;
+  color: #ffffff;
 }
 
 .action button:hover {
@@ -82,4 +87,41 @@ td button {
 
 td button:hover {
   background: #bbb;
+}
+
+.list-order {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.half-table {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.table-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 250px; /* setengah tinggi card */
+}
+
+.sticky-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.sticky-table th,
+.sticky-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+
+.sticky-table th {
+  position: sticky;
+  top: 0;
+  background: #f4f4f4;
+  z-index: 2;
 }

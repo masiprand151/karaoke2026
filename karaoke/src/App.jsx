@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import Protected from "./components/Protected";
 import Checkin from "./pages/Checkin";
 import Preview from "./pages/Preview";
+import OrderFnb from "./pages/OrderFnb";
 
 function App() {
   const [user, setUser] = useState({});
@@ -40,6 +41,14 @@ function App() {
           element={
             <Protected>
               <Preview />
+            </Protected>
+          }
+        />
+        <Route
+          path="/fnb/order/:sessionId"
+          element={
+            <Protected>
+              <OrderFnb />
             </Protected>
           }
         />

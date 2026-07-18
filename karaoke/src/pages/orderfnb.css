@@ -1,0 +1,122 @@
+.orderfnb-layout {
+  display: flex;
+  gap: 30px;
+  padding: 30px;
+}
+
+.fnb-list,
+.cart {
+  flex: 1;
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  overflow-y: auto; /* scroll jika konten panjang */
+}
+
+.fnb-list .title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fnb-list .title input {
+  width: 70%;
+  padding: 4px 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.fnb-list .title button {
+  padding: 4px 10px;
+  margin-left: 4px;
+}
+
+.table-wrapper {
+  height: 60vh; /* tinggi tabel scroll */
+  overflow-y: auto;
+}
+
+.sticky-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.sticky-table th,
+.sticky-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+
+.sticky-table th {
+  position: sticky;
+  top: 0;
+  background: #f4f4f4;
+  z-index: 2; /* biar header di atas konten */
+}
+
+.btn-add,
+.btn-search {
+  padding: 6px 12px;
+  background: #4facfe !important;
+  color: #fff !important;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-add:hover,
+.btn-search:hover {
+  background: #00c6fb !important;
+}
+.btn-del:hover {
+  background: #df653c !important;
+}
+
+.btn-del {
+  padding: 6px 12px;
+  background: #e12716 !important;
+  color: #fff !important;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.confirm-btn {
+  margin-top: 4px;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  width: 100%;
+  cursor: pointer;
+  transition: background 0.3s;
+  background-color: #1095ee;
+
+  color: #fff;
+}
+
+.confirm-btn:hover {
+  background-color: #32a8f8;
+}
+
+.back-btn {
+  margin-top: 4px;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  width: 100%;
+  cursor: pointer;
+  transition: background 0.3s;
+  background-color: #333;
+
+  color: #fff;
+}
+
+.back-btn:hover {
+  background-color: #787777;
+}

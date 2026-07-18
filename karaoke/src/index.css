@@ -11,3 +11,12 @@ body {
   overflow: hidden;
   background: linear-gradient(135deg, #4facfe, #00f2fe);
 }
+
+.disabled {
+  background-color: rgb(155, 155, 155) !important;
+  color: #444 !important;
+}
+.disabled:hover {
+  background-color: rgb(155, 155, 155) !important;
+  color: #444 !important;
+}

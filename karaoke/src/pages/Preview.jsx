@@ -94,7 +94,9 @@ export default function Preview() {
               <td>Lady</td>
               <td>{formatRp(data?.ladyTotal)}</td>
               <td>
-                <button>Order</button>
+                <button onClick={() => navigate(`/lady/order/${sessionId}`)}>
+                  Order
+                </button>
               </td>
             </tr>
             <tr>

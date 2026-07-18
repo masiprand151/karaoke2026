@@ -6,6 +6,7 @@ import Protected from "./components/Protected";
 import Checkin from "./pages/Checkin";
 import Preview from "./pages/Preview";
 import OrderFnb from "./pages/OrderFnb";
+import OrderLady from "./pages/OrderLady";
 
 function App() {
   const [user, setUser] = useState({});
@@ -49,6 +50,14 @@ function App() {
           element={
             <Protected>
               <OrderFnb />
+            </Protected>
+          }
+        />
+        <Route
+          path="/lady/order/:sessionId"
+          element={
+            <Protected>
+              <OrderLady />
             </Protected>
           }
         />

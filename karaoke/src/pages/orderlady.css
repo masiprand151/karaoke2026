@@ -1,0 +1,81 @@
+.orderlady-layout {
+  display: flex;
+  gap: 30px;
+  padding: 30px;
+}
+
+.lady-list {
+  flex: 1;
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  height: 90vh; /* tinggi penuh viewport */
+  display: flex;
+  flex-direction: column;
+}
+
+.table-wrapper {
+  flex: 1;
+  overflow-y: auto; /* scroll jika konten panjang */
+}
+.lady-footer {
+  margin-top: 10px;
+  text-align: right; /* tombol di kanan */
+}
+
+.lady-footer button {
+  background: black !important;
+}
+
+.sticky-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed; /* kolom rata */
+}
+
+.sticky-table th,
+.sticky-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+
+.sticky-table th {
+  position: sticky;
+  top: 0;
+  background: #f4f4f4;
+  z-index: 2;
+}
+
+button {
+  padding: 6px 12px;
+  background: #4facfe;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #00c6fb;
+}
+
+.confirm-btn {
+  margin-top: 15px;
+  width: 100%;
+  padding: 12px;
+  background: #00c6fb;
+  font-weight: bold;
+}
+
+.orderlady-message {
+  margin-bottom: 15px;
+  font-weight: bold;
+}
+
+.modal-input {
+  display: flex;
+  width: 100%;
+  justify-content: space-around;
+}

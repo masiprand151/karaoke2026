@@ -156,6 +156,8 @@ model Transaction {
   status           TransactionStatus
 
   createdAt        DateTime            @default(now())
+
+  payments Payment[]
 }
 
 //////////////////////////////////////////////////////
@@ -275,4 +277,15 @@ model PricingLady {
   lady          Lady      @relation(fields: [ladyId], references: [id])
 
   quantity      Int
+}
+
+
+model Payment {
+  id            Int        @id @default(autoincrement())
+  transactionId Int
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
+
+  method        PaymentMethod
+  amount        Decimal     @db.Decimal(12,2)
+  paidAt        DateTime    @default(now())
 }

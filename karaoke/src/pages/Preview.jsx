@@ -83,7 +83,7 @@ export default function Preview() {
             </tr>
             <tr>
               <td>F&B</td>
-              <td>{formatRp(data?.fnbTotal)}</td>
+              <td>{formatRp(data?.fnbSubtotal)}</td>
               <td>
                 <button onClick={() => navigate(`/fnb/order/${sessionId}`)}>
                   Order

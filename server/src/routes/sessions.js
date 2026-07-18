@@ -7,63 +7,34 @@ route.post("/checkin", async (req, res, next) => {
   try {
     const { roomId, pricingId, customerName, userId, durationMinutes } =
       req.body;
+
     const result = await prisma.$transaction(async (tx) => {
       //------------------------------------------
-      // ROOM
+      // ROOM VALIDATION
       //------------------------------------------
-
-      const room = await tx.room.findUnique({
-        where: {
-          id: roomId,
-        },
-      });
-
-      if (!room) {
-        throw new AppError("Room tidak ditemukan", 404);
-      }
-
-      //------------------------------------------
-      // ROOM MASIH DIPAKAI?
-      //------------------------------------------
-
-      if (room.status === "used" || room.status === "maintenent") {
-        throw new AppError("Room sedang digunakan", 400);
-      }
-      // room off
-      if (room.status === "offline") {
-        throw new AppError("Room sedang offline", 400);
-      }
+      const room = await tx.room.findUnique({ where: { id: roomId } });
+      if (!room) throw new AppError(404, "Room tidak ditemukan");
+      if (room.status === "used" || room.status === "maintenent")
+        throw new AppError(400, "Room sedang digunakan");
+      if (room.status === "offline")
+        throw new AppError(400, "Room sedang offline");
 
       //------------------------------------------
       // PRICING
       //------------------------------------------
-
-      const pricing = await tx.pricing.findUnique({
-        where: {
-          id: pricingId,
-        },
-      });
-
-      if (!pricing) {
-        throw new AppError("Pricing tidak ditemukan", 404);
-      }
+      const pricing = await tx.pricing.findUnique({ where: { id: pricingId } });
+      if (!pricing) throw new AppError(400, "Pricing tidak ditemukan");
 
       //------------------------------------------
       // WAKTU
       //------------------------------------------
-
       const start = new Date();
-
       const end = new Date(start.getTime() + durationMinutes * 60000);
 
       //------------------------------------------
       // ROOM PRICE
       //------------------------------------------
-
       let roomPrice = Number(pricing.baseRate);
-
-      // jika regular dihitung per jam
-
       if (pricing.name.toUpperCase() === "REGULAR") {
         roomPrice = (roomPrice / 60) * durationMinutes;
       }
@@ -71,7 +42,6 @@ route.post("/checkin", async (req, res, next) => {
       //------------------------------------------
       // SESSION
       //------------------------------------------
-
       const session = await tx.session.create({
         data: {
           roomId,
@@ -85,31 +55,41 @@ route.post("/checkin", async (req, res, next) => {
         },
       });
 
-      await tx.room.update({
-        where: {
-          id: roomId,
-        },
+      //------------------------------------------
+      // TRANSACTION (dibuat saat check-in)
+      //------------------------------------------
+      const taxAmount = (roomPrice * Number(pricing.taxRate)) / 100;
+      const serviceAmount = (roomPrice * Number(pricing.serviceCharge)) / 100;
+      const grandTotal = roomPrice + taxAmount + serviceAmount;
+
+      const transaction = await tx.transaction.create({
         data: {
-          status: "used",
+          number: `TRX-${Date.now()}`, // nomor unik
+          sessionId: session.id,
+          pricingId,
+          amount: roomPrice,
+          taxAmount,
+          serviceAmount,
+          grandTotal,
+          paymentMethod: "cash", // default atau kosong dulu
+          status: "pending",
         },
       });
 
-      return {
-        session,
-        pricing,
-        roomPrice,
-      };
+      // Update room status jadi used
+      await tx.room.update({
+        where: { id: roomId },
+        data: { status: "used" },
+      });
+
+      return { session, pricing, transaction };
     });
 
-    res.json({
-      success: true,
-      data: result,
-    });
+    res.json({ success: true, data: result });
   } catch (error) {
     next(error);
   }
 });
-
 // Preview transaksi untuk sebuah session
 route.get("/preview/:sessionId", async (req, res) => {
   const { sessionId } = req.params;
@@ -127,7 +107,7 @@ route.get("/preview/:sessionId", async (req, res) => {
 
     if (!session) return res.status(404).json({ error: "Session not found" });
 
-    // Ambil pricing dari transaksi atau default room pricing
+    // Ambil pricing
     let pricing = null;
     if (session.transaction) {
       pricing = await prisma.pricing.findUnique({
@@ -138,42 +118,40 @@ route.get("/preview/:sessionId", async (req, res) => {
         where: { roomId: session.roomId },
       });
     }
-
     if (!pricing) return res.status(400).json({ error: "Pricing not found" });
 
-    // Hitung base amount
+    // Hitung Room
     const amount = Number(pricing.baseRate);
     let taxAmount = (amount * Number(pricing.taxRate)) / 100;
     let serviceAmount = (amount * Number(pricing.serviceCharge)) / 100;
 
-    // Hitung F&B dengan tax & service
-    let fnbTotal = 0;
+    // Hitung F&B (subtotal saja, tax/service ditambahkan ke variabel global)
+    let fnbSubtotal = 0;
     session.sessionFnbs.forEach((sf) => {
       const subtotal = Number(sf.unitPrice) * sf.quantity;
+      fnbSubtotal += subtotal;
       taxAmount += (subtotal * Number(sf.fnb.taxRate)) / 100;
       serviceAmount += (subtotal * Number(sf.fnb.serviceCharge)) / 100;
-      const total = subtotal + taxAmount + serviceAmount;
-      fnbTotal += total;
     });
 
-    // Hitung Lady
+    // Hitung Lady (tanpa tax/service)
     let ladyTotal = 0;
     session.sessionLadies.forEach((sl) => {
       ladyTotal += Number(sl.totalAmount);
     });
 
+    // Grand total
     const grandTotal =
-      amount + taxAmount + serviceAmount + fnbTotal + ladyTotal;
+      amount + fnbSubtotal + ladyTotal + taxAmount + serviceAmount;
 
     res.json({
       ...session,
+      pricing: pricing.name,
       amount,
+      fnbSubtotal,
+      ladyTotal,
       taxAmount,
       serviceAmount,
-      fnbTotal,
-
-      pricing: pricing.name,
-      ladyTotal,
       grandTotal,
       status: session.transaction ? session.transaction.status : "pending",
     });

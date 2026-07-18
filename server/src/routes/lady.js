@@ -21,51 +21,99 @@ route.post("/order", async (req, res, next) => {
   const { sessionId, ladyId, quantity } = req.body;
 
   try {
-    const lady = await prisma.lady.findUnique({
-      where: { id: Number(ladyId) },
+    const result = await prisma.$transaction(async (trx) => {
+      //------------------------------------------
+      // VALIDASI LADY
+      //------------------------------------------
+      const lady = await trx.lady.findUnique({ where: { id: Number(ladyId) } });
+      if (!lady) throw new AppError(404, "Lady tidak ditemukan");
+      if (lady.isJob)
+        throw new AppError(400, `Lady ${lady.name} sedang di dalam room`);
+
+      //------------------------------------------
+      // HITUNG HARGA & WAKTU
+      //------------------------------------------
+      const unitPrice = Number(lady.basePrice);
+      const totalAmount = unitPrice * Number(quantity);
+
+      const start = new Date();
+      const end = new Date(start.getTime() + Number(quantity) * 3600000);
+
+      //------------------------------------------
+      // SIMPAN SESSION LADY
+      //------------------------------------------
+      const sessionLady = await trx.sessionLady.create({
+        data: {
+          sessionId: Number(sessionId),
+          ladyId: Number(ladyId),
+          quantity: Number(quantity),
+          unitPrice,
+          start,
+          end,
+          totalAmount,
+        },
+      });
+
+      // Update status Lady jadi sedang kerja
+      await trx.lady.update({
+        where: { id: ladyId },
+        data: { isJob: true },
+      });
+
+      //------------------------------------------
+      // UPDATE TRANSACTION
+      //------------------------------------------
+      const session = await trx.session.findUnique({
+        where: { id: Number(sessionId) },
+        include: {
+          transaction: true,
+          sessionFnbs: { include: { fnb: true } },
+          sessionLadies: { include: { lady: true } },
+        },
+      });
+
+      if (!session || !session.transaction)
+        throw new AppError(404, "Transaction tidak ditemukan");
+
+      const pricing = await trx.pricing.findUnique({
+        where: { id: session.transaction.pricingId },
+      });
+
+      let amount = Number(pricing.baseRate);
+      let tax = (amount * Number(pricing.taxRate)) / 100;
+      let service = (amount * Number(pricing.serviceCharge)) / 100;
+
+      // Hitung ulang F&B
+      let fnbSubtotal = 0;
+      session.sessionFnbs.forEach((sf) => {
+        const sub = Number(sf.unitPrice) * sf.quantity;
+        fnbSubtotal += sub;
+        tax += (sub * Number(sf.fnb.taxRate)) / 100;
+        service += (sub * Number(sf.fnb.serviceCharge)) / 100;
+      });
+
+      // Hitung ulang Lady (tanpa tax/service)
+      let ladyTotal = 0;
+      session.sessionLadies.forEach((sl) => {
+        ladyTotal += Number(sl.totalAmount);
+      });
+
+      const grandTotal = amount + fnbSubtotal + ladyTotal + tax + service;
+
+      const updatedTransaction = await trx.transaction.update({
+        where: { id: session.transaction.id },
+        data: {
+          amount,
+          taxAmount: tax,
+          serviceAmount: service,
+          grandTotal,
+        },
+      });
+
+      return { sessionLady, transaction: updatedTransaction };
     });
-    if (!lady) throw new AppError(404, "Lady tidak ditemukan");
 
-    if (lady.isJob) {
-      throw new AppError(400, `Lady ${lady.name} sedang di dalam room`);
-    }
-
-    const unitPrice = Number(lady.basePrice);
-    const totalAmount = unitPrice * Number(quantity);
-
-    //------------------------------------------
-    // WAKTU
-    //------------------------------------------
-
-    const start = new Date();
-
-    const end = new Date(start.getTime() + Number(quantity) * 3600000);
-
-    const sessionLady = await prisma.sessionLady.create({
-      data: {
-        sessionId: Number(sessionId),
-        ladyId: Number(ladyId),
-        quantity: Number(quantity),
-        unitPrice,
-        start,
-        end,
-        totalAmount,
-      },
-    });
-
-    await prisma.lady.update({
-      where: {
-        id: ladyId,
-      },
-      data: {
-        isJob: true,
-      },
-    });
-
-    res.json({
-      success: true,
-      sessionLady,
-    });
+    res.json({ success: true, result });
   } catch (error) {
     next(error);
   }

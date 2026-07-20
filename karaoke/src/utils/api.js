@@ -1,10 +1,13 @@
 const createFetch = (baseUrl = "") => {
   const request = async (endpoint = "", options = {}) => {
     try {
+      const token = window.localStorage.getItem("token");
+
       const res = await fetch(`${baseUrl}${endpoint}`, {
         headers: {
           "Content-Type": "application/json",
           ...(options.headers || {}),
+          Authorization: `Bearer ${token}`,
         },
         ...options,
       });

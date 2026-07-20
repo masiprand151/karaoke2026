@@ -51,6 +51,7 @@ function Home() {
     const isConfirm = confirm("Anda yakin ingin keluar aplikasi");
     if (isConfirm) {
       window.localStorage.removeItem("user");
+      window.localStorage.removeItem("token");
       window.electron.closeApp();
     }
   };

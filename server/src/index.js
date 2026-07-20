@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const AppError = require("./helpers/AppError");
+const { protectedAuth } = require("./middleware/auth.middleware");
 
 const app = express();
 app.use(express.json());
@@ -15,6 +16,8 @@ app.get("/", (req, res) => {
 });
 
 app.use("/auth", require("./routes/auth"));
+
+app.use(protectedAuth);
 app.use("/room", require("./routes/room"));
 app.use("/session", require("./routes/sessions"));
 app.use("/fnb", require("./routes/fnb"));

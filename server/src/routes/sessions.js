@@ -96,7 +96,7 @@ route.get("/preview/:sessionId", async (req, res) => {
 
   try {
     const session = await prisma.session.findUnique({
-      where: { id: parseInt(sessionId) },
+      where: { id: parseInt(sessionId), closed: false },
       include: {
         room: true,
         transaction: true,
@@ -158,6 +158,98 @@ route.get("/preview/:sessionId", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Billing preview error" });
+  }
+});
+
+// Checkout Session
+route.post("/checkout/:sessionId", async (req, res, next) => {
+  try {
+    const { sessionId } = req.params;
+
+    const result = await prisma.$transaction(async (trx) => {
+      const session = await trx.session.findUnique({
+        where: { id: Number(sessionId) },
+        include: {
+          transaction: true,
+          sessionLadies: { include: { lady: true } },
+        },
+      });
+      if (!session) throw new AppError(404, "Session tidak ditemukan");
+
+      if (!session.transaction || session.transaction.status !== "paid") {
+        throw new AppError(400, "Transaksi belum lunas, tidak bisa checkout");
+      }
+
+      // Reset room status ke standby
+      await trx.room.update({
+        where: { id: session.roomId },
+        data: { status: "standby" },
+      });
+
+      // Reset semua Lady yang masih isJob = true
+      for (const sl of session.sessionLadies) {
+        if (sl.lady.isJob) {
+          await trx.lady.update({
+            where: { id: sl.ladyId },
+            data: { isJob: false },
+          });
+        }
+      }
+
+      await trx.session.update({
+        where: {
+          id: Number(session.id),
+          closed: true,
+        },
+      });
+      return { transaction: session.transaction };
+    });
+
+    res.json({ success: true, result });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Create Payment untuk Transaction
+route.post("/payment/:transactionId", async (req, res, next) => {
+  try {
+    const { transactionId } = req.params;
+    const { method, amount } = req.body;
+
+    const result = await prisma.$transaction(async (trx) => {
+      const transaction = await trx.transaction.findUnique({
+        where: { id: Number(transactionId) },
+      });
+      if (!transaction) throw new AppError(404, "Transaction tidak ditemukan");
+
+      // Buat record Payment
+      const payment = await trx.payment.create({
+        data: {
+          transactionId: transaction.id,
+          method,
+          amount: Number(amount),
+          paidAt: new Date(),
+        },
+      });
+
+      // Update status Transaction
+      let newStatus = transaction.status;
+      if (Number(amount) >= Number(transaction.grandTotal)) {
+        newStatus = "paid";
+      }
+
+      const updatedTransaction = await trx.transaction.update({
+        where: { id: transaction.id },
+        data: { status: newStatus, paymentMethod: method },
+      });
+
+      return { payment, transaction: updatedTransaction };
+    });
+
+    res.json({ success: true, result });
+  } catch (error) {
+    next(error);
   }
 });
 

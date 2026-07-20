@@ -113,7 +113,9 @@ export default function Preview() {
               <td>Grand Total</td>
               <td>{formatRp(data?.grandTotal)}</td>
               <td>
-                <button>Payment</button>
+                <button onClick={() => navigate(`/payment/${sessionId}`)}>
+                  Payment
+                </button>
               </td>
             </tr>
           </tbody>

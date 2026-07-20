@@ -116,6 +116,7 @@ model Session {
 
   start             DateTime
   end               DateTime
+  closed Boolean @default(false)
 
   durationMinutes   Int
   extendMinutes     Int

@@ -231,7 +231,7 @@ route.post("/payment/:transactionId", async (req, res, next) => {
       return { payment, transaction: updatedTransaction };
     });
 
-    res.json({ success: true, result });
+    res.status(200).json({ success: true, result });
   } catch (error) {
     next(error);
   }

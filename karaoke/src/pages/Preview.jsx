@@ -121,7 +121,7 @@ export default function Preview() {
           </tbody>
         </table>
         <div className="action">
-          <button onClick={() => navigate(-1)}>back</button>
+          <button onClick={() => navigate("/")}>back</button>
           <button>checkout</button>
         </div>
       </div>

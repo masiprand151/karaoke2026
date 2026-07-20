@@ -47,9 +47,24 @@ function Home() {
     return () => clearInterval(interval);
   }, []);
 
+  const handleLogout = async () => {
+    const isConfirm = confirm("Anda yakin ingin keluar aplikasi");
+    if (isConfirm) {
+      window.localStorage.removeItem("user");
+      window.electron.closeApp();
+    }
+  };
+
   return (
     <div className="home-container">
-      <h2 className="home-title">Daftar Room Karaoke</h2>
+      <div className="header">
+        <h2 className="home-title">Daftar Room Karaoke</h2>
+        <div>
+          <button className="btn-logout" onClick={handleLogout}>
+            Logout
+          </button>
+        </div>
+      </div>
       <div className="room-grid">
         {rooms.map((room) => (
           <div

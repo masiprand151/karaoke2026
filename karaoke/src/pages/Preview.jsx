@@ -13,7 +13,7 @@ export default function Preview() {
   const getPreview = async () => {
     try {
       const res = await api.get(`/session/preview/${sessionId}`);
-      console.log(res);
+
       setData(res);
     } catch (error) {
       console.log(error.message);
@@ -47,14 +47,32 @@ export default function Preview() {
               <td>Duration</td>
               <td>{data?.durationMinutes / 60} Jam</td>
               <td>
-                <button>Edit</button>
+                <button
+                  onClick={() => {
+                    if (data.status !== "paid") {
+                    }
+
+                    alert("Sesi sudah lunas");
+                  }}
+                >
+                  Edit
+                </button>
               </td>
             </tr>
             <tr>
               <td>Extend</td>
               <td>{data?.extendMinutes / 60} Jam</td>
               <td>
-                <button>Add</button>
+                <button
+                  onClick={() => {
+                    if (data.status !== "paid") {
+                    }
+
+                    alert("Sesi sudah lunas");
+                  }}
+                >
+                  Add
+                </button>
               </td>
             </tr>
             <tr>
@@ -85,7 +103,15 @@ export default function Preview() {
               <td>F&B</td>
               <td>{formatRp(data?.fnbSubtotal)}</td>
               <td>
-                <button onClick={() => navigate(`/fnb/order/${sessionId}`)}>
+                <button
+                  onClick={() => {
+                    if (data.status !== "paid") {
+                      navigate(`/fnb/order/${sessionId}`);
+                    }
+
+                    alert("Sesi sudah lunas");
+                  }}
+                >
                   Order
                 </button>
               </td>
@@ -94,7 +120,15 @@ export default function Preview() {
               <td>Lady</td>
               <td>{formatRp(data?.ladyTotal)}</td>
               <td>
-                <button onClick={() => navigate(`/lady/order/${sessionId}`)}>
+                <button
+                  onClick={() => {
+                    if (data.status !== "paid") {
+                      navigate(`/lady/order/${sessionId}`);
+                    }
+
+                    alert("Sesi sudah lunas");
+                  }}
+                >
                   Order
                 </button>
               </td>
@@ -113,7 +147,15 @@ export default function Preview() {
               <td>Grand Total</td>
               <td>{formatRp(data?.grandTotal)}</td>
               <td>
-                <button onClick={() => navigate(`/payment/${sessionId}`)}>
+                <button
+                  onClick={() => {
+                    if (data.status !== "paid") {
+                      navigate(`/payment/${sessionId}`);
+                    }
+
+                    alert("Sesi sudah lunas");
+                  }}
+                >
                   Payment
                 </button>
               </td>

@@ -32,6 +32,7 @@ function Payment() {
   }, [data]);
 
   const handleSubmit = async (e) => {
+    e.preventDevault();
     try {
       const transactionId = data?.transaction.id;
       const res = await api.post(`/session/payment/${transactionId}`, {

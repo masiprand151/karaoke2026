@@ -4,7 +4,6 @@ const jwt = require("jsonwebtoken");
 const protectedAuth = (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
-    console.log(authHeader);
 
     if (!authHeader) {
       throw new AppError(401, "Unauthorized");

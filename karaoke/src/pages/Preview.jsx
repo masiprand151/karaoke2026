@@ -5,12 +5,14 @@ import MoveRoom from "../components/MoveRoom";
 
 import "./preview.css";
 import { formatRp } from "../utils/rupiah";
+import DiscountForm from "../components/DiscountForm";
 
 export default function Preview() {
   const { sessionId } = useParams();
   const navigate = useNavigate();
   const [data, setData] = useState({});
   const [showMvRoom, setShowMvRoom] = useState(false);
+  const [showDisRoom, setShowDisRoom] = useState(false);
 
   const getPreview = async () => {
     try {
@@ -25,6 +27,19 @@ export default function Preview() {
   useEffect(() => {
     getPreview();
   }, []);
+
+  const handleCheckout = async () => {
+    if (data?.transaction?.status !== "paid") {
+      alert("Lakukan pembayaran terlebih dahulu!");
+      return;
+    }
+    try {
+      await api.post(`/session/checkout/${data?.id}`);
+      navigate("/");
+    } catch (error) {
+      alert(error.message);
+    }
+  };
 
   return (
     <>
@@ -96,10 +111,10 @@ export default function Preview() {
                 <td></td>
               </tr>
               <tr>
-                <td>Room Dis</td>
-                <td>{formatRp(0)}</td>
+                <td>Room Discount</td>
+                <td>{formatRp(data?.roomDisAmount)}</td>
                 <td>
-                  <button>Edit</button>
+                  <button onClick={() => setShowDisRoom(true)}>Edit</button>
                 </td>
               </tr>
               <tr>
@@ -110,9 +125,9 @@ export default function Preview() {
                     onClick={() => {
                       if (data.status !== "paid") {
                         navigate(`/fnb/order/${sessionId}`);
+                      } else {
+                        alert("Sesi sudah lunas");
                       }
-
-                      alert("Sesi sudah lunas");
                     }}
                   >
                     Order
@@ -127,9 +142,9 @@ export default function Preview() {
                     onClick={() => {
                       if (data.status !== "paid") {
                         navigate(`/lady/order/${sessionId}`);
+                      } else {
+                        alert("Sesi sudah lunas");
                       }
-
-                      alert("Sesi sudah lunas");
                     }}
                   >
                     Order
@@ -154,9 +169,9 @@ export default function Preview() {
                     onClick={() => {
                       if (data.status !== "paid") {
                         navigate(`/payment/${sessionId}`);
+                      } else {
+                        alert("Sesi sudah lunas");
                       }
-
-                      alert("Sesi sudah lunas");
                     }}
                   >
                     Payment
@@ -167,7 +182,7 @@ export default function Preview() {
           </table>
           <div className="action">
             <button onClick={() => navigate("/")}>back</button>
-            <button>checkout</button>
+            <button onClick={handleCheckout}>checkout</button>
           </div>
         </div>
         <div className="preview-card list-order">
@@ -240,6 +255,16 @@ export default function Preview() {
           newRoomId={2}
           onClose={() => setShowMvRoom(false)}
           onSuccess={() => navigate("/")}
+        />
+      )}
+
+      {showDisRoom && (
+        <DiscountForm
+          transactionId={data?.transaction?.id}
+          onClose={() => {
+            setShowDisRoom(false);
+            getPreview();
+          }}
         />
       )}
     </>

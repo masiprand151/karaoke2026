@@ -7,6 +7,9 @@ route.get("/", async (req, res, next) => {
     const rooms = await prisma.room.findMany({
       include: {
         sessions: {
+          where: {
+            closed: false,
+          },
           orderBy: {
             createdAt: "desc",
           },

@@ -125,3 +125,7 @@ td button:hover {
   background: #f4f4f4;
   z-index: 2;
 }
+
+.used {
+  color: #e92e2e;
+}

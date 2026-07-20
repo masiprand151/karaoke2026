@@ -57,38 +57,40 @@ function Home() {
   };
 
   return (
-    <div className="home-container">
-      <div className="header">
-        <h2 className="home-title">Daftar Room Karaoke</h2>
-        <div>
-          <button className="btn-logout" onClick={handleLogout}>
-            Logout
-          </button>
+    <>
+      <div className="home-container">
+        <div className="header">
+          <h2 className="home-title">Daftar Room Karaoke</h2>
+          <div>
+            <button className="btn-logout" onClick={handleLogout}>
+              Logout
+            </button>
+          </div>
+        </div>
+        <div className="room-grid">
+          {rooms.map((room) => (
+            <div
+              key={room.id}
+              className={`room-card ${room?.remaining?.remainingMs > 0 && room?.remaining?.remainingMs <= WARNING_TIME ? "warn" : room?.status === "used" && room?.remaining?.isExpired ? "close" : room.status}`}
+              onClick={() => {
+                if (room.status !== "used") {
+                  navigate(`/checkin/${room.id}`);
+                }
+                navigate(`/preview/${room?.sessions?.[0].id}`);
+              }}
+            >
+              <h3 className="room-name">{room.name}</h3>
+              <p className="room-text">
+                Name: {room.sessions?.[0]?.customerName ?? "-"}
+              </p>
+              <p className="room-text">
+                Timer: {room.remaining?.remainingText ?? "--:--:--"}
+              </p>
+            </div>
+          ))}
         </div>
       </div>
-      <div className="room-grid">
-        {rooms.map((room) => (
-          <div
-            key={room.id}
-            className={`room-card ${room?.remaining?.remainingMs > 0 && room?.remaining?.remainingMs <= WARNING_TIME ? "warn" : room?.status === "used" && room?.remaining?.isExpired ? "close" : room.status}`}
-            onClick={() => {
-              if (room.status !== "used") {
-                navigate(`/checkin/${room.id}`);
-              }
-              navigate(`/preview/${room?.sessions?.[0].id}`);
-            }}
-          >
-            <h3 className="room-name">{room.name}</h3>
-            <p className="room-text">
-              Name: {room.sessions?.[0]?.customerName ?? "-"}
-            </p>
-            <p className="room-text">
-              Timer: {room.remaining?.remainingText ?? "--:--:--"}
-            </p>
-          </div>
-        ))}
-      </div>
-    </div>
+    </>
   );
 }
 

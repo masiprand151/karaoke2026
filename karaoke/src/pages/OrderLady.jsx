@@ -1,9 +1,24 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../utils/api";
-import Modal from "../components/Modal";
 
-import "./orderlady.css";
+import {
+  Row,
+  Col,
+  Card,
+  Table,
+  Button,
+  Modal,
+  Space,
+  Input,
+  Typography,
+  InputNumber,
+  Flex,
+} from "antd";
+import { formatRp } from "../utils/rupiah";
+
+const { Title } = Typography;
+const { Search } = Input;
 
 function OrderLady() {
   const { sessionId } = useParams();
@@ -15,7 +30,6 @@ function OrderLady() {
   const fetchLady = async () => {
     try {
       const res = await api.get("/lady");
-      console.log(res);
       setLadies(res.ladies);
     } catch (error) {
       console.log(error.message);
@@ -61,68 +75,125 @@ function OrderLady() {
       alert(error.message);
     }
   };
-
   return (
     <>
-      <div className="orderlady-layout">
-        <div className="lady-list">
-          <h2>Daftar Lady</h2>
-          <div className="table-wrapper">
-            <table className="sticky-table">
-              <thead>
-                <tr>
-                  <th>Nama</th>
-                  <th>Harga</th>
-                  <th>Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ladies.map((lady) => (
-                  <tr key={lady.id}>
-                    <td>{lady.name}</td>
-                    <td>Rp {lady.basePrice}</td>
-                    <td>
-                      <button
-                        className={lady.isJob ? "disabled" : ""}
+      <Row gutter={16}>
+        <Col span={24}>
+          <Card
+            title="Lady Companion"
+            extra={
+              <Flex gap={8} align="center">
+                <Search
+                  placeholder="Search Lady..."
+                  allowClear
+                  enterButton
+                  style={{ width: 250 }}
+                />
+
+                <Button onClick={() => navigate(-1)}>Back</Button>
+              </Flex>
+            }
+          >
+            <Table
+              sticky
+              size="small"
+              pagination={false}
+              scroll={{ y: 550 }}
+              rowKey="id"
+              dataSource={ladies}
+              columns={[
+                {
+                  title: "Nama",
+                  dataIndex: "name",
+                },
+                {
+                  title: "Harga",
+                  render: (_, row) => formatRp(row.basePrice),
+                },
+                {
+                  title: "Status",
+                  width: 120,
+                  align: "center",
+                  render: (_, row) =>
+                    row.isJob ? (
+                      <Button danger size="small" disabled>
+                        Sedang Kerja
+                      </Button>
+                    ) : (
+                      <Button
+                        type="primary"
+                        size="small"
                         onClick={() => {
-                          setSelected({ ...lady, quantity: 1 });
+                          setSelected({
+                            ...row,
+                            quantity: 1,
+                          });
                           setShow(true);
                         }}
-                        disabled={lady.isJob}
                       >
                         Tambah
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="lady-footer">
-            <button onClick={() => navigate(-1)}>Back</button>
-          </div>
-        </div>
-      </div>
-      {show && (
+                      </Button>
+                    ),
+                },
+              ]}
+            />
+          </Card>
+        </Col>
+
         <Modal
-          title={`${selected?.name} Duration (jam)`}
-          onClose={() => {
+          open={show}
+          title={`${selected?.name ?? ""} Duration (Jam)`}
+          centered
+          destroyOnHidden
+          onCancel={() => {
             setSelected({});
             setShow(false);
           }}
+          footer={[
+            <Button
+              key="cancel"
+              onClick={() => {
+                setSelected({});
+                setShow(false);
+              }}
+            >
+              Cancel
+            </Button>,
+
+            <Button key="submit" type="primary" onClick={handleOrder}>
+              Submit
+            </Button>,
+          ]}
         >
-          <div className="modal-input">
-            <button onClick={handleMin}>-</button>
-            <div>
-              <h4>{selected?.quantity}</h4>
-            </div>
-            <button onClick={handlePlus}>+</button>
-          </div>
-          <button className="confirm-btn" onClick={handleOrder}>
-            Submit
-          </button>
+          <Space
+            direction="vertical"
+            style={{
+              width: "100%",
+              alignItems: "center",
+            }}
+          >
+            <Title level={5}>Durasi</Title>
+
+            <Space>
+              <Button onClick={handleMin}>-</Button>
+
+              <InputNumber
+                min={1}
+                max={24}
+                controls={false}
+                value={selected?.quantity}
+                readOnly
+                style={{
+                  width: 80,
+                  textAlign: "center",
+                }}
+              />
+
+              <Button onClick={handlePlus}>+</Button>
+            </Space>
+          </Space>
         </Modal>
-      )}
+      </Row>
     </>
   );
 }

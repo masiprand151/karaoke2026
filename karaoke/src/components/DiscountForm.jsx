@@ -1,65 +1,67 @@
 import { useState } from "react";
-import Modal from "./Modal";
+import { Modal, Form, InputNumber, Button, App, Space, message } from "antd";
 import api from "../utils/api";
 
-function DiscountForm({ transactionId, onClose }) {
+function DiscountForm({ transactionId, onClose, open }) {
+  const { modal, message } = App.useApp();
   const [count, setCount] = useState(0);
-
-  const handleChange = (e) => {
-    const value = Number(e.target.value.replace(/\D/g, ""));
-
-    setCount(value <= 0 ? 0 : value >= 100 ? 100 : value);
-  };
-
+  const [loading, setLoading] = useState(false);
   const handleDiscount = async () => {
+    const confirmed = window.confirm(
+      `Apa kamu yakin ingin memberikan discount room sebesar ${count}%?`,
+    );
+
+    if (!confirmed) {
+      setCount(0);
+      onClose();
+      return;
+    }
+
     try {
-      const confirmed = confirm(
-        `Apa kamu yakin ingin discount room sebesar "${count}%".?`,
-      );
+      setLoading(true);
 
-      if (!confirmed) {
-        setCount(0);
-        onClose();
-      }
-
-      const res = await api.post("/session/discount", {
+      await api.post("/session/discount", {
         transactionId: Number(transactionId),
         discount: Number(count),
       });
 
       alert("Berhasil melakukan discount");
+      onClose();
     } catch (error) {
       alert(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <Modal title={"Discount"} onClose={onClose}>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-        }}
-      >
-        <div className="form-groub">
-          <input
-            type="text"
-            className="form-input"
-            value={count}
-            onChange={handleChange}
-          />
-        </div>
-        <p
-          style={{
-            fontWeight: "bold",
-          }}
-        >
-          %
-        </p>
-      </div>
-      <div className="action">
-        <button onClick={handleDiscount}>Discount now</button>
-      </div>
+    <Modal
+      open={open}
+      title="Room Discount"
+      onCancel={onClose}
+      footer={null}
+      destroyOnHidden
+      centered
+      width={400}
+    >
+      <Form layout="vertical">
+        <Form.Item label="Discount (%)">
+          <Space.Compact style={{ width: "100%" }}>
+            <InputNumber
+              min={0}
+              max={100}
+              value={count}
+              onChange={(value) => setCount(value ?? 0)}
+              addonAfter="%"
+              style={{ width: "100%" }}
+            />
+          </Space.Compact>
+        </Form.Item>
+
+        <Button type="primary" block loading={loading} onClick={handleDiscount}>
+          Discount Now
+        </Button>
+      </Form>
     </Modal>
   );
 }

@@ -87,6 +87,158 @@ route.post("/checkin", async (req, res, next) => {
     next(error);
   }
 });
+
+// free minute
+route.post("/free-minute", async (req, res, next) => {
+  try {
+    const { sessionId, addMinutes } = req.body;
+
+    // Validasi: hanya boleh 1–30 menit
+    if (addMinutes < 1 || addMinutes > 30) {
+      throw new AppError(400, "Penambahan waktu maksimal 30 menit");
+    }
+
+    const session = await prisma.session.findUnique({
+      where: { id: Number(sessionId), closed: false },
+    });
+
+    if (!session) {
+      throw new AppError(404, "Session tidak ditemukan");
+    }
+
+    const now = Date.now();
+
+    const startTime = new Date(session.start).getTime();
+    const endTime = new Date(session.end).getTime();
+
+    const totalDuration = endTime - startTime;
+    const remaining = Math.max(endTime - now, 0);
+
+    if (remaining <= 0) {
+      throw new AppError(
+        401,
+        "Waktu awal sudah berakhir tidak bisa tambah waktu",
+      );
+    }
+
+    // Hitung end baru
+    const newEnd = new Date(session.end.getTime() + addMinutes * 60000);
+
+    // Update session
+    const updated = await prisma.session.update({
+      where: { id: session.id },
+      data: {
+        end: newEnd,
+        freeMinutes: session.freeMinutes + addMinutes, // simpan total extend
+      },
+    });
+
+    res.json({ success: true, updated });
+  } catch (error) {
+    next(error);
+  }
+});
+
+route.post("/extend", async (req, res, next) => {
+  try {
+    const { sessionId, addMinutes } = req.body;
+
+    if (addMinutes < 1 || addMinutes > 540) {
+      throw new AppError(400, "Penambahan waktu maksimal 9jam");
+    }
+
+    const session = await prisma.session.findUnique({
+      where: { id: Number(sessionId), closed: false },
+      include: {
+        transaction: { include: { pricing: true } },
+        sessionFnbs: { include: { fnb: true } },
+        sessionLadies: { include: { lady: true } },
+      },
+    });
+
+    if (!session) throw new AppError(404, "Session tidak ditemukan");
+
+    const now = Date.now();
+
+    const startTime = new Date(session.start).getTime();
+    const endTime = new Date(session.end).getTime();
+
+    const totalDuration = endTime - startTime;
+    const remaining = Math.max(endTime - now, 0);
+
+    if (remaining <= 0) {
+      throw new AppError(
+        401,
+        "Waktu awal sudah berakhir tidak bisa tambah waktu",
+      );
+    }
+
+    // Hitung end baru
+    const newEnd = new Date(session.end.getTime() + addMinutes * 60000);
+    const durationMinutes = Math.floor(
+      (newEnd.getTime() - new Date(session.start).getTime()) / 60000,
+    );
+
+    // Hitung ulang Room
+    const baseRate = Number(session.transaction.pricing.baseRate);
+    const amount = (baseRate / 60) * durationMinutes;
+    const taxAmount =
+      (amount * Number(session.transaction.pricing.taxRate)) / 100;
+    const serviceAmount =
+      (amount * Number(session.transaction.pricing.serviceCharge)) / 100;
+    let roomTotal = amount + taxAmount + serviceAmount;
+
+    // Diskon Room (jika ada)
+    const discountRate = Number(session.transaction.roomDis || 0);
+    const discountAmount = (roomTotal * discountRate) / 100;
+    roomTotal -= discountAmount;
+
+    // Hitung ulang F&B
+    let fnbSubtotal = 0,
+      fnbTax = 0,
+      fnbService = 0;
+    session.sessionFnbs.forEach((sf) => {
+      const sub = Number(sf.unitPrice) * sf.quantity;
+      fnbSubtotal += sub;
+      fnbTax += (sub * Number(sf.fnb.taxRate)) / 100;
+      fnbService += (sub * Number(sf.fnb.serviceCharge)) / 100;
+    });
+
+    // Hitung ulang Lady
+    let ladyTotal = 0;
+    session.sessionLadies.forEach((sl) => {
+      ladyTotal += Number(sl.totalAmount);
+    });
+
+    // GrandTotal baru
+    const grandTotal =
+      roomTotal + fnbSubtotal + ladyTotal + fnbTax + fnbService;
+
+    // Update session + transaction
+    const updatedSession = await prisma.session.update({
+      where: { id: session.id },
+      data: {
+        end: newEnd,
+        extendMinutes: session.extendMinutes + addMinutes,
+        transaction: {
+          update: {
+            amount,
+            taxAmount,
+            serviceAmount,
+            roomDisAmount: discountAmount,
+            grandTotal,
+          },
+        },
+      },
+      include: { transaction: true },
+    });
+
+    res.json({ success: true, updatedSession });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // Preview transaksi untuk sebuah session
 route.get("/preview/:sessionId", async (req, res, next) => {
   const { sessionId } = req.params;
@@ -158,9 +310,9 @@ route.post("/checkout/:sessionId", async (req, res, next) => {
       });
       if (!session) throw new AppError(404, "Session tidak ditemukan");
 
-      if (!session.transaction || session.transaction.status !== "paid") {
-        throw new AppError(400, "Transaksi belum lunas, tidak bisa checkout");
-      }
+      // if (!session.transaction || session.transaction.status !== "paid") {
+      //   throw new AppError(400, "Transaksi belum lunas, tidak bisa checkout");
+      // }
 
       // Reset room status ke standby
       await trx.room.update({

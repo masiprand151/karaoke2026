@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../utils/api";
+import { Row, Col, Card, Table, Button, Input, Space } from "antd";
 
-import "./orderfnb.css";
 import { formatRp } from "../utils/rupiah";
+const { Search } = Input;
 
 function OrderFnb() {
   const { sessionId } = useParams();
@@ -64,86 +65,133 @@ function OrderFnb() {
   };
 
   return (
-    <div className="orderfnb-layout">
-      <div className="fnb-list">
-        <div className="title">
-          <h2>Product List</h2>
-          <div>
-            <input type="search" placeholder="search" />
-            <button className="btn-search">search</button>
-          </div>
-        </div>
-        <div className="table-wrapper">
-          <table className="sticky-table">
-            <thead>
-              <tr>
-                <th>Nama</th>
-                <th>Harga</th>
-                <th>Stock</th>
-                <th>Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {fnbs.map((fnb) => (
-                <tr key={fnb.id}>
-                  <td>{fnb.name}</td>
-                  <td>{formatRp(fnb.basePrice)}</td>
-                  <td>{fnb.stock}</td>
-                  <td>
-                    <button className="btn-add" onClick={() => addToCart(fnb)}>
-                      Tambah
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div className="cart">
-        <h2>Cart</h2>
-        <div className="table-wrapper">
-          <table className="sticky-table">
-            <thead>
-              <tr>
-                <th>Nama</th>
-                <th>Qty</th>
-                <th>Subtotal</th>
-                <th>Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {cart.map((item) => (
-                <tr key={item.id}>
-                  <td>{item.name}</td>
-                  <td>{item.quantity}</td>
-                  <td>Rp {item.basePrice * item.quantity}</td>
-                  <td>
-                    <button
-                      className="btn-del"
-                      onClick={() => removeFromCart(item.id)}
-                    >
-                      Hapus
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <button
-          className="confirm-btn"
-          onClick={confirmOrder}
-          disabled={cart.length <= 0}
+    <Row gutter={16} style={{ height: "100%" }}>
+      {/* Product List */}
+      <Col span={14}>
+        <Card
+          title="Product List"
+          extra={
+            <Search placeholder="Search Product..." allowClear enterButton />
+          }
+          style={{ height: "100%" }}
+          bodyStyle={{ padding: 0 }}
         >
-          Confirm Order
-        </button>
-        <button className="back-btn" onClick={() => navigate(-1)}>
-          Cancel
-        </button>
-      </div>
-    </div>
+          <Table
+            sticky
+            size="small"
+            pagination={false}
+            scroll={{ y: 520 }}
+            rowKey="id"
+            dataSource={fnbs}
+            columns={[
+              {
+                title: "Nama",
+                dataIndex: "name",
+              },
+              {
+                title: "Harga",
+                render: (_, row) => formatRp(row.basePrice),
+              },
+              {
+                title: "Stock",
+                dataIndex: "stock",
+                width: 90,
+                align: "center",
+              },
+              {
+                title: "Aksi",
+                width: 110,
+                align: "center",
+                render: (_, row) => (
+                  <Button
+                    type="primary"
+                    size="small"
+                    onClick={() => addToCart(row)}
+                  >
+                    Tambah
+                  </Button>
+                ),
+              },
+            ]}
+          />
+        </Card>
+      </Col>
+
+      {/* Cart */}
+      <Col span={10}>
+        <Card
+          title="Cart"
+          style={{ height: "100%" }}
+          bodyStyle={{
+            display: "flex",
+            flexDirection: "column",
+            height: "100%",
+            padding: 0,
+          }}
+        >
+          <Table
+            sticky
+            size="small"
+            pagination={false}
+            scroll={{ y: 430 }}
+            rowKey="id"
+            dataSource={cart}
+            columns={[
+              {
+                title: "Nama",
+                dataIndex: "name",
+              },
+              {
+                title: "Qty",
+                dataIndex: "quantity",
+                width: 70,
+                align: "center",
+              },
+              {
+                title: "Subtotal",
+                render: (_, row) => formatRp(row.basePrice * row.quantity),
+              },
+              {
+                title: "Aksi",
+                width: 90,
+                align: "center",
+                render: (_, row) => (
+                  <Button
+                    danger
+                    size="small"
+                    onClick={() => removeFromCart(row.id)}
+                  >
+                    Hapus
+                  </Button>
+                ),
+              },
+            ]}
+          />
+
+          <div
+            style={{
+              padding: 16,
+              borderTop: "1px solid #f0f0f0",
+            }}
+          >
+            <Space direction="vertical" style={{ width: "100%" }}>
+              <Button
+                type="primary"
+                block
+                disabled={cart.length <= 0}
+                onClick={confirmOrder}
+              >
+                Confirm Order
+              </Button>
+
+              <Button block onClick={() => navigate(-1)}>
+                Cancel
+              </Button>
+            </Space>
+          </div>
+        </Card>
+      </Col>
+    </Row>
   );
 }
 export default OrderFnb;

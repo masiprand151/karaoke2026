@@ -2,12 +2,26 @@ import { useNavigate, useParams } from "react-router-dom";
 import api from "../utils/api";
 import { useEffect, useState } from "react";
 import MoveRoom from "../components/MoveRoom";
-
-import "./preview.css";
+import {
+  Row,
+  Col,
+  Card,
+  Button,
+  Table,
+  Tag,
+  Space,
+  Statistic,
+  Divider,
+  Descriptions,
+  Flex,
+  Modal,
+  Form,
+  InputNumber,
+} from "antd";
 import { formatRp } from "../utils/rupiah";
 import DiscountForm from "../components/DiscountForm";
 import LadyCountdown from "../components/LadyCountdown";
-import Modal from "../components/Modal";
+import DetailsTable from "../components/DetailsTable";
 
 export default function Preview() {
   const { sessionId } = useParams();
@@ -34,10 +48,6 @@ export default function Preview() {
   }, []);
 
   const handleCheckout = async () => {
-    if (data?.transaction?.status !== "paid") {
-      alert("Lakukan pembayaran terlebih dahulu!");
-      return;
-    }
     try {
       await api.post(`/session/checkout/${data?.id}`);
       navigate("/");
@@ -46,287 +56,290 @@ export default function Preview() {
     }
   };
 
+  const handleFreeMinute = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await api.post("/session/free-minute", {
+        sessionId: Number(sessionId),
+        addMinutes: Number(duration),
+      });
+      alert("Berhail tambah free minute");
+      getPreview();
+      setDuration(0);
+      setModalType(null);
+      setShowModal(false);
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
+  const handleExtend = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await api.post("/session/extend", {
+        sessionId: Number(sessionId),
+        addMinutes: Number(duration) * 60,
+      });
+      alert("Berhasil tambah jam");
+      getPreview();
+      setDuration(0);
+      setModalType(null);
+      setShowModal(false);
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
   return (
     <>
-      <div className="preview-container">
-        <div className="preview-card">
-          <h2>Preview Billing</h2>
+      <Row gutter={16}>
+        <Col span={10}>
+          <Card
+            title="Preview Billing"
+            extra={
+              <Tag
+                color={
+                  data?.status === "paid"
+                    ? "green"
+                    : data?.status === "partial"
+                      ? "gold"
+                      : "blue"
+                }
+              >
+                {data?.status}
+              </Tag>
+            }
+          >
+            <Descriptions bordered size="small" column={1}>
+              <Descriptions.Item label="Customer">
+                {data?.customerName}
+              </Descriptions.Item>
 
-          <table className="preview-table">
-            <tbody>
-              <tr>
-                <td>Custoner</td>
-                <td>{data?.customerName}</td>
-                <td></td>
-              </tr>
-              <tr>
-                <td>Room</td>
-                <td>{data?.room?.name}</td>
-                <td>
-                  <button onClick={() => setShowMvRoom(true)}>Move</button>
-                </td>
-              </tr>
-              <tr>
-                <td>Duration</td>
-                <td>{data?.durationMinutes / 60} Jam</td>
-                <td>
-                  <button
-                    onClick={() => {
-                      if (data.status !== "paid") {
-                      } else {
-                        alert("Sesi sudah lunas");
-                      }
-                    }}
-                  >
-                    Edit
-                  </button>
-                </td>
-              </tr>
-              <tr>
-                <td>Extend</td>
-                <td>{data?.extendMinutes / 60} Jam</td>
-                <td>
-                  <button
+              <Descriptions.Item label="Room">
+                <Space>
+                  {data?.room?.name}
+
+                  <Button size="small" onClick={() => setShowMvRoom(true)}>
+                    Move
+                  </Button>
+                </Space>
+              </Descriptions.Item>
+
+              <Descriptions.Item label="Duration">
+                <Space>
+                  {data?.durationMinutes
+                    ? `${data.durationMinutes / 60} Jam`
+                    : "-"}
+                  <Button size="small">Edit</Button>
+                </Space>
+              </Descriptions.Item>
+
+              <Descriptions.Item label="Extend">
+                <Space>
+                  {(data?.extendMinutes ?? 0) / 60} Jam
+                  <Button
+                    size="small"
                     onClick={() => {
                       if (data.status !== "paid") {
                         setShowModal(true);
                         setModalType("Extend");
-                      } else {
-                        alert("Sesi sudah lunas");
                       }
                     }}
                   >
                     Add
-                  </button>
-                </td>
-              </tr>
-              <tr>
-                <td>Free Minute</td>
-                <td>{data?.freeMinutes} Jam</td>
-                <td>
-                  <button
+                  </Button>
+                </Space>
+              </Descriptions.Item>
+
+              <Descriptions.Item label="Free Minute">
+                <Space>
+                  {data?.freeMinutes} Menit
+                  <Button
+                    size="small"
                     onClick={() => {
                       if (data.status !== "paid") {
                         setShowModal(true);
                         setModalType("Free Minute");
-                      } else {
-                        alert("Sesi sudah lunas");
                       }
                     }}
                   >
                     Add
-                  </button>
-                </td>
-              </tr>
-              <tr>
-                <td>Status</td>
-                <td>{data?.status}</td>
-                <td></td>
-              </tr>
-              <tr>
-                <td>Room Amount</td>
-                <td>{formatRp(data?.amount)}</td>
-                <td></td>
-              </tr>
-              <tr>
-                <td>Room Discount</td>
-                <td>{formatRp(data?.roomDisAmount)}</td>
-                <td>
-                  <button onClick={() => setShowDisRoom(true)}>Edit</button>
-                </td>
-              </tr>
-              <tr>
-                <td>F&B</td>
-                <td>{formatRp(data?.fnbSubtotal)}</td>
-                <td>
-                  <button
-                    onClick={() => {
-                      if (data.status !== "paid") {
-                        navigate(`/fnb/order/${sessionId}`);
-                      } else {
-                        alert("Sesi sudah lunas");
-                      }
-                    }}
+                  </Button>
+                </Space>
+              </Descriptions.Item>
+
+              <Descriptions.Item label="Room Amount">
+                {formatRp(data?.amount)}
+              </Descriptions.Item>
+
+              <Descriptions.Item label="Discount">
+                <Space>
+                  {formatRp(data?.roomDisAmount)}
+
+                  <Button size="small" onClick={() => setShowDisRoom(true)}>
+                    Edit
+                  </Button>
+                </Space>
+              </Descriptions.Item>
+
+              <Descriptions.Item label="F&B">
+                <Space>
+                  {formatRp(data?.fnbSubtotal)}
+
+                  <Button
+                    size="small"
+                    type="primary"
+                    onClick={() => navigate(`/fnb/order/${sessionId}`)}
                   >
                     Order
-                  </button>
-                </td>
-              </tr>
-              <tr>
-                <td>Lady</td>
-                <td>{formatRp(data?.ladyTotal)}</td>
-                <td>
-                  <button
-                    onClick={() => {
-                      if (data.status !== "paid") {
-                        navigate(`/lady/order/${sessionId}`);
-                      } else {
-                        alert("Sesi sudah lunas");
-                      }
-                    }}
+                  </Button>
+                </Space>
+              </Descriptions.Item>
+
+              <Descriptions.Item label="Lady">
+                <Space>
+                  {formatRp(data?.ladyTotal)}
+
+                  <Button
+                    size="small"
+                    type="primary"
+                    onClick={() => navigate(`/lady/order/${sessionId}`)}
                   >
                     Order
-                  </button>
-                </td>
-              </tr>
-              <tr>
-                <td>Tax</td>
-                <td>{formatRp(data?.taxAmount)}</td>
-                <td></td>
-              </tr>
-              <tr>
-                <td>Service</td>
-                <td>{formatRp(data?.serviceAmount)}</td>
-                <td></td>
-              </tr>
-              <tr className="grand-total">
-                <td>Grand Total</td>
-                <td>{formatRp(data?.grandTotal)}</td>
-                <td>
-                  <button
-                    onClick={() => {
-                      if (data.status !== "paid") {
-                        navigate(`/payment/${sessionId}`);
-                      } else {
-                        alert("Sesi sudah lunas");
-                      }
-                    }}
-                  >
-                    Payment
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <div className="action">
-            <button onClick={() => navigate("/")}>back</button>
-            <button onClick={handleCheckout}>checkout</button>
-          </div>
-        </div>
-        <div className="preview-card list-order">
-          <div className="half-table">
-            <h2>Preview F&B</h2>
-            <div className="table-wrapper">
-              <table className="sticky-table">
-                <thead>
-                  <tr>
-                    <th>Nama</th>
-                    <th>Qty</th>
-                    <th>Harga</th>
-                    <th>Total</th>
-                    <th>Aksi</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data?.sessionFnbs?.map((sf) => (
-                    <tr key={sf.id}>
-                      <td>{sf.fnb?.name}</td>
-                      <td>{sf.quantity}</td>
-                      <td>{formatRp(sf.unitPrice)}</td>
-                      <td>{formatRp(sf.totalAmount)}</td>
-                      <td>
-                        <button>edit</button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                  </Button>
+                </Space>
+              </Descriptions.Item>
 
-          <div className="half-table">
-            <h2>Preview Lady</h2>
-            <div className="table-wrapper">
-              <table className="sticky-table">
-                <thead>
-                  <tr>
-                    <th>Nama</th>
-                    <th>Qty</th>
-                    <th>Harga</th>
-                    <th>Total</th>
-                    <th>Time</th>
-                    <th>Aksi</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data?.sessionLadies?.map((sl) => (
-                    <tr key={sl.id}>
-                      <td>{sl.lady?.name}</td>
-                      <td>{sl.quantity}</td>
-                      <td>{formatRp(sl.unitPrice)}</td>
-                      <td>{formatRp(sl.totalAmount)}</td>
-                      <td>
-                        <LadyCountdown
-                          ladyId={sl.lady?.id}
-                          start={sl.start}
-                          end={sl.end}
-                          isJob={sl.lady?.isJob}
-                        />
-                      </td>
-                      <td>
-                        <button>edit</button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
+              <Descriptions.Item label="Tax">
+                {formatRp(data?.taxAmount)}
+              </Descriptions.Item>
 
-      {/* mv room */}
-      {showMvRoom && (
-        <MoveRoom
-          sessionId={sessionId}
-          newRoomId={2}
-          onClose={() => setShowMvRoom(false)}
-          onSuccess={() => navigate("/")}
-        />
-      )}
+              <Descriptions.Item label="Service">
+                {formatRp(data?.serviceAmount)}
+              </Descriptions.Item>
+            </Descriptions>
 
-      {showDisRoom && (
-        <DiscountForm
-          transactionId={data?.transaction?.id}
-          onClose={() => {
-            setShowDisRoom(false);
-            getPreview();
-          }}
-        />
-      )}
+            <Divider />
 
-      {showModal && (
-        <Modal
-          title={modalType}
-          onClose={() => {
-            setModalType(null);
-            setShowModal(false);
-          }}
-        >
-          <div
-            className="form-groub"
-            style={{
-              width: "95%",
+            <Statistic
+              title="Grand Total"
+              value={Number(data?.grandTotal)}
+              precision={0}
+              formatter={(v) => formatRp(v)}
+              valueStyle={{
+                color: "#1677ff",
+                fontWeight: "bold",
+              }}
+            />
+
+            <Flex justify="space-between" style={{ marginTop: 20 }}>
+              <Button onClick={() => navigate("/")}>Back</Button>
+
+              <Space>
+                <Button
+                  type="primary"
+                  onClick={() => navigate(`/payment/${sessionId}`)}
+                >
+                  Payment
+                </Button>
+
+                <Button danger onClick={handleCheckout}>
+                  Checkout
+                </Button>
+              </Space>
+            </Flex>
+          </Card>
+        </Col>
+
+        <DetailsTable data={data} />
+      </Row>
+
+      <Modal
+        open={showModal}
+        title={modalType}
+        centered
+        destroyOnHidden
+        maskClosable={false}
+        onCancel={() => {
+          setModalType(null);
+          setShowModal(false);
+          setDuration(0);
+        }}
+        footer={[
+          <Button
+            key="cancel"
+            onClick={() => {
+              setModalType(null);
+              setShowModal(false);
+              setDuration(0);
             }}
           >
-            <input
-              type="number"
+            Cancel
+          </Button>,
+
+          <Button
+            key="submit"
+            type="primary"
+            onClick={
+              modalType === "Free Minute" ? handleFreeMinute : handleExtend
+            }
+          >
+            Submit
+          </Button>,
+        ]}
+      >
+        <Form layout="vertical">
+          <Form.Item
+            label={
+              modalType === "Extend" ? "Extend (Jam)" : "Free Minute (Menit)"
+            }
+          >
+            <InputNumber
+              style={{ width: "100%" }}
               value={duration}
-              onChange={(e) => {
-                const v = Number(e.target.value);
-                if (v >= 9) {
-                  setDuration(9);
-                } else if (v <= 0) {
-                  setDuration(0);
+              min={0}
+              max={modalType === "Extend" ? 9 : 30}
+              onChange={(value) => {
+                const v = Number(value || 0);
+
+                if (modalType === "Extend") {
+                  if (v >= 9) {
+                    setDuration(9);
+                  } else if (v <= 0) {
+                    setDuration(0);
+                  } else {
+                    setDuration(v);
+                  }
                 } else {
-                  setDuration(e.target.value);
+                  if (v >= 30) {
+                    setDuration(30);
+                  } else if (v <= 0) {
+                    setDuration(0);
+                  } else {
+                    setDuration(v);
+                  }
                 }
               }}
-              className="form-input"
             />
-          </div>
-        </Modal>
-      )}
+          </Form.Item>
+        </Form>
+      </Modal>
+      <MoveRoom
+        open={showMvRoom}
+        onClose={() => setShowMvRoom(false)}
+        sessionId={data?.id}
+        onSuccess={() => {
+          window.location.reload();
+        }}
+      />
+
+      <DiscountForm
+        transactionId={data?.transaction?.id}
+        open={showDisRoom}
+        onClose={() => {
+          setShowDisRoom(false);
+        }}
+      />
     </>
   );
 }

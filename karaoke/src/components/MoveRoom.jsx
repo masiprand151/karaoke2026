@@ -1,8 +1,8 @@
-import Modal from "./Modal";
 import { useState, useEffect } from "react";
 import api from "../utils/api";
+import { Modal, Form, Select, Button, Tag } from "antd";
 
-function MoveRoom({ sessionId, onClose, onSuccess }) {
+function MoveRoom({ open, sessionId, onClose, onSuccess }) {
   const [rooms, setRooms] = useState([]);
   const [selected, setSelected] = useState({});
   const [error, setError] = useState(null);
@@ -39,29 +39,52 @@ function MoveRoom({ sessionId, onClose, onSuccess }) {
   };
 
   return (
-    <Modal title={"Move Room"} onClose={onClose}>
-      <div className="form-groub">
-        <label>Room List</label>
-        <select
-          className="form-input"
-          value={selected}
-          onChange={(e) => setSelected(e.target.value)}
-        >
-          {rooms &&
-            rooms.map((room) => (
-              <option
-                className={room.status === "used" ? "used" : ""}
-                key={room.name}
+    <Modal
+      open={open}
+      title="Move Room"
+      centered
+      destroyOnHidden
+      onCancel={onClose}
+      footer={[
+        <Button key="cancel" onClick={onClose}>
+          Cancel
+        </Button>,
+        <Button key="move" type="primary" onClick={handleMove}>
+          Move Room
+        </Button>,
+      ]}
+    >
+      <Form layout="vertical">
+        <Form.Item label="Room List">
+          <Select
+            value={selected}
+            onChange={setSelected}
+            placeholder="Pilih Room"
+          >
+            {rooms?.map((room) => (
+              <Select.Option
+                key={room.id}
                 value={room.status === "used" ? room.status : room.id}
+                disabled={room.status === "used"}
               >
-                {room.name}
-              </option>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <span>{room.name}</span>
+
+                  <Tag color={room.status === "used" ? "red" : "green"}>
+                    {room.status === "used" ? "USED" : "AVAILABLE"}
+                  </Tag>
+                </div>
+              </Select.Option>
             ))}
-        </select>
-      </div>
-      <div className="action">
-        <button onClick={handleMove}>Move</button>
-      </div>
+          </Select>
+        </Form.Item>
+      </Form>
     </Modal>
   );
 }

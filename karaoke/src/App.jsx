@@ -1,7 +1,7 @@
-import { HashRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
-import { useEffect, useState } from "react";
 import Protected from "./components/Protected";
 import Checkin from "./pages/Checkin";
 import Preview from "./pages/Preview";
@@ -11,6 +11,8 @@ import Payment from "./pages/Payment";
 
 function App() {
   const [user, setUser] = useState({});
+  const location = useLocation();
+
   useEffect(() => {
     const user = JSON.stringify(window.localStorage.getItem("user"));
     if (user) {
@@ -19,7 +21,7 @@ function App() {
   }, [user]);
 
   return (
-    <HashRouter>
+    <>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route
@@ -34,7 +36,7 @@ function App() {
           path="/checkin/:roomId"
           element={
             <Protected>
-              <Checkin />
+              <Checkin key={location.pathname} />
             </Protected>
           }
         />
@@ -71,7 +73,7 @@ function App() {
           }
         />
       </Routes>
-    </HashRouter>
+    </>
   );
 }
 

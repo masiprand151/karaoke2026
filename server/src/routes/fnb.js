@@ -21,12 +21,13 @@ route.post("/order", async (req, res, next) => {
 
     const result = await prisma.$transaction(async (trx) => {
       //------------------------------------------
-      // FNB VALIDATION
+      // VALIDASI F&B
       //------------------------------------------
       const fnb = await trx.fnb.findUnique({ where: { id: Number(fnbId) } });
       if (!fnb) throw new AppError(404, "F&B tidak ditemukan");
-      if (fnb.isStock && fnb.stock < Number(quantity))
+      if (fnb.isStock && fnb.stock < Number(quantity)) {
         throw new AppError(400, "Stock F&B tidak cukup");
+      }
 
       //------------------------------------------
       // HITUNG SUBTOTAL (tanpa tax/service)
@@ -35,7 +36,7 @@ route.post("/order", async (req, res, next) => {
       const subtotal = unitPrice * Number(quantity);
 
       //------------------------------------------
-      // SIMPAN SESSION FNB (totalAmount = subtotal saja)
+      // SIMPAN SESSION FNB
       //------------------------------------------
       const sessionFnb = await trx.sessionFnb.create({
         data: {
@@ -61,7 +62,7 @@ route.post("/order", async (req, res, next) => {
       // UPDATE TRANSACTION
       //------------------------------------------
       const session = await trx.session.findUnique({
-        where: { id: Number(sessionId) },
+        where: { id: Number(sessionId), closed: false },
         include: {
           transaction: true,
           sessionFnbs: { include: { fnb: true } },
@@ -69,25 +70,24 @@ route.post("/order", async (req, res, next) => {
         },
       });
 
-      if (!session || !session.transaction)
+      if (!session || !session.transaction) {
         throw new AppError(404, "Transaction tidak ditemukan");
+      }
 
-      // Ambil pricing
-      const pricing = await trx.pricing.findUnique({
-        where: { id: session.transaction.pricingId },
-      });
-
-      let amount = Number(pricing.baseRate);
-      let tax = (amount * Number(pricing.taxRate)) / 100;
-      let service = (amount * Number(pricing.serviceCharge)) / 100;
+      // Ambil Room dari transaction (sudah sesuai durasi)
+      let amount = Number(session.transaction.amount);
+      let roomTax = Number(session.transaction.taxAmount);
+      let roomService = Number(session.transaction.serviceAmount);
 
       // Hitung ulang F&B (subtotal + tax/service)
       let fnbSubtotal = 0;
+      let fnbTax = 0;
+      let fnbService = 0;
       session.sessionFnbs.forEach((sf) => {
         const sub = Number(sf.unitPrice) * sf.quantity;
         fnbSubtotal += sub;
-        tax += (sub * Number(sf.fnb.taxRate)) / 100;
-        service += (sub * Number(sf.fnb.serviceCharge)) / 100;
+        fnbTax += (sub * Number(sf.fnb.taxRate)) / 100;
+        fnbService += (sub * Number(sf.fnb.serviceCharge)) / 100;
       });
 
       // Hitung ulang Lady (tanpa tax/service)
@@ -96,14 +96,22 @@ route.post("/order", async (req, res, next) => {
         ladyTotal += Number(sl.totalAmount);
       });
 
-      const grandTotal = amount + fnbSubtotal + ladyTotal + tax + service;
+      // GrandTotal = Room + F&B + Lady
+      const grandTotal =
+        amount +
+        roomTax +
+        roomService +
+        fnbSubtotal +
+        fnbTax +
+        fnbService +
+        ladyTotal;
 
       const updatedTransaction = await trx.transaction.update({
         where: { id: session.transaction.id },
         data: {
           amount,
-          taxAmount: tax,
-          serviceAmount: service,
+          taxAmount: roomTax + fnbTax,
+          serviceAmount: roomService + fnbService,
           grandTotal,
         },
       });

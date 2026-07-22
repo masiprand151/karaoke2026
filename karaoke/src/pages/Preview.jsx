@@ -6,6 +6,8 @@ import MoveRoom from "../components/MoveRoom";
 import "./preview.css";
 import { formatRp } from "../utils/rupiah";
 import DiscountForm from "../components/DiscountForm";
+import LadyCountdown from "../components/LadyCountdown";
+import Modal from "../components/Modal";
 
 export default function Preview() {
   const { sessionId } = useParams();
@@ -13,6 +15,9 @@ export default function Preview() {
   const [data, setData] = useState({});
   const [showMvRoom, setShowMvRoom] = useState(false);
   const [showDisRoom, setShowDisRoom] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [modalType, setModalType] = useState(null);
+  const [duration, setDuration] = useState(0);
 
   const getPreview = async () => {
     try {
@@ -68,9 +73,9 @@ export default function Preview() {
                   <button
                     onClick={() => {
                       if (data.status !== "paid") {
+                      } else {
+                        alert("Sesi sudah lunas");
                       }
-
-                      alert("Sesi sudah lunas");
                     }}
                   >
                     Edit
@@ -84,9 +89,11 @@ export default function Preview() {
                   <button
                     onClick={() => {
                       if (data.status !== "paid") {
+                        setShowModal(true);
+                        setModalType("Extend");
+                      } else {
+                        alert("Sesi sudah lunas");
                       }
-
-                      alert("Sesi sudah lunas");
                     }}
                   >
                     Add
@@ -97,7 +104,18 @@ export default function Preview() {
                 <td>Free Minute</td>
                 <td>{data?.freeMinutes} Jam</td>
                 <td>
-                  <button>Add</button>
+                  <button
+                    onClick={() => {
+                      if (data.status !== "paid") {
+                        setShowModal(true);
+                        setModalType("Free Minute");
+                      } else {
+                        alert("Sesi sudah lunas");
+                      }
+                    }}
+                  >
+                    Add
+                  </button>
                 </td>
               </tr>
               <tr>
@@ -226,6 +244,7 @@ export default function Preview() {
                     <th>Qty</th>
                     <th>Harga</th>
                     <th>Total</th>
+                    <th>Time</th>
                     <th>Aksi</th>
                   </tr>
                 </thead>
@@ -236,6 +255,14 @@ export default function Preview() {
                       <td>{sl.quantity}</td>
                       <td>{formatRp(sl.unitPrice)}</td>
                       <td>{formatRp(sl.totalAmount)}</td>
+                      <td>
+                        <LadyCountdown
+                          ladyId={sl.lady?.id}
+                          start={sl.start}
+                          end={sl.end}
+                          isJob={sl.lady?.isJob}
+                        />
+                      </td>
                       <td>
                         <button>edit</button>
                       </td>
@@ -266,6 +293,39 @@ export default function Preview() {
             getPreview();
           }}
         />
+      )}
+
+      {showModal && (
+        <Modal
+          title={modalType}
+          onClose={() => {
+            setModalType(null);
+            setShowModal(false);
+          }}
+        >
+          <div
+            className="form-groub"
+            style={{
+              width: "95%",
+            }}
+          >
+            <input
+              type="number"
+              value={duration}
+              onChange={(e) => {
+                const v = Number(e.target.value);
+                if (v >= 9) {
+                  setDuration(9);
+                } else if (v <= 0) {
+                  setDuration(0);
+                } else {
+                  setDuration(e.target.value);
+                }
+              }}
+              className="form-input"
+            />
+          </div>
+        </Modal>
       )}
     </>
   );

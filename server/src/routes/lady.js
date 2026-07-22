@@ -119,4 +119,38 @@ route.post("/order", async (req, res, next) => {
   }
 });
 
+route.patch("/:ladyId/off", async (req, res, next) => {
+  try {
+    const { ladyId } = req.params;
+
+    const lady = await prisma.lady.findUnique({
+      where: {
+        id: Number(ladyId),
+      },
+    });
+
+    if (!lady) {
+      throw new AppError(404, "Lady tidak di temukan");
+    }
+
+    if (!lady.isJob) {
+      throw new AppError(401, "Lady sedang tidak job");
+    }
+
+    await prisma.lady.update({
+      where: {
+        id: lady.id,
+        isJob: true,
+      },
+      data: {
+        isJob: false,
+      },
+    });
+
+    res.status(200).json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
 module.exports = route;

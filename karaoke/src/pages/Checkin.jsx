@@ -28,6 +28,7 @@ export default function Checkin() {
   const customerRef = useRef(null);
 
   const [room, setRoom] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [pricingType, setPricingType] = useState("REGULAR");
 
   const [form, setForm] = useState({
@@ -82,6 +83,7 @@ export default function Checkin() {
 
   const handleSubmit = async () => {
     try {
+      setLoading(true);
       const user = JSON.parse(localStorage.getItem("user"));
 
       await api.post("/session/checkin", {
@@ -92,13 +94,13 @@ export default function Checkin() {
         userId: user.id,
       });
 
-      message.success("Check In berhasil");
+      alert("Check In berhasil");
 
       navigate(-1);
     } catch (err) {
-      console.log(err);
-
-      message.error(err.response?.data?.message || err.message);
+      alert(err.response?.data?.message || err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -164,10 +166,15 @@ export default function Checkin() {
               }}
             >
               <Button onClick={() => navigate(-1)}>Cancel</Button>
-
-              <Button type="primary" onClick={handleSubmit}>
-                Check In
-              </Button>
+              {!loading ? (
+                <Button type="primary" onClick={handleSubmit}>
+                  Check In
+                </Button>
+              ) : (
+                <Button type="primary" loading iconPlacement="end">
+                  Loading
+                </Button>
+              )}
             </Space>
           </Form>
         </Card>

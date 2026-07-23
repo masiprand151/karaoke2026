@@ -15,13 +15,22 @@ import {
   Descriptions,
   Flex,
   Modal,
+  Typography,
   Form,
   InputNumber,
 } from "antd";
+import {
+  SwapOutlined,
+  EditOutlined,
+  ShoppingCartOutlined,
+  UserAddOutlined,
+} from "@ant-design/icons";
 import { formatRp } from "../utils/rupiah";
 import DiscountForm from "../components/DiscountForm";
 import LadyCountdown from "../components/LadyCountdown";
 import DetailsTable from "../components/DetailsTable";
+
+const { Text } = Typography;
 
 export default function Preview() {
   const { sessionId } = useParams();
@@ -91,7 +100,11 @@ export default function Preview() {
   };
 
   return (
-    <>
+    <div
+      style={{
+        padding: 20,
+      }}
+    >
       <Row gutter={16}>
         <Col span={10}>
           <Card
@@ -112,47 +125,86 @@ export default function Preview() {
           >
             <Descriptions bordered size="small" column={1}>
               <Descriptions.Item label="Customer">
-                {data?.customerName}
+                <Text
+                  ellipsis={{ tooltip: data?.customerName }}
+                  style={{
+                    width: 140,
+                    display: "inline-block",
+                    // fontSize: 14,
+                    verticalAlign: "middle",
+                  }}
+                >
+                  {data?.customerName}
+                </Text>
               </Descriptions.Item>
 
               <Descriptions.Item label="Room">
-                <Space>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    width: "100%",
+                  }}
+                >
                   {data?.room?.name}
-
-                  <Button size="small" onClick={() => setShowMvRoom(true)}>
-                    Move
-                  </Button>
-                </Space>
+                  <Button
+                    type="text"
+                    size="small"
+                    icon={<SwapOutlined />}
+                    onClick={() => setShowMvRoom(true)}
+                  />
+                </div>
               </Descriptions.Item>
 
               <Descriptions.Item label="Duration">
-                <Space>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    width: "100%",
+                  }}
+                >
                   {data?.durationMinutes
                     ? `${data.durationMinutes / 60} Jam`
                     : "-"}
-                  <Button size="small">Edit</Button>
-                </Space>
+                  <Button size="small" icon={<EditOutlined />} />
+                </div>
               </Descriptions.Item>
 
               <Descriptions.Item label="Extend">
-                <Space>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    width: "100%",
+                  }}
+                >
                   {(data?.extendMinutes ?? 0) / 60} Jam
                   <Button
                     size="small"
+                    icon={<EditOutlined />}
                     onClick={() => {
                       if (data.status !== "paid") {
                         setShowModal(true);
                         setModalType("Extend");
                       }
                     }}
-                  >
-                    Add
-                  </Button>
-                </Space>
+                  />
+                </div>
               </Descriptions.Item>
 
               <Descriptions.Item label="Free Minute">
-                <Space>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    width: "100%",
+                  }}
+                >
                   {data?.freeMinutes} Menit
                   <Button
                     size="small"
@@ -162,10 +214,9 @@ export default function Preview() {
                         setModalType("Free Minute");
                       }
                     }}
-                  >
-                    Add
-                  </Button>
-                </Space>
+                    icon={<EditOutlined />}
+                  />
+                </div>
               </Descriptions.Item>
 
               <Descriptions.Item label="Room Amount">
@@ -173,41 +224,61 @@ export default function Preview() {
               </Descriptions.Item>
 
               <Descriptions.Item label="Discount">
-                <Space>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    width: "100%",
+                  }}
+                >
                   {formatRp(data?.roomDisAmount)}
 
-                  <Button size="small" onClick={() => setShowDisRoom(true)}>
-                    Edit
-                  </Button>
-                </Space>
+                  <Button
+                    size="small"
+                    onClick={() => setShowDisRoom(true)}
+                    icon={<EditOutlined />}
+                  />
+                </div>
               </Descriptions.Item>
 
               <Descriptions.Item label="F&B">
-                <Space>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    width: "100%",
+                  }}
+                >
                   {formatRp(data?.fnbSubtotal)}
 
                   <Button
-                    size="small"
                     type="primary"
+                    size="small"
+                    icon={<ShoppingCartOutlined />}
                     onClick={() => navigate(`/fnb/order/${sessionId}`)}
-                  >
-                    Order
-                  </Button>
-                </Space>
+                  />
+                </div>
               </Descriptions.Item>
 
               <Descriptions.Item label="Lady">
-                <Space>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    width: "100%",
+                  }}
+                >
                   {formatRp(data?.ladyTotal)}
-
                   <Button
-                    size="small"
                     type="primary"
+                    size="small"
+                    icon={<UserAddOutlined />}
                     onClick={() => navigate(`/lady/order/${sessionId}`)}
-                  >
-                    Order
-                  </Button>
-                </Space>
+                  />
+                </div>
               </Descriptions.Item>
 
               <Descriptions.Item label="Tax">
@@ -227,7 +298,7 @@ export default function Preview() {
               precision={0}
               formatter={(v) => formatRp(v)}
               valueStyle={{
-                color: "#1677ff",
+                // color: "#1677ff",
                 fontWeight: "bold",
               }}
             />
@@ -236,14 +307,21 @@ export default function Preview() {
               <Button onClick={() => navigate("/")}>Back</Button>
 
               <Space>
+                <Button color="default" variant="solid">
+                  Solid
+                </Button>
+                <Button type="primary" onClick={() => {}}>
+                  Print
+                </Button>
                 <Button
-                  type="primary"
+                  color="cyan"
+                  variant="solid"
                   onClick={() => navigate(`/payment/${sessionId}`)}
                 >
                   Payment
                 </Button>
 
-                <Button danger onClick={handleCheckout}>
+                <Button color="danger" variant="solid" onClick={handleCheckout}>
                   Checkout
                 </Button>
               </Space>
@@ -340,6 +418,6 @@ export default function Preview() {
           setShowDisRoom(false);
         }}
       />
-    </>
+    </div>
   );
 }

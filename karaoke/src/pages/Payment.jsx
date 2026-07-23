@@ -68,7 +68,6 @@ function Payment() {
         justifyContent: "center",
         alignItems: "center",
         minHeight: "100vh",
-        background: "#f5f5f5",
         padding: 20,
       }}
     >
@@ -129,22 +128,22 @@ function Payment() {
           </Descriptions.Item>
         </Descriptions>
 
-        <Divider />
+        {/* <Divider /> */}
 
         <div
           style={{
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            marginBottom: 20,
+            marginBottom: 12,
           }}
         >
-          <Text strong style={{ fontSize: 18 }}>
+          <Text strong style={{ fontSize: 16 }}>
             Grand Total
           </Text>
 
           <Title
-            level={2}
+            level={4}
             style={{
               margin: 0,
               color: "#1677ff",

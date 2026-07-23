@@ -88,7 +88,7 @@ function Home() {
     <Layout style={{ minHeight: "100vh" }}>
       <Header
         style={{
-          background: "#fff",
+          background: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
@@ -145,7 +145,15 @@ function Home() {
                       </Tag>
                     </Space>
 
-                    <Text style={{ fontSize: 13 }}>
+                    <Text
+                      ellipsis={{ tooltip: room.sessions?.[0]?.customerName }}
+                      style={{
+                        width: 140,
+                        display: "inline-block",
+                        fontSize: 13,
+                        verticalAlign: "middle",
+                      }}
+                    >
                       <UserOutlined /> {room.sessions?.[0]?.customerName || "-"}
                     </Text>
 

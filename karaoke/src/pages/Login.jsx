@@ -45,7 +45,6 @@ function Login() {
       style={{
         width: "100vw",
         height: "100vh",
-        background: "#f5f5f5",
       }}
     >
       <Card

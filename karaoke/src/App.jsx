@@ -9,6 +9,8 @@ import OrderFnb from "./pages/OrderFnb";
 import OrderLady from "./pages/OrderLady";
 import Payment from "./pages/Payment";
 
+import "./index.css";
+
 function App() {
   const [user, setUser] = useState({});
   const location = useLocation();

@@ -1,9 +1,30 @@
-import React from "react";
+import { useState } from "react";
 import { formatRp } from "../utils/rupiah";
 import LadyCountdown from "./LadyCountdown";
 import { Row, Col, Card, Button, Table } from "antd";
+import EditFnbModal from "./EditFnbModal";
+import api from "../utils/api";
 
-function DetailsTable({ data }) {
+function DetailsTable({ data, refresh }) {
+  const [showFnbEdit, setShowFnbEdit] = useState(false);
+  const [showLadyEdit, setShowLadyEdit] = useState(false);
+  const [selectFnb, setSelectFnb] = useState(null);
+  const [selectLady, setSelectLady] = useState(null);
+
+  const handleEditFnb = async (updated) => {
+    try {
+      const res = await api.put(`/fnb/order/${updated.id}`, {
+        quantity: Number(updated?.quantity),
+      });
+      alert("Berhasil update");
+      refresh();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleEditLady = (updated) => {};
+
   const fnbColumns = [
     {
       title: "Nama",
@@ -23,7 +44,17 @@ function DetailsTable({ data }) {
     },
     {
       title: "Aksi",
-      render: () => <Button size="small">Edit</Button>,
+      render: (_, r) => (
+        <Button
+          size="small"
+          onClick={() => {
+            setSelectFnb(r);
+            setShowFnbEdit(true);
+          }}
+        >
+          Edit
+        </Button>
+      ),
     },
   ];
 
@@ -60,38 +91,48 @@ function DetailsTable({ data }) {
       render: () => <Button size="small">Edit</Button>,
     },
   ];
-  return (
-    <Col span={14}>
-      <Row gutter={[0, 16]}>
-        <Col span={24}>
-          <Card title="Food & Beverage">
-            <Table
-              sticky
-              size="small"
-              pagination={false}
-              scroll={{ y: 220 }}
-              columns={fnbColumns}
-              dataSource={data?.sessionFnbs}
-              rowKey="id"
-            />
-          </Card>
-        </Col>
 
-        <Col span={24}>
-          <Card title="Lady Companion">
-            <Table
-              sticky
-              size="small"
-              pagination={false}
-              scroll={{ y: 220 }}
-              columns={ladyColumns}
-              dataSource={data?.sessionLadies}
-              rowKey="id"
-            />
-          </Card>
-        </Col>
-      </Row>
-    </Col>
+  return (
+    <>
+      <Col span={14}>
+        <Row gutter={[0, 16]}>
+          <Col span={24}>
+            <Card title="Food & Beverage">
+              <Table
+                sticky
+                size="small"
+                pagination={false}
+                scroll={{ y: 220 }}
+                columns={fnbColumns}
+                dataSource={data?.sessionFnbs}
+                rowKey="id"
+              />
+            </Card>
+          </Col>
+
+          <Col span={24}>
+            <Card title="Lady Companion">
+              <Table
+                sticky
+                size="small"
+                pagination={false}
+                scroll={{ y: 220 }}
+                columns={ladyColumns}
+                dataSource={data?.sessionLadies}
+                rowKey="id"
+              />
+            </Card>
+          </Col>
+        </Row>
+      </Col>
+
+      <EditFnbModal
+        open={showFnbEdit}
+        onClose={() => setShowFnbEdit(false)}
+        fnb={selectFnb}
+        onSave={handleEditFnb}
+      />
+    </>
   );
 }
 

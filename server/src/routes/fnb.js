@@ -1,6 +1,7 @@
 const prisma = require("../configs/prisma");
 const route = require("express").Router();
 const AppError = require("../helpers/AppError");
+const recalculateTransaction = require("../helpers/recalculateTransaction");
 
 // Ambil daftar F&B
 route.get("/", async (req, res, next) => {
@@ -66,67 +67,83 @@ route.post("/order", async (req, res, next) => {
       }
 
       //------------------------------------------
-      // UPDATE TRANSACTION
+      // UPDATE TRANSACTION (pakai helper)
       //------------------------------------------
-      const session = await trx.session.findUnique({
-        where: { id: Number(sessionId), closed: false },
-        include: {
-          transaction: true,
-          sessionFnbs: { include: { fnb: true } },
-          sessionLadies: { include: { lady: true } },
-        },
-      });
-
-      if (!session || !session.transaction) {
-        throw new AppError(404, "Transaction tidak ditemukan");
-      }
-
-      // Ambil Room dari transaction (sudah sesuai durasi)
-      let amount = Number(session.transaction.amount);
-      let roomTax = Number(session.transaction.taxAmount);
-      let roomService = Number(session.transaction.serviceAmount);
-
-      // Hitung ulang F&B (subtotal + tax/service)
-      let fnbSubtotal = 0;
-      let fnbTax = 0;
-      let fnbService = 0;
-      session.sessionFnbs.forEach((sf) => {
-        const sub = Number(sf.unitPrice) * sf.quantity;
-        fnbSubtotal += sub;
-        fnbTax += (sub * Number(sf.fnb.taxRate)) / 100;
-        fnbService += (sub * Number(sf.fnb.serviceCharge)) / 100;
-      });
-
-      // Hitung ulang Lady (tanpa tax/service)
-      let ladyTotal = 0;
-      session.sessionLadies.forEach((sl) => {
-        ladyTotal += Number(sl.totalAmount);
-      });
-
-      // GrandTotal = Room + F&B + Lady
-      const grandTotal =
-        amount +
-        roomTax +
-        roomService +
-        fnbSubtotal +
-        fnbTax +
-        fnbService +
-        ladyTotal;
-
-      const updatedTransaction = await trx.transaction.update({
-        where: { id: session.transaction.id },
-        data: {
-          amount,
-          taxAmount: roomTax + fnbTax,
-          serviceAmount: roomService + fnbService,
-          grandTotal,
-        },
-      });
+      const updatedTransaction = await recalculateTransaction(sessionId, trx);
 
       return { sessionFnb, transaction: updatedTransaction };
     });
 
     res.status(201).json({ success: true, result });
+  } catch (error) {
+    next(error);
+  }
+});
+
+route.put("/order/:id", async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { quantity } = req.body;
+
+    const result = await prisma.$transaction(async (trx) => {
+      const sessionFnb = await trx.sessionFnb.findUnique({
+        where: { id: Number(id) },
+        include: {
+          fnb: true,
+          session: true,
+        },
+      });
+
+      if (!sessionFnb) {
+        throw new AppError(404, "Order tidak ditemukan");
+      }
+
+      const oldQty = sessionFnb.quantity;
+      const newQty = Number(quantity);
+      const diff = newQty - oldQty;
+
+      if (sessionFnb.fnb.isStock && sessionFnb.fnb.stock < diff) {
+        throw new AppError(400, "Stock F&B tidak cukup");
+      }
+
+      const updatedSessionFnb = await trx.sessionFnb.update({
+        where: {
+          id: sessionFnb.id,
+        },
+        data: {
+          quantity: newQty,
+          totalAmount: Number(sessionFnb.unitPrice) * newQty,
+        },
+      });
+
+      if (sessionFnb.fnb.isStock) {
+        await trx.fnb.update({
+          where: {
+            id: sessionFnb.fnb.id,
+          },
+          data: {
+            stock: {
+              decrement: diff,
+            },
+          },
+        });
+      }
+
+      const updatedTransaction = await recalculateTransaction(
+        sessionFnb.sessionId,
+        trx,
+      );
+
+      return {
+        sessionFnb: updatedSessionFnb,
+        transaction: updatedTransaction,
+      };
+    });
+
+    res.json({
+      success: true,
+      result,
+    });
   } catch (error) {
     next(error);
   }

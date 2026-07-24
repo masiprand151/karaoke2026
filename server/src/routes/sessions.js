@@ -1,6 +1,7 @@
 const prisma = require("../configs/prisma");
 const route = require("express").Router();
 const AppError = require("../helpers/AppError");
+const recalculateTransaction = require("../helpers/recalculateTransaction");
 
 // Check-in session
 route.post("/checkin", async (req, res, next) => {
@@ -388,84 +389,26 @@ route.post("/payment/:transactionId", async (req, res, next) => {
     next(error);
   }
 });
+
 route.post("/discount", async (req, res, next) => {
   try {
     const { transactionId, discount } = req.body;
 
     const result = await prisma.$transaction(async (trx) => {
+      // ambil sessionId dari transaction
       const trcn = await trx.transaction.findUnique({
         where: { id: Number(transactionId) },
-        include: {
-          pricing: true,
-          session: {
-            include: {
-              sessionFnbs: { include: { fnb: true } },
-              sessionLadies: { include: { lady: true } },
-            },
-          },
-        },
       });
-
       if (!trcn) throw new AppError(404, "Transaction tidak ditemukan");
 
-      // --- Hitung Room ---
-      const baseAmount = Number(trcn.amount);
-      const taxRate = Number(trcn.pricing.taxRate);
-      const serviceRate = Number(trcn.pricing.serviceCharge);
+      // panggil helper dengan diskon
+      const updatedTransaction = await recalculateTransaction(
+        trcn.sessionId,
+        trx,
+        Number(discount),
+      );
 
-      let roomTax = (baseAmount * taxRate) / 100;
-      let roomService = (baseAmount * serviceRate) / 100;
-      let roomTotal = baseAmount + roomTax + roomService;
-
-      // --- Diskon Room ---
-      const discountRate = Number(discount);
-      const discountAmount = (roomTotal * discountRate) / 100;
-      roomTotal -= discountAmount;
-
-      // Kalau diskon 100%, roomTotal = 0 → tax & service ikut nol
-      if (discountRate === 100) {
-        roomTax = 0;
-        roomService = 0;
-      }
-
-      // --- Hitung F&B ---
-      let fnbSubtotal = 0;
-      let fnbTax = 0;
-      let fnbService = 0;
-      trcn.session.sessionFnbs.forEach((sf) => {
-        const sub = Number(sf.unitPrice) * sf.quantity;
-        fnbSubtotal += sub;
-        fnbTax += (sub * Number(sf.fnb.taxRate)) / 100;
-        fnbService += (sub * Number(sf.fnb.serviceCharge)) / 100;
-      });
-
-      // --- Hitung Lady ---
-      let ladyTotal = 0;
-      trcn.session.sessionLadies.forEach((sl) => {
-        ladyTotal += Number(sl.totalAmount);
-      });
-
-      // --- Total Akhir ---
-      const totalAmount = baseAmount; // tetap simpan base room rate
-      const totalTax = roomTax + fnbTax;
-      const totalService = roomService + fnbService;
-      const grandTotal =
-        roomTotal + fnbSubtotal + ladyTotal + totalTax + totalService;
-
-      // --- Update Transaction ---
-      const newTrcn = await trx.transaction.update({
-        where: { id: trcn.id },
-        data: {
-          roomDis: discountRate,
-          roomDisAmount: discountAmount,
-          amount: totalAmount,
-          taxAmount: totalTax,
-          serviceAmount: totalService,
-          grandTotal,
-        },
-      });
-
-      return newTrcn;
+      return updatedTransaction;
     });
 
     res.json({ success: true, result });

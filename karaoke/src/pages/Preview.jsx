@@ -45,6 +45,7 @@ export default function Preview() {
   const getPreview = async () => {
     try {
       const res = await api.get(`/session/preview/${sessionId}`);
+      console.log(res);
 
       setData(res);
     } catch (error) {
@@ -329,7 +330,7 @@ export default function Preview() {
           </Card>
         </Col>
 
-        <DetailsTable data={data} />
+        <DetailsTable data={data} refresh={getPreview} />
       </Row>
 
       <Modal

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Navigate } from "react-router-dom";
 
 function Protected({ children }) {
@@ -9,6 +10,18 @@ function Protected({ children }) {
     // kalau tidak ada user, redirect ke login
     return <Navigate to="/login" replace />;
   }
+
+  useEffect(() => {
+    window.electron.on("app:closing", () => {
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+
+      // atau localStorage.clear();
+      localStorage.clear();
+
+      window.electron.appClosingDone();
+    });
+  }, []);
 
   return children;
 }

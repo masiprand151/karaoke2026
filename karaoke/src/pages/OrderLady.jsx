@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import api from "../utils/api";
-
 import {
   Row,
   Col,
@@ -16,66 +14,27 @@ import {
   Flex,
 } from "antd";
 import { formatRp } from "../utils/rupiah";
+import useLadies from "../hooks/useLadies";
 
 const { Title } = Typography;
 const { Search } = Input;
 
 function OrderLady() {
   const { sessionId } = useParams();
-  const [ladies, setLadies] = useState([]);
-  const [query, setQuery] = useState("");
-  const [show, setShow] = useState(false);
-  const [selected, setSelected] = useState({});
   const navigate = useNavigate();
+  const {
+    ladies,
+    query,
+    selected,
+    show,
+    handleMin,
+    handlePlus,
+    setShow,
+    handleOrder,
+    setSelected,
+    setQuery,
+  } = useLadies(sessionId);
 
-  const fetchLady = async (query) => {
-    try {
-      const res = await api.get(`/lady?search=${query}`);
-      setLadies(res.ladies);
-    } catch (error) {
-      console.log(error.message);
-    }
-  };
-
-  useEffect(() => {
-    fetchLady(query);
-  }, [query]);
-
-  const handleMin = () => {
-    setSelected((prev) => {
-      return {
-        ...prev,
-        quantity: prev.quantity <= 1 ? 1 : prev.quantity - 1,
-      };
-    });
-  };
-
-  const handlePlus = () => {
-    setSelected((prev) => {
-      return {
-        ...prev,
-        quantity: prev.quantity >= 10 ? 10 : prev.quantity + 1,
-      };
-    });
-  };
-
-  const handleOrder = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await api.post("/lady/order", {
-        sessionId,
-        ladyId: selected.id,
-        quantity: selected.quantity,
-      });
-
-      alert(`Berhasil order lady ${selected.name}`);
-      setShow(false);
-      setSelected({});
-      fetchLady();
-    } catch (error) {
-      alert(error.message);
-    }
-  };
   return (
     <>
       <Row gutter={16}>

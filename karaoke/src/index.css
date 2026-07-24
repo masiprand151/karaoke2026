@@ -17,3 +17,7 @@ body {
   overflow: hidden;
   background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
 }
+
+.ant-table-tbody > tr:hover {
+  cursor: pointer;
+}

@@ -23,13 +23,14 @@ const { Search } = Input;
 function OrderLady() {
   const { sessionId } = useParams();
   const [ladies, setLadies] = useState([]);
+  const [query, setQuery] = useState("");
   const [show, setShow] = useState(false);
   const [selected, setSelected] = useState({});
   const navigate = useNavigate();
 
-  const fetchLady = async () => {
+  const fetchLady = async (query) => {
     try {
-      const res = await api.get("/lady");
+      const res = await api.get(`/lady?search=${query}`);
       setLadies(res.ladies);
     } catch (error) {
       console.log(error.message);
@@ -37,8 +38,8 @@ function OrderLady() {
   };
 
   useEffect(() => {
-    fetchLady();
-  }, []);
+    fetchLady(query);
+  }, [query]);
 
   const handleMin = () => {
     setSelected((prev) => {
@@ -88,6 +89,8 @@ function OrderLady() {
                   allowClear
                   enterButton
                   style={{ width: 250 }}
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
                 />
 
                 <Button onClick={() => navigate(-1)}>Back</Button>

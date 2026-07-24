@@ -5,7 +5,14 @@ const AppError = require("../helpers/AppError");
 // Ambil daftar F&B
 route.get("/", async (req, res, next) => {
   try {
-    const fnbs = await prisma.fnb.findMany();
+    const search = req.query.search || "";
+    const fnbs = await prisma.fnb.findMany({
+      where: {
+        name: {
+          contains: search,
+        },
+      },
+    });
     res.status(200).json({
       success: true,
       fnbs,

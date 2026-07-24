@@ -5,7 +5,14 @@ const AppError = require("../helpers/AppError");
 // get all
 route.get("/", async (req, res, next) => {
   try {
-    const lady = await prisma.lady.findMany();
+    const search = req.query.search || "";
+    const lady = await prisma.lady.findMany({
+      where: {
+        name: {
+          contains: search,
+        },
+      },
+    });
 
     res.status(200).json({
       success: true,

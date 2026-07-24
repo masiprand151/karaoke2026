@@ -9,22 +9,26 @@ const { Search } = Input;
 function OrderFnb() {
   const { sessionId } = useParams();
   const [fnbs, setFnbs] = useState([]);
+  const [query, setQuery] = useState("");
   const [selectedFnb, setSelectedFnb] = useState("");
   const [quantities, setQuantities] = useState({});
   const [message, setMessage] = useState(null);
   const [cart, setCart] = useState([]);
   const navigate = useNavigate();
 
+  const getFnbs = async (query) => {
+    try {
+      const res = await api.get(`/fnb?search=${query}`);
+      setFnbs(res.fnbs);
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
+
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await api.get("/fnb");
-        setFnbs(res.fnbs);
-      } catch (error) {
-        console.log(error.message);
-      }
-    })();
-  }, []);
+    getFnbs(query);
+  }, [query]);
+
   const addToCart = (fnb) => {
     setCart((prev) => {
       const existing = prev.find((item) => item.id === fnb.id);
@@ -71,7 +75,13 @@ function OrderFnb() {
         <Card
           title="Product List"
           extra={
-            <Search placeholder="Search Product..." allowClear enterButton />
+            <Search
+              placeholder="Search Product..."
+              allowClear
+              enterButton
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
           }
           style={{ height: "100%" }}
           bodyStyle={{ padding: 0 }}

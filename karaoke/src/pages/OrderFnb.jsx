@@ -1,72 +1,28 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import api from "../utils/api";
 import { Row, Col, Card, Table, Button, Input, Space } from "antd";
-
 import { formatRp } from "../utils/rupiah";
+import useFnbs from "../hooks/useFnbs";
 const { Search } = Input;
 
 function OrderFnb() {
   const { sessionId } = useParams();
-  const [fnbs, setFnbs] = useState([]);
-  const [query, setQuery] = useState("");
-  const [selectedFnb, setSelectedFnb] = useState("");
-  const [quantities, setQuantities] = useState({});
-  const [message, setMessage] = useState(null);
-  const [cart, setCart] = useState([]);
   const navigate = useNavigate();
-
-  const getFnbs = async (query) => {
-    try {
-      const res = await api.get(`/fnb?search=${query}`);
-      setFnbs(res.fnbs);
-    } catch (error) {
-      console.log(error.message);
-    }
-  };
-
-  useEffect(() => {
-    getFnbs(query);
-  }, [query]);
-
-  const addToCart = (fnb) => {
-    setCart((prev) => {
-      const existing = prev.find((item) => item.id === fnb.id);
-      if (existing) {
-        return prev.map((item) =>
-          item.id === fnb.id ? { ...item, quantity: item.quantity + 1 } : item,
-        );
-      }
-      return [...prev, { ...fnb, quantity: 1 }];
-    });
-  };
-
-  const removeFromCart = (id) => {
-    setCart((prev) => prev.filter((item) => item.id !== id));
-  };
-
-  const confirmOrder = async (e) => {
-    e.preventDefault();
-
-    try {
-      const res = await Promise.all(
-        cart.map(async (item) => {
-          return api.post("/fnb/order", {
-            sessionId: Number(sessionId),
-            fnbId: item.id,
-            quantity: item.quantity,
-          });
-          return true;
-        }),
-      );
-      alert("Yey! berhasil order");
-      navigate(-1);
-      setCart([]);
-    } catch (error) {
-      console.log(error.message);
-      alert(error.message);
-    }
-  };
+  const {
+    fnbs,
+    query,
+    error,
+    loading,
+    cart,
+    setFnbs,
+    setQuery,
+    setError,
+    setLoading,
+    getFnbs,
+    confirmOrder,
+    addToCart,
+    removeFromCart,
+  } = useFnbs(sessionId);
 
   return (
     <Row gutter={16} style={{ height: "100%" }}>

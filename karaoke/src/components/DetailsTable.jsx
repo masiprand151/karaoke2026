@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { formatRp } from "../utils/rupiah";
 import LadyCountdown from "./LadyCountdown";
-import { Row, Col, Card, Button, Table } from "antd";
+import { Row, Col, Card, Button, Table, Flex } from "antd";
 import EditFnbModal from "./EditFnbModal";
 import api from "../utils/api";
+import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { Space } from "antd";
 
 function DetailsTable({ data, refresh }) {
   const [showFnbEdit, setShowFnbEdit] = useState(false);
@@ -43,17 +45,22 @@ function DetailsTable({ data, refresh }) {
       render: (_, r) => formatRp(r.totalAmount),
     },
     {
-      title: "Aksi",
+      title: "",
       render: (_, r) => (
-        <Button
-          size="small"
-          onClick={() => {
-            setSelectFnb(r);
-            setShowFnbEdit(true);
-          }}
-        >
-          Edit
-        </Button>
+        <Space>
+          <Button
+            size="small"
+            onClick={() => {
+              setSelectFnb(r);
+              setShowFnbEdit(true);
+            }}
+          >
+            <EditOutlined />
+          </Button>
+          <Button size="small" danger>
+            <DeleteOutlined />
+          </Button>
+        </Space>
       ),
     },
   ];
@@ -87,43 +94,48 @@ function DetailsTable({ data, refresh }) {
       ),
     },
     {
-      title: "Aksi",
-      render: () => <Button size="small">Edit</Button>,
+      title: "",
+      render: (_, r) => (
+        <Space>
+          <Button size="small">
+            <EditOutlined />
+          </Button>
+          <Button size="small" danger>
+            <DeleteOutlined />
+          </Button>
+        </Space>
+      ),
     },
   ];
 
   return (
     <>
       <Col span={14}>
-        <Row gutter={[0, 16]}>
-          <Col span={24}>
-            <Card title="Food & Beverage">
-              <Table
-                sticky
-                size="small"
-                pagination={false}
-                scroll={{ y: 220 }}
-                columns={fnbColumns}
-                dataSource={data?.sessionFnbs}
-                rowKey="id"
-              />
-            </Card>
-          </Col>
+        <Flex gap={"middle"} vertical style={{ height: "100%" }}>
+          <Card title="Food & Beverage" style={{ height: "100%" }}>
+            <Table
+              sticky
+              size="small"
+              pagination={false}
+              scroll={{ y: 220 }}
+              columns={fnbColumns}
+              dataSource={data?.sessionFnbs}
+              rowKey="id"
+            />
+          </Card>
 
-          <Col span={24}>
-            <Card title="Lady Companion">
-              <Table
-                sticky
-                size="small"
-                pagination={false}
-                scroll={{ y: 220 }}
-                columns={ladyColumns}
-                dataSource={data?.sessionLadies}
-                rowKey="id"
-              />
-            </Card>
-          </Col>
-        </Row>
+          <Card title="Lady Companion" style={{ height: "100%" }}>
+            <Table
+              sticky
+              size="small"
+              pagination={false}
+              scroll={{ y: 220 }}
+              columns={ladyColumns}
+              dataSource={data?.sessionLadies}
+              rowKey="id"
+            />
+          </Card>
+        </Flex>
       </Col>
 
       <EditFnbModal

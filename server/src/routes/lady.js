@@ -1,6 +1,7 @@
 const prisma = require("../configs/prisma");
 const route = require("express").Router();
 const AppError = require("../helpers/AppError");
+const recalculateTransaction = require("../helpers/recalculateTransaction");
 
 // get all
 route.get("/", async (req, res, next) => {
@@ -24,6 +25,7 @@ route.get("/", async (req, res, next) => {
 });
 
 // Order Lady untuk session (tanpa tax & service)
+
 route.post("/order", async (req, res, next) => {
   try {
     const { sessionId, ladyId, quantity } = req.body;
@@ -68,61 +70,9 @@ route.post("/order", async (req, res, next) => {
       });
 
       //------------------------------------------
-      // UPDATE TRANSACTION
+      // UPDATE TRANSACTION (pakai helper)
       //------------------------------------------
-      const session = await trx.session.findUnique({
-        where: { id: Number(sessionId), closed: false },
-        include: {
-          transaction: true,
-          sessionFnbs: { include: { fnb: true } },
-          sessionLadies: { include: { lady: true } },
-        },
-      });
-
-      if (!session || !session.transaction)
-        throw new AppError(404, "Transaction tidak ditemukan");
-
-      // Ambil Room dari transaction (sudah sesuai durasi)
-      let amount = Number(session.transaction.amount);
-      let roomTax = Number(session.transaction.taxAmount);
-      let roomService = Number(session.transaction.serviceAmount);
-
-      // Hitung ulang F&B (subtotal + tax/service)
-      let fnbSubtotal = 0;
-      let fnbTax = 0;
-      let fnbService = 0;
-      session.sessionFnbs.forEach((sf) => {
-        const sub = Number(sf.unitPrice) * sf.quantity;
-        fnbSubtotal += sub;
-        fnbTax += (sub * Number(sf.fnb.taxRate)) / 100;
-        fnbService += (sub * Number(sf.fnb.serviceCharge)) / 100;
-      });
-
-      // Hitung ulang Lady (tanpa tax/service)
-      let ladyTotal = 0;
-      session.sessionLadies.forEach((sl) => {
-        ladyTotal += Number(sl.totalAmount);
-      });
-
-      // GrandTotal = Room + F&B + Lady
-      const grandTotal =
-        amount +
-        roomTax +
-        roomService +
-        fnbSubtotal +
-        fnbTax +
-        fnbService +
-        ladyTotal;
-
-      const updatedTransaction = await trx.transaction.update({
-        where: { id: session.transaction.id },
-        data: {
-          amount,
-          taxAmount: roomTax + fnbTax,
-          serviceAmount: roomService + fnbService,
-          grandTotal,
-        },
-      });
+      const updatedTransaction = await recalculateTransaction(sessionId, trx);
 
       return { sessionLady, transaction: updatedTransaction };
     });

@@ -25,18 +25,18 @@ async function recalculateTransaction(sessionId, trx, discountRate = 0) {
     (roomAmount * Number(session.transaction.pricing.serviceCharge || 0)) / 100;
   let roomTotal = roomAmount + roomTax + roomService;
 
-  let discountAmount = (roomTotal * discountRate) / 100;
-  if (discountRate === 0) {
-    discountAmount = (roomTotal * Number(session.transaction.roomDis)) / 100;
-  }
-
   // --- Diskon Room ---
+  const existingDis = Number(session.transaction.roomDis || 0);
+  const totalDiscountRate = existingDis + discountRate; // jumlahkan persentase
+  const discountAmount = (roomTotal * totalDiscountRate) / 100;
+
   roomTotal -= discountAmount;
 
-  // Kalau diskon 100%, roomTax & roomService ikut nol
-  if (discountRate === 100) {
+  // Kalau diskon penuh (>=100%), nolkan Room tax/service
+  if (totalDiscountRate >= 100) {
     roomTax = 0;
     roomService = 0;
+    roomTotal = 0;
   }
 
   //---------------------------------------
@@ -74,7 +74,7 @@ async function recalculateTransaction(sessionId, trx, discountRate = 0) {
   return trx.transaction.update({
     where: { id: session.transaction.id },
     data: {
-      roomDis: discountRate,
+      roomDis: totalDiscountRate,
       roomDisAmount: discountAmount,
       amount: roomAmount, // tetap simpan base room rate
       taxAmount,

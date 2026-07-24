@@ -45,7 +45,6 @@ export default function Preview() {
   const getPreview = async () => {
     try {
       const res = await api.get(`/session/preview/${sessionId}`);
-      console.log(res);
 
       setData(res);
     } catch (error) {
@@ -417,6 +416,7 @@ export default function Preview() {
         open={showDisRoom}
         onClose={() => {
           setShowDisRoom(false);
+          getPreview();
         }}
       />
     </div>

@@ -6,6 +6,7 @@ import EditFnbModal from "./EditFnbModal";
 import api from "../utils/api";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import { Space } from "antd";
+import EditLadyModal from "./EditLadyModal";
 
 function DetailsTable({ data, refresh }) {
   const [showFnbEdit, setShowFnbEdit] = useState(false);
@@ -25,7 +26,17 @@ function DetailsTable({ data, refresh }) {
     }
   };
 
-  const handleEditLady = (updated) => {};
+  const handleEditLady = async (updated) => {
+    try {
+      const res = await api.put(`/lady/order/${updated.id}`, {
+        quantity: Number(updated?.quantity),
+      });
+      alert("Berhasil update");
+      refresh();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
 
   const fnbColumns = [
     {
@@ -97,7 +108,13 @@ function DetailsTable({ data, refresh }) {
       title: "",
       render: (_, r) => (
         <Space>
-          <Button size="small">
+          <Button
+            size="small"
+            onClick={() => {
+              setSelectLady(r);
+              setShowLadyEdit(true);
+            }}
+          >
             <EditOutlined />
           </Button>
           <Button size="small" danger>
@@ -143,6 +160,13 @@ function DetailsTable({ data, refresh }) {
         onClose={() => setShowFnbEdit(false)}
         fnb={selectFnb}
         onSave={handleEditFnb}
+      />
+
+      <EditLadyModal
+        open={showLadyEdit}
+        onClose={() => setShowLadyEdit(false)}
+        lady={selectLady}
+        onSave={handleEditLady}
       />
     </>
   );

@@ -25,7 +25,6 @@ route.get("/", async (req, res, next) => {
 });
 
 // Order Lady untuk session (tanpa tax & service)
-
 route.post("/order", async (req, res, next) => {
   try {
     const { sessionId, ladyId, quantity } = req.body;
@@ -112,6 +111,66 @@ route.patch("/:ladyId/off", async (req, res, next) => {
     });
 
     res.status(200).json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
+route.put("/order/:id", async (req, res, next) => {
+  try {
+    const { id } = req.params; // id sessionLady
+    const { quantity } = req.body;
+    const { role } = req.user;
+    const result = await prisma.$transaction(async (trx) => {
+      //------------------------------------------
+      // VALIDASI SESSION LADY
+      //------------------------------------------
+      const sessionLady = await trx.sessionLady.findUnique({
+        where: { id: Number(id) },
+        include: { lady: true },
+      });
+      if (!sessionLady) throw new AppError(404, "Order Lady tidak ditemukan");
+      // validasi jika quantity lebih kecil dari sebelumnya
+      if (Number(quantity) < Number(sessionLady.quantity) && role !== "admin") {
+        throw new AppError(400, "Akses di tolak!");
+      }
+
+      //------------------------------------------
+      // HITUNG ULANG HARGA & WAKTU
+      //------------------------------------------
+      const unitPrice = Number(sessionLady.unitPrice);
+      const totalAmount = unitPrice * Number(quantity);
+
+      // gunakan start existing dari DB
+      const start = new Date(sessionLady.start);
+      const end = new Date(start.getTime() + Number(quantity) * 3600000);
+
+      //------------------------------------------
+      // UPDATE SESSION LADY
+      //------------------------------------------
+      const updatedLadyOrder = await trx.sessionLady.update({
+        where: { id: sessionLady.id },
+        data: {
+          quantity: Number(quantity),
+          unitPrice,
+          totalAmount,
+          start, // tetap pakai start lama
+          end, // end dihitung ulang dari start lama
+        },
+      });
+
+      //------------------------------------------
+      // UPDATE TRANSACTION (pakai helper)
+      //------------------------------------------
+      const updatedTransaction = await recalculateTransaction(
+        sessionLady.sessionId,
+        trx,
+      );
+
+      return { ladyOrder: updatedLadyOrder, transaction: updatedTransaction };
+    });
+
+    res.json({ success: true, result });
   } catch (error) {
     next(error);
   }

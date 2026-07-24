@@ -84,6 +84,7 @@ route.put("/order/:id", async (req, res, next) => {
   try {
     const { id } = req.params;
     const { quantity } = req.body;
+    const { role } = req.user;
 
     const result = await prisma.$transaction(async (trx) => {
       const sessionFnb = await trx.sessionFnb.findUnique({
@@ -96,6 +97,11 @@ route.put("/order/:id", async (req, res, next) => {
 
       if (!sessionFnb) {
         throw new AppError(404, "Order tidak ditemukan");
+      }
+
+      // validasi jika quantity lebih kecil dari sebelumnya
+      if (Number(quantity) < Number(sessionFnb.quantity) && role !== "admin") {
+        throw new AppError(400, "Akses di tolak!");
       }
 
       const oldQty = sessionFnb.quantity;

@@ -311,10 +311,6 @@ route.post("/checkout/:sessionId", async (req, res, next) => {
       });
       if (!session) throw new AppError(404, "Session tidak ditemukan");
 
-      // if (!session.transaction || session.transaction.status !== "paid") {
-      //   throw new AppError(400, "Transaksi belum lunas, tidak bisa checkout");
-      // }
-
       // Reset room status ke standby
       await trx.room.update({
         where: { id: session.roomId },
@@ -393,6 +389,10 @@ route.post("/payment/:transactionId", async (req, res, next) => {
 route.post("/discount", async (req, res, next) => {
   try {
     const { transactionId, discount } = req.body;
+    const { role } = req.user;
+    if (role !== "admin") {
+      throw new AppError(400, "Akses di tolak");
+    }
 
     const result = await prisma.$transaction(async (trx) => {
       // ambil sessionId dari transaction

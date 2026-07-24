@@ -71,6 +71,21 @@ route.post("/order", async (req, res, next) => {
       //------------------------------------------
       const updatedTransaction = await recalculateTransaction(sessionId, trx);
 
+      // log
+      await trx.sessionLog.create({
+        data: {
+          sessionId: sessionFnb.sessionId,
+          transactionId: updatedTransaction.id,
+          type: "fnb",
+          targetId: sessionFnb.id,
+          action: "create",
+          oldValue: {},
+          newValue: sessionFnb,
+          role: req.user.role,
+          userId: req.user.id,
+        },
+      });
+
       return { sessionFnb, transaction: updatedTransaction };
     });
 
@@ -139,6 +154,21 @@ route.put("/order/:id", async (req, res, next) => {
         sessionFnb.sessionId,
         trx,
       );
+
+      // log
+      await trx.sessionLog.create({
+        data: {
+          sessionId: sessionFnb.sessionId,
+          transactionId: updatedTransaction.id,
+          type: "fnb",
+          targetId: sessionFnb.id,
+          action: "update",
+          oldValue: sessionFnb,
+          newValue: updatedSessionFnb,
+          role,
+          userId: req.user.id,
+        },
+      });
 
       return {
         sessionFnb: updatedSessionFnb,

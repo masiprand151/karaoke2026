@@ -10,6 +10,7 @@ import {
 
 import api from "../utils/api";
 import { getRemainingTime } from "../utils/Time";
+import { useConfirm } from "../contexts/ConfirmContext";
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
@@ -17,6 +18,7 @@ const { Title, Text } = Typography;
 function Home() {
   const [rooms, setRooms] = useState([]);
   const [error, setError] = useState(null);
+  const { showConfirm } = useConfirm();
 
   const navigate = useNavigate();
 
@@ -54,15 +56,16 @@ function Home() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleLogout = () => {
-    const isConfirm = confirm("Anda yakin ingin keluar aplikasi?");
+  const handleLogout = async () => {
+    const ok = await showConfirm({
+      description: "Anda yakin ingin keluar aplikasi?",
+    });
 
-    if (!isConfirm) return;
-
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
-
-    window.electron.closeApp();
+    if (ok) {
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      window.electron.closeApp();
+    }
   };
 
   const getCardColor = (room) => {

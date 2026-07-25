@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "../utils/api";
 import { useNavigate } from "react-router-dom";
+import { useAlert } from "../contexts/AlertContext";
 
 /**
  *
@@ -9,6 +10,7 @@ import { useNavigate } from "react-router-dom";
  */
 function useFnbs(sessionId) {
   const navigate = useNavigate();
+  const { showAlert } = useAlert();
   const [fnbs, setFnbs] = useState([]);
   const [query, setQuery] = useState("");
   const [error, setError] = useState(null);
@@ -65,12 +67,12 @@ function useFnbs(sessionId) {
           return true;
         }),
       );
-      alert("Yey! berhasil order");
+      // alert("Yey! berhasil order");
+      showAlert({ type: "success", message: "Yey! berhasil order" });
       navigate(-1);
       setCart([]);
     } catch (error) {
-      console.log(error.message);
-      alert(error.message);
+      showAlert({ type: "error", message: error.message });
     }
   };
 

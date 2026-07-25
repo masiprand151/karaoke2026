@@ -7,8 +7,10 @@ import api from "../utils/api";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import { Space } from "antd";
 import EditLadyModal from "./EditLadyModal";
+import { useAlert } from "../contexts/AlertContext";
 
 function DetailsTable({ data, refresh }) {
+  const { showAlert } = useAlert();
   const [showFnbEdit, setShowFnbEdit] = useState(false);
   const [showLadyEdit, setShowLadyEdit] = useState(false);
   const [selectFnb, setSelectFnb] = useState(null);
@@ -19,10 +21,16 @@ function DetailsTable({ data, refresh }) {
       const res = await api.put(`/fnb/order/${updated.id}`, {
         quantity: Number(updated?.quantity),
       });
-      alert("Berhasil update");
+      showAlert({
+        type: "success",
+        message: `Berhasil update order f&b ${updated.fnb.name}`,
+      });
       refresh();
     } catch (err) {
-      alert(err.message);
+      showAlert({
+        type: "success",
+        message: err.message,
+      });
     }
   };
 
@@ -31,10 +39,16 @@ function DetailsTable({ data, refresh }) {
       const res = await api.put(`/lady/order/${updated.id}`, {
         quantity: Number(updated?.quantity),
       });
-      alert("Berhasil update");
+      showAlert({
+        type: "success",
+        message: `Berhasil update order lady ${updated.lady.name}`,
+      });
       refresh();
     } catch (err) {
-      alert(err.message);
+      showAlert({
+        type: "success",
+        message: err.message,
+      });
     }
   };
 

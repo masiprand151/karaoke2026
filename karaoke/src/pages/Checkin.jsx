@@ -18,12 +18,14 @@ import {
 } from "antd";
 
 import dayjs from "dayjs";
+import { useAlert } from "../contexts/AlertContext";
 
 const { Title } = Typography;
 
 export default function Checkin() {
   const { roomId } = useParams();
   const navigate = useNavigate();
+  const { showAlert } = useAlert();
 
   const customerRef = useRef(null);
 
@@ -94,11 +96,11 @@ export default function Checkin() {
         userId: user.id,
       });
 
-      alert("Check In berhasil");
+      showAlert({ type: "success", message: "Yey! check In berhasil" });
 
       navigate(-1);
     } catch (err) {
-      alert(err.response?.data?.message || err.message);
+      showAlert({ type: "error", message: err.message });
     } finally {
       setLoading(false);
     }

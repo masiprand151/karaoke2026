@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import api from "../utils/api";
+import { useAlert } from "../contexts/AlertContext";
 
 function useLadies(sessionId) {
+  const { showAlert } = useAlert();
   const [ladies, setLadies] = useState([]);
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState({});
@@ -9,7 +11,7 @@ function useLadies(sessionId) {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const fetchLady = async (query) => {
+  const fetchLady = async (query = "") => {
     try {
       setLoading(true);
       setError(null);
@@ -54,12 +56,21 @@ function useLadies(sessionId) {
         quantity: selected.quantity,
       });
 
-      alert(`Berhasil order lady ${selected.name}`);
-      setShow(false);
-      setSelected({});
-      window.location.reload();
+      showAlert({
+        type: "success",
+        message: `Berhasil order lady ${selected.name}`,
+      });
+      setTimeout(() => {
+        setShow(false);
+        setSelected({});
+        // window.location.reload();
+        fetchLady();
+      }, 3000);
     } catch (error) {
-      alert(error.message);
+      showAlert({
+        type: "error",
+        message: error.message,
+      });
     }
   };
 

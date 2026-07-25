@@ -1,25 +1,47 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, Form, Input, Button, Typography, Alert, Flex } from "antd";
+import {
+  Card,
+  Form,
+  Input,
+  Button,
+  Typography,
+  Alert,
+  Flex,
+  Popconfirm,
+} from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import api from "../utils/api";
+import { useAlert } from "../contexts/AlertContext";
+import { useConfirm } from "../contexts/ConfirmContext";
 
 const { Title } = Typography;
 
 function Login() {
+  const navigate = useNavigate();
+  const { showAlert } = useAlert();
+  const { showConfirm } = useConfirm();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const navigate = useNavigate();
+  const handleExit = async () => {
+    const ok = await showConfirm({
+      description: "Anda yakin ingin keluar aplikasi?",
+    });
+
+    if (ok) {
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      window.electron.closeApp();
+    }
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
 
     try {
       setLoading(true);
-      setError(null);
 
       const res = await api.post("/auth/login", {
         username,
@@ -29,10 +51,10 @@ function Login() {
       window.localStorage.setItem("user", JSON.stringify(res.user));
       window.localStorage.setItem("token", res.token);
 
+      showAlert({ type: "success", message: `Welcome ${res.user.username}` });
       navigate("/");
     } catch (error) {
-      console.log(error.message);
-      setError(error.message);
+      showAlert({ type: "error", message: error.message });
     } finally {
       setLoading(false);
     }
@@ -64,15 +86,6 @@ function Login() {
           Karaoke Billing
         </Title>
 
-        {error && (
-          <Alert
-            type="error"
-            showIcon
-            message={error}
-            style={{ marginBottom: 20 }}
-          />
-        )}
-
         <Form onSubmitCapture={handleLogin} layout="vertical">
           <Form.Item label="Username">
             <Input
@@ -95,16 +108,21 @@ function Login() {
               required
             />
           </Form.Item>
+          <Flex gap={"small"} vertical>
+            <Button
+              type="primary"
+              htmlType="submit"
+              size="large"
+              block
+              loading={loading}
+            >
+              Login
+            </Button>
 
-          <Button
-            type="primary"
-            htmlType="submit"
-            size="large"
-            block
-            loading={loading}
-          >
-            Login
-          </Button>
+            <Button danger size="large" block onClick={handleExit}>
+              Exit
+            </Button>
+          </Flex>
         </Form>
       </Card>
     </Flex>

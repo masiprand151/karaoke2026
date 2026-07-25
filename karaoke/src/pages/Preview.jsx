@@ -29,6 +29,7 @@ import { formatRp } from "../utils/rupiah";
 import DiscountForm from "../components/DiscountForm";
 import LadyCountdown from "../components/LadyCountdown";
 import DetailsTable from "../components/DetailsTable";
+import { useAlert } from "../contexts/AlertContext";
 
 const { Text } = Typography;
 
@@ -41,6 +42,7 @@ export default function Preview() {
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState(null);
   const [duration, setDuration] = useState(0);
+  const { showAlert } = useAlert();
 
   const getPreview = async () => {
     try {
@@ -61,7 +63,10 @@ export default function Preview() {
       await api.post(`/session/checkout/${data?.id}`);
       navigate("/");
     } catch (error) {
-      alert(error.message);
+      showAlert({
+        type: "error",
+        message: error.message,
+      });
     }
   };
 
@@ -72,13 +77,19 @@ export default function Preview() {
         sessionId: Number(sessionId),
         addMinutes: Number(duration),
       });
-      alert("Berhail tambah free minute");
+      showAlert({
+        type: "success",
+        message: "Berhasil tambah free minute",
+      });
       getPreview();
       setDuration(0);
       setModalType(null);
       setShowModal(false);
     } catch (error) {
-      alert(error.message);
+      showAlert({
+        type: "error",
+        message: error.message,
+      });
     }
   };
 
@@ -87,15 +98,44 @@ export default function Preview() {
     try {
       const res = await api.post("/session/extend", {
         sessionId: Number(sessionId),
-        addMinutes: Number(duration) * 60,
+        extendMinutes: Number(duration) * 60,
       });
-      alert("Berhasil tambah jam");
+      showAlert({
+        type: "success",
+        message: "Berhasil update tambahan waktu",
+      });
       getPreview();
       setDuration(0);
       setModalType(null);
       setShowModal(false);
     } catch (error) {
-      alert(error.message);
+      showAlert({
+        type: "error",
+        message: error.message,
+      });
+    }
+  };
+
+  const handleDuration = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await api.put("/session/duration", {
+        sessionId: Number(sessionId),
+        durationMinutes: Number(duration) * 60,
+      });
+      showAlert({
+        type: "success",
+        message: "Berhasil update waktu",
+      });
+      getPreview();
+      setDuration(0);
+      setModalType(null);
+      setShowModal(false);
+    } catch (error) {
+      showAlert({
+        type: "error",
+        message: error.message,
+      });
     }
   };
 
@@ -169,7 +209,17 @@ export default function Preview() {
                   {data?.durationMinutes
                     ? `${data.durationMinutes / 60} Jam`
                     : "-"}
-                  <Button size="small" icon={<EditOutlined />} />
+                  <Button
+                    size="small"
+                    icon={<EditOutlined />}
+                    onClick={() => {
+                      if (data.status !== "paid") {
+                        setShowModal(true);
+                        setModalType("Duration");
+                        setDuration((data?.durationMinutes ?? 0) / 60);
+                      }
+                    }}
+                  />
                 </div>
               </Descriptions.Item>
 
@@ -190,6 +240,7 @@ export default function Preview() {
                       if (data.status !== "paid") {
                         setShowModal(true);
                         setModalType("Extend");
+                        setDuration((data?.extendMinutes ?? 0) / 60);
                       }
                     }}
                   />
@@ -359,7 +410,11 @@ export default function Preview() {
             key="submit"
             type="primary"
             onClick={
-              modalType === "Free Minute" ? handleFreeMinute : handleExtend
+              modalType === "Free Minute"
+                ? handleFreeMinute
+                : modalType === "Extend"
+                  ? handleExtend
+                  : handleDuration
             }
           >
             Submit
@@ -369,18 +424,22 @@ export default function Preview() {
         <Form layout="vertical">
           <Form.Item
             label={
-              modalType === "Extend" ? "Extend (Jam)" : "Free Minute (Menit)"
+              modalType === "Extend"
+                ? "Extend (Jam)"
+                : modalType === "Duration"
+                  ? "Duration"
+                  : "Free Minute (Menit)"
             }
           >
             <InputNumber
               style={{ width: "100%" }}
               value={duration}
               min={0}
-              max={modalType === "Extend" ? 9 : 30}
+              max={modalType === "Extend" || modalType === "Duration" ? 9 : 30}
               onChange={(value) => {
                 const v = Number(value || 0);
 
-                if (modalType === "Extend") {
+                if (modalType === "Extend" || modalType === "Duration") {
                   if (v >= 9) {
                     setDuration(9);
                   } else if (v <= 0) {
@@ -402,6 +461,7 @@ export default function Preview() {
           </Form.Item>
         </Form>
       </Modal>
+
       <MoveRoom
         open={showMvRoom}
         onClose={() => setShowMvRoom(false)}

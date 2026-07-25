@@ -115,6 +115,10 @@ route.post("/free-minute", async (req, res, next) => {
     const totalDuration = endTime - startTime;
     const remaining = Math.max(endTime - now, 0);
 
+    if (session.freeMinutes > 30) {
+      throw new AppError(400, "Penambahan waktu maksimal 30 menit");
+    }
+
     if (remaining <= 0) {
       throw new AppError(
         401,
@@ -140,107 +144,152 @@ route.post("/free-minute", async (req, res, next) => {
   }
 });
 
-route.post("/extend", async (req, res, next) => {
+route.put("/duration", async (req, res, next) => {
   try {
-    const { sessionId, addMinutes } = req.body;
+    const { sessionId, durationMinutes } = req.body;
 
-    if (addMinutes < 1 || addMinutes > 540) {
-      throw new AppError(400, "Penambahan waktu maksimal 9jam");
+    if (durationMinutes < 1 || durationMinutes > 540) {
+      throw new AppError(400, "Durasi maksimal 9 jam");
     }
 
+    // Ambil session
     const session = await prisma.session.findUnique({
       where: { id: Number(sessionId), closed: false },
-      include: {
-        transaction: { include: { pricing: true } },
-        sessionFnbs: { include: { fnb: true } },
-        sessionLadies: { include: { lady: true } },
-      },
+      include: { transaction: { include: { pricing: true } } },
     });
-
     if (!session) throw new AppError(404, "Session tidak ditemukan");
 
-    const now = Date.now();
-
-    const startTime = new Date(session.start).getTime();
-    const endTime = new Date(session.end).getTime();
-
-    const totalDuration = endTime - startTime;
-    const remaining = Math.max(endTime - now, 0);
-
-    if (remaining <= 0) {
-      throw new AppError(
-        401,
-        "Waktu awal sudah berakhir tidak bisa tambah waktu",
-      );
+    // jika pengurangan harus admin
+    if (
+      Number(durationMinutes) < session.durationMinutes &&
+      req.user.role !== "admin"
+    ) {
+      throw new AppError(401, "Akses di tolak");
     }
 
-    // Hitung end baru
-    const newEnd = new Date(session.end.getTime() + addMinutes * 60000);
-    const durationMinutes = Math.floor(
-      (newEnd.getTime() - new Date(session.start).getTime()) / 60000,
+    // Hitung end baru dari start + durationMinutes
+    const newEnd = new Date(
+      new Date(session.start).getTime() + durationMinutes * 60000,
     );
 
-    // Hitung ulang Room
+    // Hitung ulang Room amount
     const baseRate = Number(session.transaction.pricing.baseRate);
     const amount = (baseRate / 60) * durationMinutes;
-    const taxAmount =
-      (amount * Number(session.transaction.pricing.taxRate)) / 100;
-    const serviceAmount =
-      (amount * Number(session.transaction.pricing.serviceCharge)) / 100;
-    let roomTotal = amount + taxAmount + serviceAmount;
-
-    // Diskon Room (jika ada)
-    const discountRate = Number(session.transaction.roomDis || 0);
-    const discountAmount = (roomTotal * discountRate) / 100;
-    roomTotal -= discountAmount;
-
-    // Hitung ulang F&B
-    let fnbSubtotal = 0,
-      fnbTax = 0,
-      fnbService = 0;
-    session.sessionFnbs.forEach((sf) => {
-      const sub = Number(sf.unitPrice) * sf.quantity;
-      fnbSubtotal += sub;
-      fnbTax += (sub * Number(sf.fnb.taxRate)) / 100;
-      fnbService += (sub * Number(sf.fnb.serviceCharge)) / 100;
-    });
-
-    // Hitung ulang Lady
-    let ladyTotal = 0;
-    session.sessionLadies.forEach((sl) => {
-      ladyTotal += Number(sl.totalAmount);
-    });
-
-    // GrandTotal baru
-    const grandTotal =
-      roomTotal + fnbSubtotal + ladyTotal + fnbTax + fnbService;
 
     // Update session + transaction
     const updatedSession = await prisma.session.update({
       where: { id: session.id },
       data: {
         end: newEnd,
-        extendMinutes: session.extendMinutes + addMinutes,
+        durationMinutes, // simpan durasi baru
         transaction: {
-          update: {
-            amount,
-            taxAmount,
-            serviceAmount,
-            roomDisAmount: discountAmount,
-            grandTotal,
-          },
+          update: { amount },
         },
       },
       include: { transaction: true },
     });
 
-    res.json({ success: true, updatedSession });
+    // Recalculate transaction (Room, F&B, Lady, diskon)
+    const updatedTransaction = await recalculateTransaction(sessionId, prisma);
+
+    // Simpan log perubahan
+    await prisma.sessionLog.create({
+      data: {
+        sessionId: session.id,
+        transactionId: session.transaction.id,
+        type: "duration",
+        targetId: session.id,
+        action: "update",
+        oldValue: session,
+        newValue: updatedSession,
+        role: req.user.role,
+        userId: req.user.id,
+      },
+    });
+
+    res.json({ success: true, updatedSession, updatedTransaction });
   } catch (error) {
     next(error);
   }
 });
 
-// Preview transaksi untuk sebuah session
+route.post("/extend", async (req, res, next) => {
+  try {
+    const { sessionId, extendMinutes } = req.body;
+    // extendMinutes = total menit extend yang diinginkan
+
+    if (extendMinutes < 0 || extendMinutes > 540) {
+      throw new AppError(400, "Extend maksimal 9 jam");
+    }
+
+    const session = await prisma.session.findUnique({
+      where: { id: Number(sessionId), closed: false },
+      include: { transaction: { include: { pricing: true } } },
+    });
+    if (!session) throw new AppError(404, "Session tidak ditemukan");
+
+    const now = Date.now();
+    const endTime = new Date(session.end).getTime();
+    if (endTime <= now) {
+      throw new AppError(400, "Session sudah berakhir, tidak bisa extend");
+    }
+    // jika pengurangan harus admin
+    if (
+      Number(extendMinutes) < session.extendMinutes &&
+      req.user.role !== "admin"
+    ) {
+      throw new AppError(401, "Akses di tolak");
+    }
+
+    // Hitung durasi baru = durasi awal + extendMinutes
+    const durationMinutes =
+      Number(session.durationMinutes) + Number(extendMinutes);
+
+    // End baru = start + durasi total
+    const newEnd = new Date(
+      new Date(session.start).getTime() + durationMinutes * 60000,
+    );
+
+    // Hitung ulang Room amount
+    const baseRate = Number(session.transaction.pricing.baseRate);
+    const amount = (baseRate / 60) * durationMinutes;
+
+    // Update session
+    const updatedSession = await prisma.session.update({
+      where: { id: session.id },
+      data: {
+        end: newEnd,
+        extendMinutes, // simpan total extend baru
+        transaction: {
+          update: { amount },
+        },
+      },
+      include: { transaction: true },
+    });
+
+    // Recalculate transaction
+    const updatedTransaction = await recalculateTransaction(sessionId, prisma);
+    // Simpan log perubahan
+    await prisma.sessionLog.create({
+      data: {
+        sessionId: session.id,
+        transactionId: session.transaction.id,
+        type: "duration",
+        targetId: session.id,
+        action: "update",
+        oldValue: session,
+        newValue: updatedSession,
+        role: req.user.role,
+        userId: req.user.id,
+      },
+    });
+
+    res.json({ success: true, updatedSession, updatedTransaction });
+  } catch (error) {
+    next(error);
+  }
+});
+
 route.get("/preview/:sessionId", async (req, res, next) => {
   const { sessionId } = req.params;
 

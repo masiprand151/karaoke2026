@@ -50,6 +50,12 @@ enum LogType {
   fnb
   room
   discount
+  action
+  freeMinute
+  payment
+  checkout
+  checkin
+  duration
 }
 
 enum LogAction {

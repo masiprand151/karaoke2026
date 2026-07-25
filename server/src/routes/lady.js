@@ -206,4 +206,52 @@ route.put("/order/:id", async (req, res, next) => {
   }
 });
 
+route.delete("/order/:id", async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const result = await prisma.$transaction(async (trx) => {
+      const sessionLady = await trx.sessionLady.findUnique({
+        where: { id: Number(id) },
+      });
+      if (!sessionLady) throw new AppError(404, "Order Lady tidak ditemukan");
+      if (req.user.role !== "admin") throw new AppError(401, "Akses di tolak");
+
+      await trx.sessionLady.delete({ where: { id: sessionLady.id } });
+
+      // Update status Lady jadi tidak kerja
+      await trx.lady.update({
+        where: { id: sessionLady.ladyId },
+        data: { isJob: false },
+      });
+
+      // Log delete
+      await trx.sessionLog.create({
+        data: {
+          sessionId: sessionLady.sessionId,
+          transactionId: sessionLady.transactionId,
+          type: "lady",
+          targetId: sessionLady.id,
+          action: "delete",
+          oldValue: sessionLady,
+          newValue: null,
+          role: req.user.role,
+          userId: req.user.id,
+        },
+      });
+
+      const updatedTransaction = await recalculateTransaction(
+        sessionLady.sessionId,
+        trx,
+      );
+
+      return { deletedLadyId: sessionLady.id, transaction: updatedTransaction };
+    });
+
+    res.json({ success: true, result });
+  } catch (error) {
+    next(error);
+  }
+});
+
 module.exports = route;

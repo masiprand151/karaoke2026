@@ -185,4 +185,47 @@ route.put("/order/:id", async (req, res, next) => {
   }
 });
 
+// hapus order / void
+route.delete("/order/:id", async (req, res, next) => {
+  try {
+    const { id } = req.params; //sessionFnb.id
+
+    const result = await prisma.$transaction(async (trx) => {
+      const sessionFnb = await trx.sessionFnb.findUnique({
+        where: { id: Number(id) },
+      });
+      if (!sessionFnb) throw new AppError(404, "Order F&B tidak ditemukan");
+      if (req.user.role !== "admin") throw new AppError(401, "Akses di tolak");
+
+      await trx.sessionFnb.delete({ where: { id: sessionFnb.id } });
+
+      // Log delete
+      await trx.sessionLog.create({
+        data: {
+          sessionId: sessionFnb.sessionId,
+          transactionId: sessionFnb.transactionId,
+          type: "fnb",
+          targetId: sessionFnb.id,
+          action: "delete",
+          oldValue: sessionFnb,
+          newValue: null,
+          role: req.user.role,
+          userId: req.user.id,
+        },
+      });
+
+      const updatedTransaction = await recalculateTransaction(
+        sessionFnb.sessionId,
+        trx,
+      );
+
+      return { deletedFnbId: sessionFnb.id, transaction: updatedTransaction };
+    });
+
+    res.json({ success: true, result });
+  } catch (error) {
+    next(error);
+  }
+});
+
 module.exports = route;

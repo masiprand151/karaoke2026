@@ -215,6 +215,7 @@ function Payment() {
               type="primary"
               size="large"
               disabled={data?.transaction?.status === "paid"}
+              loading={loading}
             >
               {data?.transaction?.status === "paid" ? "Paid" : "Pay Now"}
             </Button>

@@ -114,7 +114,7 @@ export default function Checkin() {
             Check In - {room?.name}
           </Title>
 
-          <Form layout="vertical">
+          <Form onSubmitCapture={handleSubmit} layout="vertical">
             <Form.Item label="Package">
               <Select value={form.pricingId} onChange={handlePricingChange}>
                 {room?.pricings.map((pricing) => (
@@ -168,15 +168,9 @@ export default function Checkin() {
               }}
             >
               <Button onClick={() => navigate(-1)}>Cancel</Button>
-              {!loading ? (
-                <Button type="primary" onClick={handleSubmit}>
-                  Check In
-                </Button>
-              ) : (
-                <Button type="primary" loading iconPlacement="end">
-                  Loading
-                </Button>
-              )}
+              <Button type="primary" loading={loading} htmlType="submit">
+                Check In
+              </Button>
             </Space>
           </Form>
         </Card>

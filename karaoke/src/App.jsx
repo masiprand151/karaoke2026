@@ -11,6 +11,7 @@ import Payment from "./pages/Payment";
 
 import "./index.css";
 import User from "./pages/admin/User";
+import Lady from "./pages/admin/Lady";
 
 function App() {
   const [user, setUser] = useState({});
@@ -82,6 +83,14 @@ function App() {
             element={
               <Protected>
                 <User />
+              </Protected>
+            }
+          />
+          <Route
+            path="lady"
+            element={
+              <Protected>
+                <Lady />
               </Protected>
             }
           />

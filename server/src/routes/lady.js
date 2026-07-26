@@ -24,6 +24,37 @@ route.get("/", async (req, res, next) => {
   }
 });
 
+// managemen
+route.post("/", async (req, res, next) => {
+  try {
+    const { name, basePrice } = req.body;
+
+    const lady = await prisma.lady.findUnique({
+      where: {
+        name,
+      },
+    });
+
+    if (lady) {
+      throw new AppError(400, "Nama lady sudah di gunakan!");
+    }
+
+    await prisma.lady.create({
+      data: {
+        name,
+        basePrice: Number(basePrice),
+      },
+    });
+
+    res.status(401).json({
+      success: true,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// transactin
 // Order Lady untuk session (tanpa tax & service)
 route.post("/order", async (req, res, next) => {
   try {

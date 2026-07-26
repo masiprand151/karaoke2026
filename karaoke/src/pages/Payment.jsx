@@ -13,12 +13,17 @@ import {
   Descriptions,
   Divider,
   Tag,
+  Flex,
 } from "antd";
+import { useAlert } from "../contexts/AlertContext";
+import { useConfirm } from "../contexts/ConfirmContext";
 
 const { Title, Text } = Typography;
 
 function Payment() {
   const { sessionId } = useParams();
+  const { showAlert } = useAlert();
+  const { showConfirm } = useConfirm();
   const [method, setMethod] = useState("cash");
   const [amount, setAmount] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -30,7 +35,6 @@ function Payment() {
       const res = await api.get(`/session/preview/${sessionId}`);
 
       setData(res);
-      console.log(res);
     } catch (error) {
       console.log(error.message);
     }
@@ -45,6 +49,10 @@ function Payment() {
   }, [data]);
 
   const handleSubmit = async (e) => {
+    const ok = await showConfirm({
+      description: `Anda ingin melakukan pembayaran sebesar: ${formatRp(amount)}?, dengan metode: ${method}`,
+    });
+    if (!ok) return;
     try {
       const transactionId = data?.transaction.id;
       const res = await api.post(`/session/payment/${transactionId}`, {
@@ -52,10 +60,16 @@ function Payment() {
         amount,
       });
 
-      alert("Payment success");
+      showAlert({
+        type: "success",
+        message: "Pembayaran berhasil",
+      });
       navigate(`/preview/${sessionId}`);
     } catch (error) {
-      alert(error.message);
+      showAlert({
+        type: "error",
+        message: error.message,
+      });
     }
   };
 
@@ -74,7 +88,16 @@ function Payment() {
           width: 600,
         }}
       >
-        <Title level={3}>Payment</Title>
+        <Flex align="center" justify="space-between">
+          <Title level={3}>Payment</Title>
+          <p
+            style={{
+              color: "#f61238",
+            }}
+          >
+            Priksa ulang apakah jumlah/total sudah benar!
+          </p>
+        </Flex>
 
         <Descriptions bordered column={1} size="small">
           <Descriptions.Item label="Customer">
@@ -144,7 +167,7 @@ function Payment() {
             level={4}
             style={{
               margin: 0,
-              color: "#1677ff",
+              color: "#f61238",
             }}
           >
             {formatRp(data?.grandTotal)}
@@ -155,6 +178,7 @@ function Payment() {
           <Form.Item label="Payment Method">
             <Select value={method} onChange={setMethod}>
               <Select.Option value="cash">Cash</Select.Option>
+              <Select.Option value="transfer">Transfer</Select.Option>
 
               <Select.Option value="debit">Debit</Select.Option>
 

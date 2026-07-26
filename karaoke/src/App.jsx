@@ -10,6 +10,7 @@ import OrderLady from "./pages/OrderLady";
 import Payment from "./pages/Payment";
 
 import "./index.css";
+import User from "./pages/admin/User";
 
 function App() {
   const [user, setUser] = useState({});
@@ -74,6 +75,17 @@ function App() {
             </Protected>
           }
         />
+        {/* Admin */}
+        <Route path="/admin">
+          <Route
+            path="user"
+            element={
+              <Protected>
+                <User />
+              </Protected>
+            }
+          />
+        </Route>
       </Routes>
     </>
   );

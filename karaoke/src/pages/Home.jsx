@@ -1,11 +1,29 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Layout, Typography, Row, Col, Card, Button, Tag, Space } from "antd";
+import {
+  Layout,
+  Typography,
+  Row,
+  Col,
+  Card,
+  Button,
+  Tag,
+  Space,
+  Menu,
+  Flex,
+} from "antd";
 import {
   LogoutOutlined,
   ClockCircleOutlined,
   UserOutlined,
   HomeOutlined,
+  AntDesignOutlined,
+  MailOutlined,
+  AppstoreOutlined,
+  ShoppingOutlined,
+  TeamOutlined,
+  CustomerServiceOutlined,
+  ReloadOutlined,
 } from "@ant-design/icons";
 
 import api from "../utils/api";
@@ -15,10 +33,49 @@ import { useConfirm } from "../contexts/ConfirmContext";
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
 
+const menuItems = [
+  {
+    label: "Room",
+    key: "/admin/room",
+    icon: <HomeOutlined />, // paket layanan
+  },
+  {
+    label: "Packages",
+    key: "/admin/package",
+    icon: <AppstoreOutlined />, // paket layanan
+  },
+  {
+    label: "Products",
+    key: "/admin/product",
+    icon: <ShoppingOutlined />, // produk/F&B
+  },
+  {
+    label: "Ladies",
+    key: "/admin/lady",
+    icon: <TeamOutlined />, // lady companion
+  },
+  {
+    label: "Songs",
+    key: "/admin/song",
+    icon: <CustomerServiceOutlined />, // musik/lagu
+  },
+  {
+    label: "User",
+    key: "/admin/user",
+    icon: <UserOutlined />, // manajemen user
+  },
+  {
+    label: "Reload",
+    key: "reload",
+    icon: <ReloadOutlined />, // manajemen user
+  },
+];
+
 function Home() {
   const [rooms, setRooms] = useState([]);
   const [error, setError] = useState(null);
   const { showConfirm } = useConfirm();
+  const [current, setCurrent] = useState("mail");
 
   const navigate = useNavigate();
 
@@ -30,6 +87,14 @@ function Home() {
       setRooms(res.rooms);
     } catch (err) {
       setError(err.message);
+    }
+  };
+
+  const onClickMenu = (e) => {
+    if (e.key === "reload") {
+      window.location.reload();
+    } else {
+      navigate(e.key);
     }
   };
 
@@ -98,13 +163,29 @@ function Home() {
           paddingInline: 24,
         }}
       >
-        <Title level={3} style={{ margin: 0 }}>
-          🎤 Karaoke Billing
+        <Title level={3} style={{ margin: 0, color: "white" }}>
+          <AntDesignOutlined /> Karaoke Billing
         </Title>
+        <Flex gap={5} justify="center" align="center">
+          <Menu
+            onClick={onClickMenu}
+            selectedKeys={[current]}
+            mode="horizontal"
+            items={menuItems}
+            style={{
+              background: "transparent",
+            }}
+          />
 
-        <Button danger icon={<LogoutOutlined />} onClick={handleLogout}>
-          Logout
-        </Button>
+          <Button
+            type="primary"
+            danger
+            icon={<LogoutOutlined />}
+            onClick={handleLogout}
+          >
+            Logout
+          </Button>
+        </Flex>
       </Header>
 
       <Content style={{ padding: 24 }}>

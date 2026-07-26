@@ -1,3 +1,0 @@
--- AlterTable
-ALTER TABLE `transaction` ADD COLUMN `roomDis` DECIMAL(5, 2) NOT NULL DEFAULT 0,
-    ADD COLUMN `roomDisAmount` DECIMAL(12, 2) NOT NULL DEFAULT 0;

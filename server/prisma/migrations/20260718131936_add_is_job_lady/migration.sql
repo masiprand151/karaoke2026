@@ -1,2 +1,0 @@
--- AlterTable
-ALTER TABLE `lady` ADD COLUMN `isJob` BOOLEAN NOT NULL DEFAULT false;

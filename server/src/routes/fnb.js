@@ -228,4 +228,46 @@ route.delete("/order/:id", async (req, res, next) => {
   }
 });
 
+// Tambah purchase + update stok
+route.post("/purchase", async (req, res) => {
+  try {
+    const { fnbId, supplierName, invoiceNumber, quantity, unitPrice, userId } =
+      req.body;
+
+    const totalAmount = unitPrice * quantity;
+
+    const purchase = await prisma.$transaction(async (tx) => {
+      // simpan purchase
+      const newPurchase = await tx.purchase.create({
+        data: {
+          fnbId,
+          supplierName,
+          invoiceNumber,
+          quantity,
+          unitPrice,
+          totalAmount,
+          createdById: userId,
+        },
+      });
+
+      // update stok Fnb
+      await tx.fnb.update({
+        where: { id: fnbId },
+        data: {
+          stock: { increment: quantity },
+        },
+      });
+
+      return newPurchase;
+    });
+
+    res.json({ success: true, data: purchase });
+  } catch (err) {
+    console.error(err);
+    res
+      .status(500)
+      .json({ success: false, message: "Gagal menambah purchase" });
+  }
+});
+
 module.exports = route;

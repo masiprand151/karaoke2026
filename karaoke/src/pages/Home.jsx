@@ -46,7 +46,7 @@ const menuItems = [
   },
   {
     label: "Products",
-    key: "/admin/product",
+    key: "/admin/fnb",
     icon: <ShoppingOutlined />, // produk/F&B
   },
   {

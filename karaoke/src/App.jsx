@@ -12,6 +12,7 @@ import Payment from "./pages/Payment";
 import "./index.css";
 import User from "./pages/admin/User";
 import Lady from "./pages/admin/Lady";
+import Fnb from "./pages/admin/Fnb";
 
 function App() {
   const [user, setUser] = useState({});
@@ -91,6 +92,14 @@ function App() {
             element={
               <Protected>
                 <Lady />
+              </Protected>
+            }
+          />
+          <Route
+            path="fnb"
+            element={
+              <Protected>
+                <Fnb />
               </Protected>
             }
           />

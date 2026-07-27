@@ -77,6 +77,8 @@ model User {
   updatedAt DateTime @updatedAt
   deletedAt DateTime?
   sessions Session[]
+
+  purchases Purchase[]
 }
 
 //////////////////////////////////////////////////////
@@ -207,7 +209,28 @@ model Fnb {
   sessionFnbs   SessionFnb[]
   pricingFnbs   PricingFnb[]
   deletedAt DateTime?
+
+  purchases Purchase[]
 }
+
+model Purchase {
+  id            Int       @id @default(autoincrement())
+
+  fnbId         Int
+  fnb           Fnb       @relation(fields: [fnbId], references: [id])
+
+  supplierName  String
+  invoiceNumber String    // nomor nota dari supplier
+  quantity      Int
+  unitPrice     Decimal   @db.Decimal(12,2)
+  totalAmount   Decimal   @db.Decimal(12,2)
+
+  createdById   Int
+  createdBy     User      @relation(fields: [createdById], references: [id])
+
+  createdAt     DateTime  @default(now())
+}
+
 
 //////////////////////////////////////////////////////
 // SESSION FNB

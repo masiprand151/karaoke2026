@@ -12,6 +12,7 @@ route.get("/", async (req, res, next) => {
         name: {
           contains: search,
         },
+        deletedAt: null,
       },
     });
 
@@ -25,11 +26,15 @@ route.get("/", async (req, res, next) => {
 });
 
 // managemen
+// create new lADY
 route.post("/", async (req, res, next) => {
   try {
     const { name, basePrice } = req.body;
+    if (req.user.role !== "admin") {
+      throw new AppError(401, "Akses di tolak!");
+    }
 
-    const lady = await prisma.lady.findUnique({
+    const lady = await prisma.lady.findFirst({
       where: {
         name,
       },
@@ -46,7 +51,80 @@ route.post("/", async (req, res, next) => {
       },
     });
 
-    res.status(401).json({
+    res.status(200).json({
+      success: true,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+route.put("/:ladyId", async (req, res, next) => {
+  try {
+    const { ladyId } = req.params;
+    const { name, basePrice, isJob } = req.body;
+    if (req.user.role !== "admin") {
+      throw new AppError(401, "Akses di tolak!");
+    }
+
+    const lady = await prisma.lady.findUnique({
+      where: {
+        id: Number(ladyId),
+      },
+    });
+
+    if (!lady) {
+      throw new AppError(404, "Lady tidak di temukan");
+    }
+
+    const data = {};
+    if (name) data.name = name;
+    if (basePrice) data.basePrice = Number(basePrice);
+    data.isJob = isJob;
+
+    await prisma.lady.update({
+      where: {
+        id: lady.id,
+      },
+      data,
+    });
+
+    res.status(200).json({
+      success: true,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// delete lady
+route.delete("/:ladyId", async (req, res, next) => {
+  try {
+    const { ladyId } = req.params;
+    if (req.user.role !== "admin") {
+      throw new AppError(401, "Akses di tolak!");
+    }
+
+    const lady = await prisma.lady.findUnique({
+      where: {
+        id: Number(ladyId),
+      },
+    });
+
+    if (!lady) {
+      throw new AppError(404, "Lady tidak di temukan");
+    }
+
+    await prisma.lady.update({
+      where: {
+        id: lady.id,
+      },
+      data: {
+        deletedAt: new Date(),
+      },
+    });
+
+    res.status(200).json({
       success: true,
     });
   } catch (error) {

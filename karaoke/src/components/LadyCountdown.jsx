@@ -19,7 +19,7 @@ function LadyCountdown({ start, end, ladyId, isJob }) {
       const now = new Date().getTime();
       const diff = endTime - now;
 
-      if (diff <= 0) {
+      if (diff <= 0 || !isJob) {
         clearInterval(interval);
         // auto update status
         if (isJob) {

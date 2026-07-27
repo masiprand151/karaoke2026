@@ -17,6 +17,7 @@ import {
   Space,
   Tag,
   InputNumber,
+  Switch,
 } from "antd";
 import {
   DeleteOutlined,
@@ -27,15 +28,15 @@ import {
 } from "@ant-design/icons";
 import { useAlert } from "../../contexts/AlertContext";
 import InputPrice from "../../components/InputPrice";
+import api from "../../utils/api";
 
 const { Title } = Typography;
 const { Search } = Input;
 
 export default function Lady() {
-  const { ladies, query, setQuery } = useLadies();
+  const { ladies, query, setQuery, getLadies } = useLadies();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingLady, setEditingLady] = useState(null);
-  const [price, setPrice] = useState(0);
   const [form] = Form.useForm();
   const navigate = useNavigate();
   const { showAlert } = useAlert();
@@ -53,10 +54,50 @@ export default function Lady() {
   };
 
   const handleSave = async (v) => {
-    console.log(form.getFieldValue());
+    try {
+      const value = form.getFieldValue();
+      if (editingLady) {
+        // update
+        await api.put(`/lady/${editingLady.id}`, value);
+        showAlert({
+          type: "success",
+          message: "Berhasil update lady",
+        });
+      } else {
+        // create
+        await api.post("/lady", value);
+        showAlert({
+          type: "success",
+          message: "Berhasil tambah lady",
+        });
+      }
+      setIsModalOpen(false);
+      setEditingLady(null);
+      getLadies();
+    } catch (error) {
+      showAlert({
+        type: "error",
+        message: error.message,
+      });
+    }
   };
 
-  const handleDelete = async (id) => {};
+  const handleDelete = async (id) => {
+    try {
+      await api.delete(`/lady/${id}`);
+
+      showAlert({
+        type: "success",
+        message: "Berhasil delete lady",
+      });
+      getLadies();
+    } catch (error) {
+      showAlert({
+        type: "error",
+        message: error.message,
+      });
+    }
+  };
 
   return (
     <Row
@@ -121,9 +162,7 @@ export default function Lady() {
                       color={"success"}
                       icon={<SyncOutlined spin />}
                       variant={"solid"}
-                    >
-                      jj
-                    </Tag>
+                    ></Tag>
                   ) : (
                     <Tag
                       key={"error"}
@@ -136,17 +175,17 @@ export default function Lady() {
               {
                 title: "",
                 key: "action",
-                render: (_, r) => (
+                render: (_, row) => (
                   <Space>
                     <Button
                       icon={<EditOutlined />}
-                      onClick={() => openModal(r)}
+                      onClick={() => openModal(row)}
                     >
                       Edit
                     </Button>
                     <Popconfirm
                       title="Yakin hapus user ini?"
-                      onConfirm={() => handleDelete(r.id)}
+                      onConfirm={() => handleDelete(row.id)}
                     >
                       <Button danger icon={<DeleteOutlined />}>
                         Hapus
@@ -184,6 +223,15 @@ export default function Lady() {
           >
             <InputPrice />
           </Form.Item>
+          {editingLady && (
+            <Form.Item name={"isJob"} label="Status">
+              <Switch
+                checkedChildren="On"
+                unCheckedChildren="Off"
+                defaultChecked
+              />
+            </Form.Item>
+          )}
         </Form>
       </Modal>
     </Row>

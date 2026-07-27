@@ -7,13 +7,26 @@ const recalculateTransaction = require("../helpers/recalculateTransaction");
 route.get("/", async (req, res, next) => {
   try {
     const search = req.query.search || "";
+
+    const categoryMap = ["food", "drink", "snack", "other"];
+    const normalized = search.toLowerCase();
+
     const fnbs = await prisma.fnb.findMany({
       where: {
-        name: {
-          contains: search,
-        },
+        deletedAt: null,
+        OR: [
+          {
+            name: {
+              contains: search,
+            },
+          },
+          categoryMap.includes(normalized)
+            ? { category: normalized } // cocokkan enum
+            : {}, // kalau bukan kategori valid, kosongkan
+        ],
       },
     });
+
     res.status(200).json({
       success: true,
       fnbs,
@@ -23,6 +36,143 @@ route.get("/", async (req, res, next) => {
   }
 });
 
+// managemen
+route.post("/", async (req, res, next) => {
+  try {
+    const { category, name, basePrice, isStock, taxRate, serviceCharge } =
+      req.body;
+
+    const fnbCount = await prisma.fnb.count({
+      where: {
+        name,
+        deletedAt: null,
+      },
+    });
+
+    if (fnbCount > 0) {
+      throw new AppError(400, "Product sudah ada!");
+    }
+
+    const validCotegory = ["food", "drink", "snack", "other"];
+    if (!category || !validCotegory.includes(category))
+      throw AppError(400, "Category tidak valid");
+
+    await prisma.fnb.create({
+      data: {
+        name,
+        category,
+        stock: 0,
+        isStock,
+        basePrice: Number(basePrice),
+        taxRate: Number(taxRate),
+        serviceCharge: Number(serviceCharge),
+      },
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
+route.put("/:fnbId", async (req, res, next) => {
+  try {
+    const { fnbId } = req.params;
+    const {
+      category,
+      name,
+      basePrice,
+      taxRate,
+      serviceCharge,
+      isStock,
+      isPromo,
+      stock,
+      description,
+    } = req.body;
+
+    if (req.user.role !== "admin") {
+      throw new AppError(401, "Akses di tolak!");
+    }
+
+    const fnb = await prisma.fnb.findUnique({
+      where: {
+        id: Number(fnbId),
+      },
+    });
+
+    if (!fnb || fnb.deletedAt !== null) {
+      throw new AppError(404, "Product tidak di temukan!");
+    }
+
+    const data = {
+      name,
+      basePrice,
+      taxRate,
+      serviceCharge,
+      isStock,
+      stock,
+      isPromo,
+    };
+    const validCotegory = ["food", "drink", "snack", "other"];
+    if (!category || !validCotegory.includes(category))
+      throw AppError(400, "Category tidak valid");
+    data.category = category;
+
+    if (Number(stock) !== Number(fnb.stock)) {
+      if (!description || description.trim() === "") {
+        throw new AppError(
+          400,
+          "Juka ingin melakukan perubahan stock, description harus di isi!",
+        );
+      }
+      data.description = description;
+    }
+
+    await prisma.fnb.update({
+      where: {
+        id: Number(fnb.id),
+      },
+      data,
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
+route.delete("/:fnbId", async (req, res, next) => {
+  try {
+    const { fnbId } = req.params;
+
+    const fnb = await prisma.fnb.findUnique({
+      where: {
+        id: Number(fnbId),
+      },
+    });
+
+    if (!fnb || fnb.deletedAt !== null) {
+      throw new AppError(404, "Product tidak di temukan");
+    }
+
+    await prisma.fnb.update({
+      where: {
+        id: Number(fnb.id),
+      },
+      data: {
+        deletedAt: new Date(),
+      },
+    });
+
+    res.json({
+      success: true,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// order
 route.post("/order", async (req, res, next) => {
   try {
     const { sessionId, fnbId, quantity } = req.body;
@@ -231,20 +381,22 @@ route.delete("/order/:id", async (req, res, next) => {
 // Tambah purchase + update stok
 route.post("/purchase", async (req, res) => {
   try {
-    const { fnbId, supplierName, invoiceNumber, quantity, unitPrice, userId } =
+    const { fnbId, supplierName, invoiceNumber, quantity, unitPrice } =
       req.body;
 
-    const totalAmount = unitPrice * quantity;
+    const userId = req.user.id;
+
+    const totalAmount = Number(unitPrice) * Number(quantity);
 
     const purchase = await prisma.$transaction(async (tx) => {
       // simpan purchase
       const newPurchase = await tx.purchase.create({
         data: {
-          fnbId,
+          fnbId: Number(fnbId),
           supplierName,
           invoiceNumber,
-          quantity,
-          unitPrice,
+          quantity: Number(quantity),
+          unitPrice: Number(unitPrice),
           totalAmount,
           createdById: userId,
         },
@@ -254,7 +406,7 @@ route.post("/purchase", async (req, res) => {
       await tx.fnb.update({
         where: { id: fnbId },
         data: {
-          stock: { increment: quantity },
+          stock: { increment: Number(quantity) },
         },
       });
 

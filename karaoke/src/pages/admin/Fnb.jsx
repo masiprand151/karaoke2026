@@ -17,6 +17,7 @@ import {
   Tag,
   InputNumber,
   Switch,
+  Select,
 } from "antd";
 import {
   DeleteOutlined,
@@ -31,12 +32,13 @@ import InputPrice from "../../components/InputPrice";
 import api from "../../utils/api";
 import useFnbs from "../../hooks/useFnbs";
 import PurchaseForm from "../../components/PurchaseForm";
+import InputNumberic from "../../components/InputNumberic";
 
 const { Title } = Typography;
-const { Search } = Input;
+const { Search, TextArea } = Input;
 
 export default function Fnb() {
-  const { fnbs, query, setQuery, getFnb } = useFnbs();
+  const { fnbs, query, setQuery, getFnbs } = useFnbs();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPurcase, setIsPurcase] = useState(false);
   const [selected, setSelected] = useState(null);
@@ -62,20 +64,24 @@ export default function Fnb() {
       const value = form.getFieldValue();
       if (editingFnb) {
         // update
+        await api.put(`/fnb/${editingFnb.id}`, value);
         showAlert({
           type: "success",
           message: "Berhasil update fnb",
         });
       } else {
         // create
+        await api.post("/fnb", value);
         showAlert({
           type: "success",
           message: "Berhasil tambah fnb",
         });
       }
-      setIsModalOpen(false);
-      setEditingFnb(null);
-      getFnb();
+      setTimeout(() => {
+        setIsModalOpen(false);
+        setEditingFnb(null);
+        window.location.reload();
+      }, 2000);
     } catch (error) {
       showAlert({
         type: "error",
@@ -86,11 +92,34 @@ export default function Fnb() {
 
   const handleDelete = async (id) => {
     try {
+      await api.delete(`/fnb/${id}`);
       showAlert({
         type: "success",
         message: "Berhasil delete fnb",
       });
-      getFnb();
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    } catch (error) {
+      showAlert({
+        type: "error",
+        message: error.message,
+      });
+    }
+  };
+
+  const handleSavePurcase = async (value) => {
+    try {
+      const res = await api.post("/fnb/purchase", value);
+      showAlert({
+        type: "success",
+        message: `Stock ${value.name} berhasil di perbarui`,
+      });
+      setTimeout(() => {
+        setIsPurcase(false);
+        setSelected(null);
+        window.location.reload();
+      }, 2000);
     } catch (error) {
       showAlert({
         type: "error",
@@ -150,14 +179,17 @@ export default function Fnb() {
                 dataIndex: "name",
               },
               {
+                title: "Category",
+                dataIndex: "category",
+              },
+              {
                 title: "Harga",
                 render: (_, row) => formatRp(row.basePrice),
               },
               {
                 title: "Stock",
                 dataIndex: "stock",
-
-                align: "center",
+                // align: "center",
               },
               {
                 title: "Aksi",
@@ -170,25 +202,19 @@ export default function Fnb() {
                       onClick={() => {
                         setIsPurcase(true);
                         setSelected(row);
-                        console.log(row);
                       }}
-                    >
-                      Purcase
-                    </Button>
+                      disabled={!row.isStock}
+                    />
                     <Button
                       size="small"
                       icon={<EditOutlined />}
                       onClick={() => openModal(row)}
-                    >
-                      Edit
-                    </Button>
+                    />
                     <Popconfirm
-                      title="Yakin hapus user ini?"
+                      title="Yakin hapus product ini?"
                       onConfirm={() => handleDelete(row.id)}
                     >
-                      <Button danger size="small" icon={<DeleteOutlined />}>
-                        Hapus
-                      </Button>
+                      <Button danger size="small" icon={<DeleteOutlined />} />
                     </Popconfirm>
                   </Space>
                 ),
@@ -203,8 +229,17 @@ export default function Fnb() {
         open={isModalOpen}
         onOk={handleSave}
         onCancel={() => setIsModalOpen(false)}
+        centered
       >
-        <Form form={form} layout="vertical">
+        <Form
+          form={form}
+          layout="vertical"
+          initialValues={{
+            category: "other", // default kategori
+            taxRate: 10,
+            serviceCharge: 5,
+          }}
+        >
           <Form.Item
             name="name"
             label="Name"
@@ -222,9 +257,50 @@ export default function Fnb() {
           >
             <InputPrice />
           </Form.Item>
-          <Form.Item name={"stock"} label="stock">
-            <Input disabled />
+
+          <Form.Item name={"category"} label="Kategori">
+            <Select
+              options={[
+                { value: "other", label: "Other" },
+                {
+                  value: "food",
+                  label: "Food",
+                },
+                {
+                  value: "drink",
+                  label: "Drink",
+                },
+                {
+                  value: "snack",
+                  label: "Snack",
+                },
+              ]}
+            />
           </Form.Item>
+
+          {editingFnb && (
+            <>
+              <Form.Item name={"stock"} label="Stock">
+                <InputNumberic />
+              </Form.Item>
+
+              <Form.Item name={"description"} label="Description">
+                <TextArea
+                  placeholder="Controlled autosize"
+                  autoSize={{ minRows: 2, maxRows: 2 }}
+                />
+              </Form.Item>
+            </>
+          )}
+
+          <Flex justify="space-between">
+            <Form.Item name={"taxRate"} label="Tax">
+              <InputNumberic />
+            </Form.Item>
+            <Form.Item initialValue={5} name={"serviceCharge"} label="Service">
+              <InputNumberic />
+            </Form.Item>
+          </Flex>
 
           <Form.Item name={"isStock"} label="Include Stock">
             <Switch
@@ -240,6 +316,7 @@ export default function Fnb() {
         open={isPurcase}
         onCancel={() => setIsPurcase(false)}
         data={selected}
+        onSave={handleSavePurcase}
       />
     </Row>
   );

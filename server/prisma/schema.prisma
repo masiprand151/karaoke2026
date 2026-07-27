@@ -29,6 +29,14 @@ enum TransactionStatus {
   paid
   cancel
 }
+
+enum FnbCategory {
+  food
+  drink
+  snack
+  other
+}
+
 enum RoomStatus {
   used
   maintenent
@@ -197,6 +205,7 @@ model Fnb {
 
   name          String
   description   String?
+  category FnbCategory @default(other)
 
   basePrice     Decimal    @db.Decimal(12,2)
 

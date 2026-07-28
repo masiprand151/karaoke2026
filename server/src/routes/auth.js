@@ -13,8 +13,8 @@ route.post("/login", async (req, res, next) => {
       throw new AppError(400, "Username end password required");
     }
 
-    const user = await prisma.user.findUnique({
-      where: { username },
+    const user = await prisma.user.findFirst({
+      where: { username, deletedAt: null },
     });
 
     // validasi

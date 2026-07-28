@@ -167,15 +167,17 @@ function Home() {
           <AntDesignOutlined /> Karaoke Billing
         </Title>
         <Flex gap={5} justify="center" align="center">
-          <Menu
-            onClick={onClickMenu}
-            selectedKeys={[current]}
-            mode="horizontal"
-            items={menuItems}
-            style={{
-              background: "transparent",
-            }}
-          />
+          {JSON.parse(localStorage.getItem("user"))?.role === "admin" && (
+            <Menu
+              onClick={onClickMenu}
+              selectedKeys={[current]}
+              mode="horizontal"
+              items={menuItems}
+              style={{
+                background: "transparent",
+              }}
+            />
+          )}
 
           <Button
             type="primary"

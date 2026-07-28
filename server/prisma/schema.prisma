@@ -78,7 +78,7 @@ enum LogAction {
 
 model User {
   id       Int      @id @default(autoincrement())
-  username String   @unique
+  username String   
   password String
   role     UserRole
   createdAt DateTime @default(now())

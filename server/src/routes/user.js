@@ -27,20 +27,23 @@ route.get("/", async (req, res, next) => {
   }
 });
 
-// create new user
 route.post("/", async (req, res, next) => {
   try {
     const { username, password, role } = req.body;
 
+    // hanya admin boleh tambah user
     if (req.user.role !== "admin") {
-      throw new AppError(401, "Akses di tolak");
+      throw new AppError(401, "Akses ditolak");
     }
 
-    // cek username unik
-    const user = await prisma.user.findUnique({
-      where: { username },
+    // cek username unik (hanya user aktif)
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        username,
+        deletedAt: null,
+      },
     });
-    if (user) {
+    if (existingUser) {
       throw new AppError(400, "User sudah ada!");
     }
 
@@ -51,18 +54,18 @@ route.post("/", async (req, res, next) => {
     }
 
     // hash password
-    const pw = await bcrypt.hash(password, 10);
+    const hashedPw = await bcrypt.hash(password, 10);
 
     // simpan user baru
     const newUser = await prisma.user.create({
       data: {
         username,
-        password: pw,
+        password: hashedPw,
         role,
       },
     });
 
-    res.json({ success: true, newUser });
+    res.status(201).json({ success: true, data: newUser });
   } catch (error) {
     next(error);
   }

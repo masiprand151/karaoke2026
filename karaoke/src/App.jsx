@@ -13,6 +13,7 @@ import "./index.css";
 import User from "./pages/admin/User";
 import Lady from "./pages/admin/Lady";
 import Fnb from "./pages/admin/Fnb";
+import Package from "./pages/admin/Package";
 
 function App() {
   const [user, setUser] = useState({});
@@ -100,6 +101,14 @@ function App() {
             element={
               <Protected>
                 <Fnb />
+              </Protected>
+            }
+          />
+          <Route
+            path="package"
+            element={
+              <Protected>
+                <Package />
               </Protected>
             }
           />

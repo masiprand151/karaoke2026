@@ -120,6 +120,7 @@ model Pricing {
 
   isHoliday       Boolean   @default(false)
   isPromo         Boolean   @default(false)
+  isPackage         Boolean   @default(false)
   durationMinutes Int @default(120)
   startDate       DateTime?
   endDate         DateTime?

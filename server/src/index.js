@@ -23,6 +23,7 @@ app.use("/session", require("./routes/sessions"));
 app.use("/fnb", require("./routes/fnb"));
 app.use("/lady", require("./routes/lady"));
 app.use("/user", require("./routes/user"));
+app.use("/pricing", require("./routes/pricing"));
 
 // middleware error
 app.use((err, req, res, next) => {

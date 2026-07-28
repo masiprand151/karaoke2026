@@ -23,8 +23,111 @@ route.post("/checkin", async (req, res, next) => {
       //------------------------------------------
       // PRICING
       //------------------------------------------
-      const pricing = await tx.pricing.findUnique({ where: { id: pricingId } });
+      const pricing = await tx.pricing.findUnique({
+        where: { id: pricingId },
+        include: {
+          pricingFnbs: { include: { fnb: true } },
+          pricingLadies: true, // hanya jumlah hak Lady
+        },
+      });
       if (!pricing) throw new AppError(400, "Pricing tidak ditemukan");
+      // checkin package
+      if (pricing.isPackage) {
+        // buat session
+        const start = new Date();
+        const end = new Date(start.getTime() + pricing.durationMinutes * 60000);
+        const session = await tx.session.create({
+          data: {
+            roomId: room.id,
+            customerName,
+            userId: Number(userId),
+            start,
+            end,
+            durationMinutes: Number(pricing.durationMinutes),
+            extendMinutes: 0,
+            freeMinutes: 0,
+          },
+        });
+
+        // update room status
+        await prisma.room.update({
+          where: { id: roomId },
+          data: { status: "used" },
+        });
+
+        // buat transaction
+        const transaction = await prisma.transaction.create({
+          data: {
+            number: `TRX-${Date.now()}`,
+            sessionId: session.id,
+            pricingId,
+            amount: Number(pricing.baseRate),
+            taxAmount:
+              (Number(pricing.baseRate) * Number(pricing.taxRate)) / 100,
+            serviceAmount:
+              (Number(pricing.baseRate) * Number(pricing.serviceCharge)) / 100,
+            grandTotal:
+              Number(pricing.baseRate) +
+              (Number(pricing.baseRate) * Number(pricing.taxRate)) / 100 +
+              (Number(pricing.baseRate) * Number(pricing.serviceCharge)) / 100,
+            paymentMethod: "cash",
+            status: "pending",
+          },
+        });
+
+        // auto insert FnB dari paket
+        for (const pf of pricing.pricingFnbs) {
+          await prisma.sessionFnb.create({
+            data: {
+              sessionId: session.id,
+              fnbId: pf.fnbId,
+              quantity: pf.quantity,
+              unitPrice: pf.fnb.basePrice,
+              totalAmount: pf.fnb.basePrice * pf.quantity,
+            },
+          });
+
+          // kurangi stok FnB
+          await prisma.fnb.update({
+            where: { id: pf.fnbId },
+            data: { stock: { decrement: pf.quantity } },
+          });
+        }
+
+        // Lady pending → hanya catat hak paket, belum assign Lady tertentu
+        for (const pl of pricing.pricingLadies) {
+          await prisma.sessionLog.create({
+            data: {
+              sessionId: session.id,
+              transactionId: transaction.id,
+              type: "lady",
+              action: "create",
+              role: "system",
+              userId,
+              newValue: { hakLady: pl.quantity, status: "pending" },
+            },
+          });
+        }
+        // log checkin
+        await prisma.sessionLog.create({
+          data: {
+            sessionId: session.id,
+            transactionId: transaction.id,
+            type: "checkin",
+            action: "create",
+            role: "system",
+            userId,
+            newValue: { customerName, roomId, pricingId },
+          },
+        });
+
+        return res.status(201).json({
+          success: true,
+          session,
+          transaction,
+        });
+      }
+      // checkin regular
 
       //------------------------------------------
       // WAKTU

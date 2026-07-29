@@ -126,6 +126,7 @@ model Pricing {
   endDate         DateTime?
   taxRate       Decimal @default(11.00) @db.Decimal(5,2) // %
   serviceCharge Decimal @default(5.00)  @db.Decimal(5,2) // %
+  ladyQty Int @default(0)
 
   transactions    Transaction[]
   pricingFnbs     PricingFnb[]

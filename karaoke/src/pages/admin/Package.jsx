@@ -39,13 +39,11 @@ export default function Package() {
   const [query, setQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPackage, setEditingPackage] = useState(null);
+  const [filteredTags, setFilteredTags] = useState([]);
+  const [pricingFnb, setPricingFnb] = useState([]);
   const [form] = Form.useForm();
   const navigate = useNavigate();
   const { showAlert } = useAlert();
-
-  useEffect(() => {
-    getPackages();
-  }, [query]);
 
   const fetchRooms = async () => {
     try {
@@ -56,20 +54,48 @@ export default function Package() {
     }
   };
 
-  const getPackages = async () => {
-    const res = await api.get("/pricing/package", {
-      params: { search: query },
+  const getPackages = async (query = "") => {
+    const res = await api.get(`/pricing/package?search=${query}`);
+    // gabungkan berdasarkan nama
+    const grouped = {};
+    res.packages.forEach((pkg) => {
+      if (!grouped[pkg.name]) {
+        grouped[pkg.name] = {
+          ...pkg,
+          rooms: [pkg.roomId], // mulai dengan satu room
+        };
+      } else {
+        // kalau nama sudah ada, tambahkan roomId ke array
+        grouped[pkg.name].rooms.push(pkg.roomId);
+      }
     });
-    setPackages(res.data);
+
+    // ubah object jadi array
+    const uniquePackages = Object.values(grouped);
+
+    setPackages(uniquePackages);
   };
 
+  useEffect(() => {
+    getPackages(query);
+  }, [query]);
+
   const openModal = (pkg = null) => {
+    setFilteredTags([]);
     setEditingPackage(pkg);
     fetchRooms();
     setIsModalOpen(true);
     if (pkg) {
       form.resetFields();
+      setFilteredTags(pkg.rooms);
       form.setFieldsValue(pkg);
+      form.setFieldsValue({
+        ...pkg,
+        fnbs: pkg.pricingFnbs?.map((f) => ({
+          fnbId: f.fnbId,
+          quantity: f.quantity,
+        })),
+      });
     } else {
       form.resetFields();
     }
@@ -78,35 +104,77 @@ export default function Package() {
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
+
       if (editingPackage) {
-        await api.put(`/pricing/${editingPackage.id}`, values);
-        showAlert({ type: "success", message: "Berhasil update package" });
-      } else {
+        // update
+        // update package
         let selectedRooms = [];
-        if (!values.rooms) {
+
+        if (!values.rooms || values.rooms.length === 0) {
+          // kalau tidak pilih room → auto semua room
           selectedRooms = rooms.map((room) => ({ roomId: room.id }));
         } else {
-          selectedRooms = valuea.rooms.map((v) => ({
+          // kalau pilih room → ambil dari values.rooms
+          selectedRooms = values.rooms.map((v) => ({
             roomId: v,
           }));
         }
         const data = {
           ...values,
-          rooms: selectedRooms,
+          isPackage: true,
+          fnbs: values.fnbs?.map((f) => ({
+            fnbId: f.fnbId,
+            quantity: f.quantity,
+          })),
+        };
+
+        // kirim ke backend untuk setiap room
+        await Promise.all(
+          selectedRooms.map(async (room) => {
+            return api.put(`/pricing/${editingPackage.id}/package`, {
+              ...data,
+              roomId: room.roomId,
+            });
+          }),
+        );
+
+        showAlert({ type: "success", message: "Berhasil update package" });
+      } else {
+        // create
+        let selectedRooms = [];
+
+        if (!values.rooms || values.rooms.length === 0) {
+          // kalau tidak pilih room → auto semua room
+          selectedRooms = rooms.map((room) => ({ roomId: room.id }));
+        } else {
+          // kalau pilih room → ambil dari values.rooms
+          selectedRooms = values.rooms.map((v) => ({
+            roomId: v,
+          }));
+        }
+
+        const data = {
+          ...values,
           isPackage: true,
         };
 
-        console.log(data);
+        // kirim ke backend untuk setiap room
+        await Promise.all(
+          selectedRooms.map(async (room) => {
+            return api.post("/pricing", { ...data, roomId: room.roomId });
+          }),
+        );
 
-        // await api.post("/pricing", value);
         showAlert({ type: "success", message: "Berhasil tambah package" });
       }
+
       setIsModalOpen(false);
       setEditingPackage(null);
+      setFilteredTags([]);
       getPackages();
     } catch (error) {
       if (error.errorFields) {
-        console.log(error);
+        console.log("Validasi gagal:", error.errorFields);
       } else {
         showAlert({ type: "error", message: error.message });
       }
@@ -115,7 +183,7 @@ export default function Package() {
 
   const handleDelete = async (id) => {
     try {
-      await api.delete(`/pricing/${id}`);
+      await api.delete(`/pricing/${id}/package`);
       showAlert({ type: "success", message: "Berhasil delete package" });
       getPackages();
     } catch (error) {
@@ -159,7 +227,10 @@ export default function Package() {
             dataSource={packages}
             columns={[
               { title: "Nama Paket", dataIndex: "name" },
-              { title: "Durasi", dataIndex: "durationMinutes" },
+              {
+                title: "Durasi",
+                dataIndex: "durationMinutes",
+              },
               { title: "Harga", dataIndex: "baseRate" },
               {
                 title: "Promo",
@@ -187,16 +258,13 @@ export default function Package() {
                     <Button
                       icon={<EditOutlined />}
                       onClick={() => openModal(row)}
-                    >
-                      Edit
-                    </Button>
+                    />
+
                     <Popconfirm
                       title="Yakin hapus package ini?"
                       onConfirm={() => handleDelete(row.id)}
                     >
-                      <Button danger icon={<DeleteOutlined />}>
-                        Hapus
-                      </Button>
+                      <Button danger icon={<DeleteOutlined />} />
                     </Popconfirm>
                   </Space>
                 ),
@@ -209,7 +277,10 @@ export default function Package() {
         title={editingPackage ? "Edit Package" : "Tambah Package"}
         open={isModalOpen}
         onOk={handleSave}
-        onCancel={() => setIsModalOpen(false)}
+        onCancel={() => {
+          setFilteredTags([]);
+          setIsModalOpen(false);
+        }}
         centered
       >
         <Form form={form} layout="vertical">
@@ -218,6 +289,7 @@ export default function Package() {
               mode="tags"
               style={{ width: "100%", maxHeight: 120 }}
               placeholder="Jika kosong maka auto all room"
+              value={editingPackage ? filteredTags : []}
             >
               {rooms &&
                 rooms.map((room) => (

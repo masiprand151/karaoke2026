@@ -188,7 +188,6 @@ route.delete("/:pricingId/package", async (req, res, next) => {
       where: { id: Number(pricingId) },
       include: { pricingFnbs: true },
     });
-
     if (!pricing || !pricing.isPackage) {
       throw new AppError(404, "Package tidak di temukan");
     }

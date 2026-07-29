@@ -94,20 +94,6 @@ route.post("/checkin", async (req, res, next) => {
           });
         }
 
-        // Lady pending → hanya catat hak paket, belum assign Lady tertentu
-        for (const pl of pricing.pricingLadies) {
-          await prisma.sessionLog.create({
-            data: {
-              sessionId: session.id,
-              transactionId: transaction.id,
-              type: "lady",
-              action: "create",
-              role: "system",
-              userId,
-              newValue: { hakLady: pl.quantity, status: "pending" },
-            },
-          });
-        }
         // log checkin
         await prisma.sessionLog.create({
           data: {

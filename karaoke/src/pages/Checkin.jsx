@@ -50,6 +50,7 @@ export default function Checkin() {
       const roomData = res.room;
 
       setRoom(roomData);
+      console.log(roomData);
 
       if (roomData.pricings.length > 0) {
         const pricing = roomData.pricings[0];

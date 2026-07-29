@@ -62,10 +62,12 @@ export default function Package() {
       if (!grouped[pkg.name]) {
         grouped[pkg.name] = {
           ...pkg,
+          ids: [pkg.id],
           rooms: [pkg.roomId], // mulai dengan satu room
         };
       } else {
         // kalau nama sudah ada, tambahkan roomId ke array
+        grouped[pkg.name].ids.push(pkg.id);
         grouped[pkg.name].rooms.push(pkg.roomId);
       }
     });
@@ -181,9 +183,13 @@ export default function Package() {
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (row) => {
     try {
-      await api.delete(`/pricing/${id}/package`);
+      console.log(row);
+      await Promise.all(
+        row.ids.map((id) => api.delete(`/pricing/${id}/package`)),
+      );
+
       showAlert({ type: "success", message: "Berhasil delete package" });
       getPackages();
     } catch (error) {
@@ -262,7 +268,7 @@ export default function Package() {
 
                     <Popconfirm
                       title="Yakin hapus package ini?"
-                      onConfirm={() => handleDelete(row.id)}
+                      onConfirm={() => handleDelete(row)}
                     >
                       <Button danger icon={<DeleteOutlined />} />
                     </Popconfirm>

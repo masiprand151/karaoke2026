@@ -5,6 +5,7 @@ import { Modal, Form, Select, Button, Tag } from "antd";
 function MoveRoom({ open, sessionId, onClose, onSuccess }) {
   const [rooms, setRooms] = useState([]);
   const [selected, setSelected] = useState({});
+  const [used, setUsed] = useState(null);
   const [error, setError] = useState(null);
 
   const fetchRooms = async () => {
@@ -12,13 +13,19 @@ function MoveRoom({ open, sessionId, onClose, onSuccess }) {
       const res = await api.get("/room");
 
       setRooms(res.rooms);
+
+      const usedRooms = res.rooms.filter((room) => room.status === "used");
+      if (usedRooms.length > 0) {
+        setUsed(usedRooms[0]);
+        setSelected(usedRooms[0].id); // set default selected ke room yang sedang digunakan
+      }
     } catch (error) {
       setError(error.message);
     }
   };
   useEffect(() => {
     fetchRooms();
-  }, [sessionId]);
+  }, [open]);
 
   const handleMove = async (e) => {
     try {
@@ -57,6 +64,7 @@ function MoveRoom({ open, sessionId, onClose, onSuccess }) {
       <Form layout="vertical">
         <Form.Item label="Room List">
           <Select
+            defaultValue={used?.id} // gunakan id room yang sedang digunakan
             value={selected}
             onChange={setSelected}
             placeholder="Pilih Room"
@@ -64,7 +72,7 @@ function MoveRoom({ open, sessionId, onClose, onSuccess }) {
             {rooms?.map((room) => (
               <Select.Option
                 key={room.id}
-                value={room.status === "used" ? room.status : room.id}
+                value={room.id}
                 disabled={room.status === "used"}
               >
                 <div

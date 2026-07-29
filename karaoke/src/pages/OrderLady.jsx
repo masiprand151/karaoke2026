@@ -12,9 +12,11 @@ import {
   Typography,
   InputNumber,
   Flex,
+  Tag,
 } from "antd";
 import { formatRp } from "../utils/rupiah";
 import useLadies from "../hooks/useLadies";
+import { ExclamationCircleOutlined } from "@ant-design/icons";
 
 const { Title } = Typography;
 const { Search } = Input;
@@ -43,6 +45,13 @@ function OrderLady() {
             title="Lady Companion"
             extra={
               <Flex gap={8} align="center">
+                <Tag
+                  color={"warning"}
+                  icon={<ExclamationCircleOutlined />}
+                  variant={"solid"}
+                >
+                  Jika Order dengan paket abaikan durasi
+                </Tag>
                 <Search
                   placeholder="Search Lady..."
                   allowClear

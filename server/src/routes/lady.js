@@ -136,7 +136,7 @@ route.delete("/:ladyId", async (req, res, next) => {
 // Order Lady untuk session (tanpa tax & service)
 route.post("/order", async (req, res, next) => {
   try {
-    const { sessionId, ladyId, quantity } = req.body;
+    const { sessionId, ladyId, quantity, limit = null } = req.body;
 
     const result = await prisma.$transaction(async (trx) => {
       //------------------------------------------
@@ -147,14 +147,37 @@ route.post("/order", async (req, res, next) => {
       if (lady.isJob)
         throw new AppError(400, `Lady ${lady.name} sedang di dalam room`);
 
+      const trcn = await trx.transaction.findUnique({
+        where: {
+          sessionId: Number(sessionId),
+        },
+        include: {
+          pricing: true,
+        },
+      });
+      // cek berapa Lady gratis sudah dipakai
+      const usedFreeLadies = await trx.sessionLady.count({
+        where: { sessionId: Number(sessionId), unitPrice: 0 },
+      });
       //------------------------------------------
       // HITUNG HARGA & WAKTU
       //------------------------------------------
-      const unitPrice = Number(lady.basePrice);
-      const totalAmount = unitPrice * Number(quantity);
+      let unitPrice = Number(lady.basePrice);
+      let totalAmount = unitPrice * Number(quantity);
+      let start = new Date();
+      let end = new Date(start.getTime() + Number(quantity) * 3600000);
 
-      const start = new Date();
-      const end = new Date(start.getTime() + Number(quantity) * 3600000);
+      const freeLimit = trcn.pricing.ladyQty || 0;
+
+      if (trcn.pricing.isPackage) {
+        if (usedFreeLadies < freeLimit) {
+          unitPrice = 0;
+          totalAmount = 0;
+        }
+        const jam = trcn.pricing.durationMinutes / 60;
+
+        end = new Date(start.getTime() + Number(jam) * 3600000);
+      }
 
       //------------------------------------------
       // SIMPAN SESSION LADY
@@ -163,7 +186,9 @@ route.post("/order", async (req, res, next) => {
         data: {
           sessionId: Number(sessionId),
           ladyId: Number(ladyId),
-          quantity: Number(quantity),
+          quantity: trcn.pricing.isPackage
+            ? trcn.pricing.durationMinutes / 60
+            : Number(quantity),
           unitPrice,
           start,
           end,

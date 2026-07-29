@@ -18,6 +18,7 @@ import {
   Typography,
   Form,
   InputNumber,
+  DatePicker,
 } from "antd";
 import {
   SwapOutlined,
@@ -30,6 +31,7 @@ import DiscountForm from "../components/DiscountForm";
 import LadyCountdown from "../components/LadyCountdown";
 import DetailsTable from "../components/DetailsTable";
 import { useAlert } from "../contexts/AlertContext";
+import dayjs from "dayjs";
 
 const { Text } = Typography;
 
@@ -42,6 +44,7 @@ export default function Preview() {
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState(null);
   const [duration, setDuration] = useState(0);
+  const [loading, setLoading] = useState(false);
   const { showAlert } = useAlert();
 
   const getPreview = async () => {
@@ -60,6 +63,7 @@ export default function Preview() {
 
   const handleCheckout = async () => {
     try {
+      setLoading(true);
       await api.post(`/session/checkout/${data?.id}`);
       navigate("/");
     } catch (error) {
@@ -67,12 +71,15 @@ export default function Preview() {
         type: "error",
         message: error.message,
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleFreeMinute = async (e) => {
     e.preventDefault();
     try {
+      setLoading(true);
       const res = await api.post("/session/free-minute", {
         sessionId: Number(sessionId),
         addMinutes: Number(duration),
@@ -90,12 +97,15 @@ export default function Preview() {
         type: "error",
         message: error.message,
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleExtend = async (e) => {
     e.preventDefault();
     try {
+      setLoading(true);
       const res = await api.post("/session/extend", {
         sessionId: Number(sessionId),
         extendMinutes: Number(duration) * 60,
@@ -113,12 +123,15 @@ export default function Preview() {
         type: "error",
         message: error.message,
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleDuration = async (e) => {
     e.preventDefault();
     try {
+      setLoading(true);
       const res = await api.put("/session/duration", {
         sessionId: Number(sessionId),
         durationMinutes: Number(duration) * 60,
@@ -136,6 +149,8 @@ export default function Preview() {
         type: "error",
         message: error.message,
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -150,27 +165,34 @@ export default function Preview() {
           <Card
             title="Preview Billing"
             extra={
-              <Tag
-                color={
-                  data?.status === "paid"
-                    ? "green"
-                    : data?.status === "partial"
-                      ? "gold"
-                      : "blue"
-                }
-              >
-                {data?.status}
-              </Tag>
+              <>
+                <Tag>{dayjs().format("YYYY-MM-DD HH:mm:ss")}</Tag>
+                <Tag
+                  color={
+                    data?.status === "paid"
+                      ? "green"
+                      : data?.status === "partial"
+                        ? "gold"
+                        : "blue"
+                  }
+                >
+                  {data?.status}
+                </Tag>
+              </>
             }
           >
             <Descriptions bordered size="small" column={1}>
+              <Descriptions.Item
+                label={data?.pricing?.isPackage ? "PACKAGE" : "REGULAR "}
+              >
+                {data?.pricing?.name?.toUpperCase()}
+              </Descriptions.Item>
               <Descriptions.Item label="Customer">
                 <Text
                   ellipsis={{ tooltip: data?.customerName }}
                   style={{
                     width: 140,
                     display: "inline-block",
-                    // fontSize: 14,
                     verticalAlign: "middle",
                   }}
                 >
@@ -193,6 +215,7 @@ export default function Preview() {
                     size="small"
                     icon={<SwapOutlined />}
                     onClick={() => setShowMvRoom(true)}
+                    disabled={loading}
                   />
                 </div>
               </Descriptions.Item>
@@ -219,6 +242,7 @@ export default function Preview() {
                         setDuration((data?.durationMinutes ?? 0) / 60);
                       }
                     }}
+                    disabled={loading || data?.status === "paid"}
                   />
                 </div>
               </Descriptions.Item>
@@ -243,6 +267,7 @@ export default function Preview() {
                         setDuration((data?.extendMinutes ?? 0) / 60);
                       }
                     }}
+                    disabled={loading || data?.status === "paid"}
                   />
                 </div>
               </Descriptions.Item>
@@ -266,6 +291,7 @@ export default function Preview() {
                       }
                     }}
                     icon={<EditOutlined />}
+                    disabled={loading}
                   />
                 </div>
               </Descriptions.Item>
@@ -289,6 +315,7 @@ export default function Preview() {
                     size="small"
                     onClick={() => setShowDisRoom(true)}
                     icon={<EditOutlined />}
+                    disabled={loading}
                   />
                 </div>
               </Descriptions.Item>
@@ -309,6 +336,7 @@ export default function Preview() {
                     size="small"
                     icon={<ShoppingCartOutlined />}
                     onClick={() => navigate(`/fnb/order/${sessionId}`)}
+                    disabled={loading || data?.status === "paid"}
                   />
                 </div>
               </Descriptions.Item>
@@ -328,6 +356,7 @@ export default function Preview() {
                     size="small"
                     icon={<UserAddOutlined />}
                     onClick={() => navigate(`/lady/order/${sessionId}`)}
+                    disabled={loading || data?.status === "paid"}
                   />
                 </div>
               </Descriptions.Item>
@@ -340,7 +369,6 @@ export default function Preview() {
                 {formatRp(data?.serviceAmount)}
               </Descriptions.Item>
             </Descriptions>
-
             <Divider />
 
             <Statistic
@@ -358,21 +386,27 @@ export default function Preview() {
               <Button onClick={() => navigate("/")}>Back</Button>
 
               <Space>
-                <Button color="default" variant="solid">
-                  Solid
+                <Button color="default" variant="solid" loading={loading}>
+                  Stop
                 </Button>
-                <Button type="primary" onClick={() => {}}>
+                <Button type="primary" onClick={() => {}} loading={loading}>
                   Print
                 </Button>
                 <Button
                   color="cyan"
                   variant="solid"
                   onClick={() => navigate(`/payment/${sessionId}`)}
+                  disabled={loading || data?.status === "paid"}
                 >
                   Payment
                 </Button>
 
-                <Button color="danger" variant="solid" onClick={handleCheckout}>
+                <Button
+                  color="danger"
+                  variant="solid"
+                  onClick={handleCheckout}
+                  loading={loading}
+                >
                   Checkout
                 </Button>
               </Space>
@@ -380,7 +414,7 @@ export default function Preview() {
           </Card>
         </Col>
 
-        <DetailsTable data={data} refresh={getPreview} />
+        <DetailsTable data={data} refresh={getPreview} loading={loading} />
       </Row>
 
       <Modal
@@ -416,6 +450,7 @@ export default function Preview() {
                   ? handleExtend
                   : handleDuration
             }
+            loading={loading}
           >
             Submit
           </Button>,

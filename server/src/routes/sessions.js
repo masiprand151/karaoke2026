@@ -366,7 +366,11 @@ route.get("/preview/:sessionId", async (req, res, next) => {
       where: { id: parseInt(sessionId), closed: false },
       include: {
         room: true,
-        transaction: true,
+        transaction: {
+          include: {
+            pricing: true,
+          },
+        },
         sessionFnbs: { include: { fnb: true } },
         sessionLadies: { include: { lady: true } },
       },
@@ -397,7 +401,7 @@ route.get("/preview/:sessionId", async (req, res, next) => {
 
     res.json({
       ...session,
-      pricing: trcn ? trcn.pricingId : null,
+      pricing: trcn ? trcn.pricing : null,
       amount: trcn ? trcn.amount : 0,
       fnbSubtotal,
       ladyTotal: ladyTotal,

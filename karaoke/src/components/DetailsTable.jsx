@@ -10,7 +10,7 @@ import EditLadyModal from "./EditLadyModal";
 import { useAlert } from "../contexts/AlertContext";
 import { useConfirm } from "../contexts/ConfirmContext";
 
-function DetailsTable({ data, refresh }) {
+function DetailsTable({ data, refresh, loading }) {
   const { showAlert } = useAlert();
   const { showConfirm } = useConfirm();
   const [showFnbEdit, setShowFnbEdit] = useState(false);
@@ -126,7 +126,12 @@ function DetailsTable({ data, refresh }) {
           >
             <EditOutlined />
           </Button>
-          <Button size="small" danger onClick={() => handleVoidFnb(r)}>
+          <Button
+            size="small"
+            danger
+            onClick={() => handleVoidFnb(r)}
+            disabled={loading}
+          >
             <DeleteOutlined />
           </Button>
         </Space>
@@ -140,7 +145,7 @@ function DetailsTable({ data, refresh }) {
       dataIndex: ["lady", "name"],
     },
     {
-      title: "Qty",
+      title: "Durasi",
       dataIndex: "quantity",
     },
     {
@@ -172,10 +177,16 @@ function DetailsTable({ data, refresh }) {
               setSelectLady(r);
               setShowLadyEdit(true);
             }}
+            disabled={loading}
           >
             <EditOutlined />
           </Button>
-          <Button size="small" danger onClick={() => handleStopLady(r)}>
+          <Button
+            size="small"
+            danger
+            onClick={() => handleStopLady(r)}
+            disabled={loading}
+          >
             <DeleteOutlined />
           </Button>
         </Space>

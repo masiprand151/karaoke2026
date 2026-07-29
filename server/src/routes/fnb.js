@@ -344,9 +344,20 @@ route.delete("/order/:id", async (req, res, next) => {
       const sessionFnb = await trx.sessionFnb.findUnique({
         where: { id: Number(id) },
       });
+
       if (!sessionFnb) throw new AppError(404, "Order F&B tidak ditemukan");
       if (req.user.role !== "admin") throw new AppError(401, "Akses di tolak");
 
+      await trx.fnb.update({
+        where: {
+          id: sessionFnb.fnbId,
+        },
+        data: {
+          stock: {
+            increment: sessionFnb.quantity,
+          },
+        },
+      });
       await trx.sessionFnb.delete({ where: { id: sessionFnb.id } });
 
       // Log delete

@@ -370,3 +370,14 @@ model SessionLog {
   session       Session  @relation(fields: [sessionId], references: [id])
 }
 
+
+
+model Songs {
+  id Int @id @default(autoincrement())
+  name String
+  filePath String @db.LongText
+  size String
+  artist String
+  region String
+  isActive Boolean @default(true)
+}

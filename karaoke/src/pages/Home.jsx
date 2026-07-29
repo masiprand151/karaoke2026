@@ -56,7 +56,7 @@ const menuItems = [
   },
   {
     label: "Songs",
-    key: "/admin/song",
+    key: "/admin/songs",
     icon: <CustomerServiceOutlined />, // musik/lagu
   },
   {

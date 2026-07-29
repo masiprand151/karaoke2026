@@ -14,6 +14,7 @@ import User from "./pages/admin/User";
 import Lady from "./pages/admin/Lady";
 import Fnb from "./pages/admin/Fnb";
 import Package from "./pages/admin/Package";
+import Songs from "./pages/admin/Songs";
 
 function App() {
   const [user, setUser] = useState({});
@@ -109,6 +110,14 @@ function App() {
             element={
               <Protected>
                 <Package />
+              </Protected>
+            }
+          />
+          <Route
+            path="songs"
+            element={
+              <Protected>
+                <Songs />
               </Protected>
             }
           />

@@ -10,13 +10,9 @@ require("dotenv").config();
 
 const port = process.env.PORT || 3000;
 
-// Simple test route
-app.get("/", (req, res) => {
-  res.json({ message: "Karaoke API is running..." });
-});
+app.use("/songs", require("./routes/songs"));
 
 app.use("/auth", require("./routes/auth"));
-app.use("/songs", require("./routes/songs"));
 
 app.use(protectedAuth);
 app.use("/room", require("./routes/room"));

@@ -12,6 +12,7 @@ import Spiner from "../components/Spiner";
 import api from "../utils/api";
 import { usePlaylist } from "../contexts/PlaylistContext";
 import PlaylistTable from "../components/PlaylistTable";
+import useSongs from "../hooks/useSongs";
 
 const { Title } = Typography;
 
@@ -20,9 +21,10 @@ function Home() {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
-  const rowRefs = useRef([]);
 
-  const { playlist, addSong } = usePlaylist();
+  const { playlist, addSong, removeSong } = usePlaylist();
+
+  const rowRefs = useRef([]);
 
   const getSongs = async (q = "") => {
     try {
@@ -193,30 +195,7 @@ function Home() {
               PLAYLIST
             </Title>
             <PlaylistTable />
-            {/* <div style={{ height: "60%", background: "#111", marginBottom: 8 }}>
-              <Table
-                rowKey={(record, index) => index}
-                // tampilkan semua kecuali index 0
-                dataSource={playlist.filter((_, index) => index !== 0)}
-                columns={[{ title: "Title", dataIndex: "name" }]}
-                pagination={false}
-                size="small"
-                sticky
-                scroll={{ y: 250 }}
-                loading={loading}
-                style={{
-                  height: 300,
-                }}
-              />
-              <Flex justify="center" gap={"middle"} style={{ margin: 8 }}>
-                <Button type="primary" onClick={clearPlaylist}>
-                  Clear
-                </Button>
-                <Button type="primary">Delete</Button>
-                <Button type="primary">Up</Button>
-                <Button type="primary">Down</Button>
-              </Flex>
-            </div> */}
+
             <div style={{ color: "#fff", marginBottom: 16 }}>
               Sekarang: {playlist[0]?.name}
             </div>
@@ -266,7 +245,39 @@ function Home() {
           <Button style={{ margin: "0 4px" }}>REPLAY</Button>
         </Row>
       </Col>
-      <Col span={12}>2</Col>
+      <Col
+        span={12}
+        style={{
+          background: "black",
+          padding: 0,
+          overflow: "hidden",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        {playlist.length > 0 && (
+          <video
+            key={playlist[0].filePath}
+            src={`http://localhost:8000/songs/stream?file=${encodeURIComponent(
+              playlist[0].filePath,
+            )}`}
+            autoPlay
+            controls
+            playsInline
+            preload="auto"
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "contain",
+              display: "block",
+            }}
+            onEnded={(e) => {
+              removeSong(playlist?.[0]);
+            }}
+          />
+        )}
+      </Col>
     </Row>
   );
 }

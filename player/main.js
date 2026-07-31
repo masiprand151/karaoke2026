@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
+const { getSongsFromFolder } = require("./lib");
 
 let isQuitting = false;
 let win = null;
@@ -58,4 +59,8 @@ ipcMain.on("app:close", () => {
 ipcMain.on("app:closing:done", () => {
   isQuitting = true;
   app.quit();
+});
+
+ipcMain.handle("get-songs", async (event, folderPath) => {
+  return getSongsFromFolder(folderPath);
 });

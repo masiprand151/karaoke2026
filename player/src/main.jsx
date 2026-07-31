@@ -1,10 +1,20 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.jsx'
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import App from "./App";
+import { HashRouter } from "react-router-dom";
 
-createRoot(document.getElementById('root')).render(
+import "antd/dist/reset.css";
+import { AlertProvider } from "./contexts/AlertContext";
+import { ConfirmProvider } from "./contexts/ConfirmContext";
+
+createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <App />
+    <ConfirmProvider>
+      <AlertProvider>
+        <HashRouter>
+          <App />
+        </HashRouter>
+      </AlertProvider>
+    </ConfirmProvider>
   </StrictMode>,
-)
+);

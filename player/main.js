@@ -2,12 +2,13 @@ const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
 
 let isQuitting = false;
+let win = null;
 function createWindow() {
-  const win = new BrowserWindow({
-    width: 1200,
-    height: 800,
+  win = new BrowserWindow({
+    width: 0,
+    height: 0,
     frame: false,
-    // fullscreen: true,
+    show: false,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -15,11 +16,17 @@ function createWindow() {
     },
   });
 
-  win.loadURL("http://localhost:5174"); // Vite default port
+  win.loadURL("http://localhost:5174");
+
+  // Atur ukuran setelah konten siap
+  win.once("ready-to-show", () => {
+    win.setBounds({ x: 0, y: 0, width: 1024 * 2, height: 768 });
+    win.show();
+  });
+
   win.on("close", (e) => {
     if (!isQuitting) {
       e.preventDefault();
-
       win.webContents.send("app:closing");
     }
   });

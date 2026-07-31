@@ -1,6 +1,11 @@
 const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
+const { startLocalVideoServer, stopLocalVideoServer } = require("./server");
 const { getSongsFromFolder } = require("./lib");
+
+const { getConfig } = require("./lib");
+
+const config = getConfig();
 
 let isQuitting = false;
 let win = null;
@@ -34,6 +39,7 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  startLocalVideoServer();
   createWindow();
 
   app.on("activate", () => {
@@ -45,6 +51,7 @@ app.whenReady().then(() => {
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
+    stopLocalVideoServer();
     ipcMain.emit("close", true);
     app.quit();
   }
@@ -63,4 +70,8 @@ ipcMain.on("app:closing:done", () => {
 
 ipcMain.handle("get-songs", async (event, folderPath) => {
   return getSongsFromFolder(folderPath);
+});
+
+ipcMain.handle("setting:get", async () => {
+  return getConfig();
 });

@@ -259,7 +259,7 @@ function Home() {
         {playlist.length > 0 && (
           <video
             key={playlist[0].filePath}
-            src={`http://localhost:8000/songs/stream?file=${encodeURIComponent(
+            src={`http://127.0.0.1:8765/stream?file=${encodeURIComponent(
               playlist[0].filePath,
             )}`}
             autoPlay

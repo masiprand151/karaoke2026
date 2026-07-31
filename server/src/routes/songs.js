@@ -1,9 +1,9 @@
 const fs = require("fs");
 const path = require("path");
 const route = require("express").Router();
+const { spawn, exec } = require("child_process");
 const prisma = require("../configs/prisma");
 const os = require("os");
-const { streamOriginal, transcodeVideo } = require("../helpers/streamParsing");
 
 // ambil daftar drive
 route.get("/drives", async (req, res, next) => {
@@ -28,6 +28,7 @@ route.get("/drives", async (req, res, next) => {
     next(error);
   }
 });
+
 route.get("/folder", async (req, res, next) => {
   try {
     const folderPath = req.query.folderPath;
@@ -121,7 +122,7 @@ route.post("/import", async (req, res, next) => {
         name: parts[0], // judul sebelum #
         artist: parts[1] || "", // setelah # pertama
         region: parts[2] || "", // setelah # kedua
-        filePath: f.path,
+        filePath: convertToUNC(f.path),
         size: f.size.toString(), // sesuai schema Songs pakai String
         isActive: true,
       };
@@ -178,24 +179,6 @@ route.delete("/", async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-});
-
-route.get("/stream", async (req, res) => {
-  const file = req.query.file;
-
-  if (!file || !fs.existsSync(file)) {
-    return res.status(404).send("File not found");
-  }
-
-  const ext = path.extname(file).toLowerCase();
-
-  // Format yang biasanya langsung didukung Chromium
-  if (ext === ".mp4" || ext === ".webm") {
-    return streamOriginal(file, req, res);
-  }
-
-  // Format lama seperti AVI/MPG/MPEG
-  return transcodeVideo(file, req, res);
 });
 
 module.exports = route;

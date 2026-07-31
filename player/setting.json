@@ -1,0 +1,12 @@
+{
+  "roomId": 1,
+  "roomName": "ROOM 01",
+  "pin": "1234",
+  "cstime": 10000,
+
+  "server": "http://127.0.0.1:8000",
+
+  "display": {
+    "screenmode": 2
+  }
+}

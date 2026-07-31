@@ -1,9 +1,10 @@
 const createFetch = (baseUrl = "") => {
   const request = async (endpoint = "", options = {}) => {
     try {
+      const setting = await await window.electron.getSetting();
       const token = window.localStorage.getItem("token");
 
-      const res = await fetch(`${baseUrl}${endpoint}`, {
+      const res = await fetch(`${setting.server}${endpoint}`, {
         headers: {
           "Content-Type": "application/json",
           ...(options.headers || {}),

@@ -10,4 +10,5 @@ contextBridge.exposeInMainWorld("electron", {
     ipcRenderer.send("app:closing:done");
   },
   getSongs: (folderPath) => ipcRenderer.invoke("get-songs", folderPath),
+  getSetting: () => ipcRenderer.invoke("setting:get"),
 });

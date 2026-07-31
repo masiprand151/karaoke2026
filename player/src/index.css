@@ -28,8 +28,20 @@
   cursor: pointer;
 }
 
+.ant-table-placeholder {
+  background: transparent !important;
+}
+
+.ant-table-tbody {
+  background: transparent !important;
+}
 /* hover seluruh baris */
 .ant-table-tbody > tr:hover > td {
   background: #00ffff !important;
   color: #000 !important; /* biar kontras dengan background cyan */
+}
+
+.ant-table-tbody > tr.active-row > td {
+  background: #00ffff !important;
+  color: #000 !important;
 }

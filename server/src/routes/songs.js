@@ -3,6 +3,7 @@ const path = require("path");
 const { exec } = require("child_process");
 const route = require("express").Router();
 const prisma = require("../configs/prisma");
+const os = require("os");
 
 // ambil daftar drive
 route.get("/drives", async (req, res, next) => {
@@ -105,7 +106,7 @@ route.get("/scan", async (req, res, next) => {
 function convertToUNC(localPath) {
   // ambil drive prefix, misalnya "D:\", "C:\", "E:\"
   const driveRegex = /^[A-Z]:\\/i;
-  const baseUNC = `\\\\${process.env.IP_PUBLIC}`;
+  const baseUNC = `\\\\${os.hostname() || process.env.COMPUTERNAME}`;
 
   // replace drive prefix dengan UNC base
   return localPath.replace(driveRegex, baseUNC + "\\");

@@ -16,6 +16,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/auth", require("./routes/auth"));
+app.use("/songs", require("./routes/songs"));
 
 app.use(protectedAuth);
 app.use("/room", require("./routes/room"));
@@ -24,7 +25,6 @@ app.use("/fnb", require("./routes/fnb"));
 app.use("/lady", require("./routes/lady"));
 app.use("/user", require("./routes/user"));
 app.use("/pricing", require("./routes/pricing"));
-app.use("/songs", require("./routes/songs"));
 
 // middleware error
 app.use((err, req, res, next) => {

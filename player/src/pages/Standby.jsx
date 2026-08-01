@@ -144,18 +144,6 @@ export default function Standby() {
             display: "block",
             background: "black",
           }}
-          onLoadedMetadata={(e) => {
-            console.log("VIDEO LOADED", e.currentTarget.duration);
-          }}
-          onCanPlay={() => {
-            console.log("VIDEO CAN PLAY");
-          }}
-          onPlay={() => {
-            console.log("VIDEO PLAYING");
-          }}
-          onError={(e) => {
-            console.log("VIDEO ERROR:", e.currentTarget.error);
-          }}
         />
       </Col>
     </Row>

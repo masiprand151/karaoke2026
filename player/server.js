@@ -5,13 +5,34 @@ const { spawn } = require("child_process");
 const ffmpegPath = require("ffmpeg-static");
 const mime = require("mime-types");
 
-let server = null;
+const { app } = require("electron");
 
+let server = null;
+const wallpaper = app.isPackaged
+  ? path.join(
+      process.env.PROGRAMDATA || "C:\\ProgramData",
+      "KaraokePlayer",
+      "wallpaper.mp4",
+    )
+  : path.join(process.cwd(), "wallpaper.mp4");
 function startLocalVideoServer() {
   if (server) return;
 
   const app = express();
 
+  app.get("/wallpaper", (req, res) => {
+    if (!fs.existsSync(wallpaper)) {
+      return res.sendStatus(404);
+    }
+
+    console.log("WALLPAPER:", wallpaper);
+
+    res.sendFile(wallpaper, (err) => {
+      if (err) {
+        console.error("SEND FILE ERROR:", err);
+      }
+    });
+  });
   app.get("/stream", (req, res) => {
     const file = req.query.file;
 
@@ -26,6 +47,8 @@ function startLocalVideoServer() {
     const ext = path.extname(file).toLowerCase();
     // File yang biasanya bisa langsung dimainkan Chromium
     if ([".mp4", ".webm"].includes(ext)) {
+      console.log(ext);
+
       return streamOriginal(file, req, res);
     }
 

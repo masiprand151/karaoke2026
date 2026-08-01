@@ -126,11 +126,37 @@ export default function Standby() {
         </Drawer>
       </Col>
 
-      {/* Kolom kanan */}
       {/* Kanan: video */}
       <Col span={12} style={{ background: "#fff" }}>
-        {/* <video src="sample.mp4" controls style={{ width: "100%", height: "100%" }} /> */}
-        lklkl
+        <video
+          key={"wallpaper"}
+          src={`http://127.0.0.1:8765/wallpaper`}
+          autoPlay
+          controls
+          loop
+          playsInline
+          muted
+          preload="auto"
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "contain",
+            display: "block",
+            background: "black",
+          }}
+          onLoadedMetadata={(e) => {
+            console.log("VIDEO LOADED", e.currentTarget.duration);
+          }}
+          onCanPlay={() => {
+            console.log("VIDEO CAN PLAY");
+          }}
+          onPlay={() => {
+            console.log("VIDEO PLAYING");
+          }}
+          onError={(e) => {
+            console.log("VIDEO ERROR:", e.currentTarget.error);
+          }}
+        />
       </Col>
     </Row>
   );

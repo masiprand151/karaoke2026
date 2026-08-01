@@ -16,10 +16,13 @@ function Home() {
   const [loading, setLoading] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [volume, setVolume] = useState(50);
+  const [pitch, setPitch] = useState(0);
 
   const { playlist, addSong, removeSong, setPlaylist } = usePlaylist();
 
   const rowRefs = useRef([]);
+  const videoRef = useRef(null);
 
   const getSongs = async (q = "") => {
     try {
@@ -49,6 +52,37 @@ function Home() {
     getSongs(query);
   }, [query]);
 
+  const handlePlayPause = () => {
+    const video = videoRef.current;
+
+    if (!video) return;
+
+    if (video.paused) {
+      video.play();
+    } else {
+      video.pause();
+    }
+  };
+
+  const handleStop = () => {
+    const video = videoRef.current;
+
+    if (!video) return;
+
+    video.pause();
+    video.currentTime = 0;
+
+    setIsPlaying(false);
+  };
+
+  // handle volume
+  useEffect(() => {
+    const video = videoRef.current;
+
+    if (!video) return;
+    video.volume = volume / 100;
+  }, [volume]);
+
   return (
     <Row style={{ height: "100vh" }}>
       <Col
@@ -77,13 +111,20 @@ function Home() {
             rowRefs={rowRefs}
           />
 
-          <PlayerSidebar playlist={playlist} />
+          <PlayerSidebar
+            playlist={playlist}
+            volume={volume}
+            setVolume={setVolume}
+            pitch={pitch}
+            setPitch={setPitch}
+          />
         </Row>
 
         <PlayerControls isPlaying={isPlaying} />
       </Col>
 
       <VideoPlayer
+        videoRef={videoRef}
         playlist={playlist}
         isPlaying={isPlaying}
         setIsPlaying={setIsPlaying}

@@ -5,7 +5,30 @@ import PlaylistTable from "./PlaylistTable";
 
 const { Title } = Typography;
 
-function PlayerSidebar({ playlist }) {
+function PlayerSidebar({
+  playlist,
+  volume,
+  setVolume,
+  pitch,
+  setPitch,
+  down,
+  up,
+}) {
+  const handleVolMin = () => {
+    setVolume((prev) => Math.max(prev - 10, 0));
+  };
+  const handleVolPlus = () => {
+    setVolume((prev) => Math.min(prev + 10, 100));
+  };
+
+  const handlePitchMin = () => {
+    setPitch((prev) => (prev <= -5 ? -5 : prev - 1));
+  };
+
+  const handlePitchPlus = () => {
+    setPitch((prev) => (prev >= 5 ? 5 : prev + 1));
+  };
+
   return (
     <Col span={7} style={{ padding: 8 }}>
       <Title level={5} style={{ color: "#00ffff" }}>
@@ -37,6 +60,7 @@ function PlayerSidebar({ playlist }) {
               fontSize: 28,
             }}
             icon={<MinusOutlined />}
+            onClick={handleVolMin}
           />
 
           <div
@@ -46,7 +70,7 @@ function PlayerSidebar({ playlist }) {
               fontWeight: "bold",
             }}
           >
-            10
+            {volume}
           </div>
 
           <Button
@@ -57,6 +81,7 @@ function PlayerSidebar({ playlist }) {
               fontSize: 28,
             }}
             icon={<PlusOutlined />}
+            onClick={handleVolPlus}
           />
         </Flex>
 
@@ -72,6 +97,7 @@ function PlayerSidebar({ playlist }) {
               fontSize: 28,
             }}
             icon={<MinusOutlined />}
+            onClick={handlePitchMin}
           />
 
           <div
@@ -81,7 +107,7 @@ function PlayerSidebar({ playlist }) {
               fontWeight: "bold",
             }}
           >
-            10
+            {pitch}
           </div>
 
           <Button
@@ -92,6 +118,7 @@ function PlayerSidebar({ playlist }) {
               fontSize: 28,
             }}
             icon={<PlusOutlined />}
+            onClick={handlePitchPlus}
           />
         </Flex>
       </div>

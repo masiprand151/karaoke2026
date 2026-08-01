@@ -5,6 +5,7 @@ import {
   CloseCircleOutlined,
   DeleteOutlined,
   DownOutlined,
+  ToTopOutlined,
   UpOutlined,
   VerticalAlignTopOutlined,
 } from "@ant-design/icons";
@@ -76,7 +77,7 @@ export default function PlaylistTable() {
           <DeleteOutlined />
         </Button>
         <Button type="primary">
-          <VerticalAlignTopOutlined />
+          <ToTopOutlined />
         </Button>
         <Button
           type="primary"

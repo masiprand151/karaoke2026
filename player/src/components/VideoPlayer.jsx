@@ -1,6 +1,12 @@
 import { Col } from "antd";
 
-function VideoPlayer({ playlist, isPlaying, setIsPlaying, setPlaylist }) {
+function VideoPlayer({
+  videoRef,
+  playlist,
+  isPlaying,
+  setIsPlaying,
+  setPlaylist,
+}) {
   return (
     <Col
       span={12}
@@ -15,6 +21,7 @@ function VideoPlayer({ playlist, isPlaying, setIsPlaying, setPlaylist }) {
     >
       {playlist.length > 0 && (
         <video
+          ref={videoRef}
           key={playlist[0].filePath}
           src={`http://127.0.0.1:8765/stream?file=${encodeURIComponent(
             playlist[0].filePath,

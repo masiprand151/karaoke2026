@@ -3,10 +3,16 @@ import { Col } from "antd";
 function VideoPlayer({
   videoRef,
   playlist,
-  isPlaying,
   setIsPlaying,
   setPlaylist,
+  setIsStopped,
+  isStopped,
+  isRepeat,
+  seekOffset,
+  streamVersion,
 }) {
+  const currentSong = playlist[0];
+
   return (
     <Col
       span={12}
@@ -19,15 +25,17 @@ function VideoPlayer({
         justifyContent: "center",
       }}
     >
-      {playlist.length > 0 && (
+      {/* VIDEO KARAOKE */}
+      {currentSong && !isStopped && (
         <video
           ref={videoRef}
-          key={playlist[0].filePath}
+          // PENTING: paksa video baru ketika seek
+          key={`${currentSong.filePath}-${streamVersion}`}
           src={`http://127.0.0.1:8765/stream?file=${encodeURIComponent(
-            playlist[0].filePath,
-          )}`}
+            currentSong.filePath,
+          )}&start=${seekOffset}`}
           autoPlay
-          controls
+          loop={isRepeat}
           playsInline
           preload="auto"
           style={{
@@ -37,11 +45,15 @@ function VideoPlayer({
             display: "block",
           }}
           onEnded={() => {
+            // kalau repeat aktif, onEnded tidak perlu mengurus playlist
+            if (isRepeat) return;
+
             setPlaylist((prev) => {
               const next = prev.slice(1);
 
               if (next.length === 0) {
                 setIsPlaying(false);
+                setIsStopped(true);
               }
 
               return next;
@@ -52,16 +64,20 @@ function VideoPlayer({
           }}
           onPlay={() => {
             setIsPlaying(true);
+            setIsStopped(false);
+          }}
+          onPause={() => {
+            setIsPlaying(false);
           }}
         />
       )}
 
-      {!isPlaying && (
+      {/* WALLPAPER */}
+      {(!currentSong || isStopped) && (
         <video
-          key={"wallpaper"}
-          src={`http://127.0.0.1:8765/wallpaper`}
+          key="wallpaper"
+          src="http://127.0.0.1:8765/wallpaper"
           autoPlay
-          controls
           loop
           playsInline
           muted

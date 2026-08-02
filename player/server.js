@@ -3,11 +3,14 @@ const fs = require("fs");
 const path = require("path");
 const { spawn } = require("child_process");
 const ffmpegPath = require("ffmpeg-static");
+const ffprobePath = require("ffprobe-static").path;
 const mime = require("mime-types");
+const cors = require("cors");
 
 const { app } = require("electron");
 
 let server = null;
+
 const wallpaper = app.isPackaged
   ? path.join(
       process.env.PROGRAMDATA || "C:\\ProgramData",
@@ -20,21 +23,110 @@ function startLocalVideoServer() {
 
   const app = express();
 
+  app.use(
+    cors({
+      origin: true,
+    }),
+  );
+  app.use(express.json());
+
   app.get("/wallpaper", (req, res) => {
     if (!fs.existsSync(wallpaper)) {
       return res.sendStatus(404);
     }
-
-    console.log("WALLPAPER:", wallpaper);
-
     res.sendFile(wallpaper, (err) => {
       if (err) {
         console.error("SEND FILE ERROR:", err);
       }
     });
   });
+
+  app.get("/metadata", (req, res) => {
+    try {
+      const file = req.query.file;
+
+      if (!file) {
+        return res.status(400).json({
+          message: "File required",
+        });
+      }
+
+      if (!fs.existsSync(file)) {
+        return res.status(404).json({
+          message: "File not found",
+          file,
+        });
+      }
+
+      const ffprobe = spawn(
+        ffprobePath,
+        [
+          "-v",
+          "error",
+          "-show_entries",
+          "format=duration",
+          "-of",
+          "default=noprint_wrappers=1:nokey=1",
+          file,
+        ],
+        {
+          windowsHide: true,
+        },
+      );
+
+      let output = "";
+      let errorOutput = "";
+
+      ffprobe.stdout.on("data", (data) => {
+        output += data.toString();
+      });
+
+      ffprobe.stderr.on("data", (data) => {
+        errorOutput += data.toString();
+      });
+
+      ffprobe.on("error", (err) => {
+        console.error("FFPROBE SPAWN ERROR:", err);
+
+        if (!res.headersSent) {
+          res.status(500).json({
+            message: "Gagal menjalankan ffprobe",
+            error: err.message,
+          });
+        }
+      });
+
+      ffprobe.on("close", (code) => {
+        if (res.headersSent) return;
+
+        if (code !== 0) {
+          return res.status(500).json({
+            message: "FFprobe gagal membaca video",
+            error: errorOutput,
+          });
+        }
+
+        const duration = parseFloat(output.trim());
+
+        if (!Number.isFinite(duration)) {
+          return res.status(500).json({
+            message: "Durasi video tidak valid",
+            output,
+          });
+        }
+
+        res.json({
+          duration,
+        });
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  });
+
   app.get("/stream", (req, res) => {
     const file = req.query.file;
+    const start = Number(req.query.start) || 0;
 
     if (!file) {
       return res.status(400).send("File required");
@@ -53,7 +145,7 @@ function startLocalVideoServer() {
     }
 
     // AVI / MPG / MPEG / MKV dll
-    return transcode(file, req, res);
+    return transcode(file, req, res, start);
   });
 
   server = app.listen(8765, "127.0.0.1", () => {
@@ -122,7 +214,7 @@ function streamOriginal(file, req, res) {
   });
 }
 
-function transcode(file, req, res) {
+function transcode(file, req, res, start = 0) {
   res.writeHead(200, {
     "Content-Type": "video/mp4",
     "Cache-Control": "no-cache",
@@ -133,6 +225,9 @@ function transcode(file, req, res) {
     ffmpegPath,
     [
       "-hide_banner",
+
+      // SEEK INPUT
+      ...(start > 0 ? ["-ss", String(start)] : []),
 
       "-i",
       file,

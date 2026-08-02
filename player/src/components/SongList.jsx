@@ -5,6 +5,7 @@ import {
   ArrowUpOutlined,
   ArrowDownOutlined,
 } from "@ant-design/icons";
+import { useEffect, useState } from "react";
 
 function SongList({
   songs,
@@ -14,9 +15,35 @@ function SongList({
   addSong,
   rowRefs,
 }) {
+  const [activeId, setActiveId] = useState(0);
+
+  useEffect(() => {
+    setActiveId(songs[activeIndex]?.id);
+  }, [songs]);
+
   const columnsTitle = [
     { title: "Title", dataIndex: "name" },
     { title: "Artist", dataIndex: "artist" },
+    {
+      title: "",
+      align: "end",
+      width: 40,
+      render: (_, row) => {
+        return (
+          activeId === row.id && (
+            <Button
+              type="primary"
+              size="small"
+              onClick={() => {
+                addSong(songs[activeIndex]);
+              }}
+            >
+              <ArrowRightOutlined />
+            </Button>
+          )
+        );
+      },
+    },
   ];
 
   return (
@@ -36,6 +63,7 @@ function SongList({
       <Input placeholder="Cari lagu..." style={{ marginBottom: 8 }} />
 
       <Table
+        className="song-table"
         rowKey={"id"}
         dataSource={songs}
         columns={columnsTitle}
@@ -51,23 +79,24 @@ function SongList({
           return {
             onClick: () => {
               setActiveIndex(index);
+              setActiveId(record.id);
             },
           };
         }}
-        components={{
-          body: {
-            row: (props) => {
-              const { "data-row-key": key, ...rest } = props;
-              const index = songs.findIndex((s) => s.id === key);
+        // components={{
+        //   body: {
+        //     row: (props) => {
+        //       const { "data-row-key": key, ...rest } = props;
+        //       const index = songs.findIndex((s) => s.id === key);
 
-              return (
-                <tr {...rest} ref={(el) => (rowRefs.current[index] = el)} />
-              );
-            },
-          },
-        }}
+        //       return (
+        //         <tr {...rest} ref={(el) => (rowRefs.current[index] = el)} />
+        //       );
+        //     },
+        //   },
+        // }}
       />
-
+      {/* 
       <div
         style={{
           display: "flex",
@@ -107,7 +136,7 @@ function SongList({
         >
           <ArrowDownOutlined />
         </Button>
-      </div>
+      </div> */}
     </Col>
   );
 }

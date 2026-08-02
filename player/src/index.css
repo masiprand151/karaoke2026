@@ -13,8 +13,26 @@
 }
 
 .ant-table {
-  background: transparent !important;
-  border: 1px solid #00ffff;
+  background-color: transparent !important;
+}
+
+.song-table .ant-table-body {
+  overflow-y: scroll !important;
+  scrollbar-width: auto;
+  scrollbar-color: #00ffff #222;
+}
+
+.song-table .ant-table-body::-webkit-scrollbar {
+  width: 20px !important;
+}
+
+.song-table .ant-table-body::-webkit-scrollbar-track {
+  background: #222 !important;
+}
+
+.song-table .ant-table-body::-webkit-scrollbar-thumb {
+  background: #00ffff !important;
+  border-radius: 6px;
 }
 
 .ant-table-thead > tr > th {

@@ -10,6 +10,7 @@ function VideoPlayer({
   isRepeat,
   seekOffset,
   streamVersion,
+  volume,
 }) {
   const currentSong = playlist[0];
 
@@ -30,7 +31,7 @@ function VideoPlayer({
         <video
           ref={videoRef}
           // PENTING: paksa video baru ketika seek
-          key={`${currentSong.filePath}-${streamVersion}`}
+          key={`${currentSong.key}-${streamVersion}`}
           src={`http://127.0.0.1:8765/stream?file=${encodeURIComponent(
             currentSong.filePath,
           )}&start=${seekOffset}`}
@@ -59,15 +60,18 @@ function VideoPlayer({
               return next;
             });
           }}
-          onCanPlay={() => {
-            console.log("VIDEO CAN PLAY");
-          }}
           onPlay={() => {
             setIsPlaying(true);
             setIsStopped(false);
           }}
           onPause={() => {
             setIsPlaying(false);
+          }}
+          onLoadedMetadata={(e) => {
+            e.currentTarget.volume = volume / 100;
+          }}
+          onCanPlay={(e) => {
+            e.currentTarget.volume = volume / 100;
           }}
         />
       )}

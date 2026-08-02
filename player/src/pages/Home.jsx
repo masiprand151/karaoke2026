@@ -193,7 +193,7 @@ function Home() {
     setSeekOffset(0);
     setCurrentTime(0);
     setStreamVersion(0);
-  }, [playlist[0]?.filePath]);
+  }, [playlist[0]?.key]);
 
   return (
     <Row style={{ height: "100vh" }}>
@@ -261,6 +261,7 @@ function Home() {
         seekTime={seekTime}
         seekOffset={seekOffset}
         streamVersion={streamVersion}
+        volume={volume}
       />
     </Row>
   );

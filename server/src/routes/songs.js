@@ -142,19 +142,57 @@ route.post("/import", async (req, res, next) => {
 
 route.get("/", async (req, res, next) => {
   try {
-    const search = req.query.search || "";
+    const search = (req.query.search || "").trim();
+    const page = Math.max(Number(req.query.page) || 1, 1);
+    const limit = Math.min(Number(req.query.limit) || 10, 100);
+
+    const skip = (page - 1) * limit;
+
+    const where = search
+      ? {
+          OR: [
+            {
+              name: {
+                contains: search,
+              },
+            },
+            {
+              artist: {
+                contains: search,
+              },
+            },
+          ],
+        }
+      : {};
 
     const songs = await prisma.songs.findMany({
-      where: {
-        name: {
-          contains: search,
-        },
+      where,
+      skip,
+      take: limit + 1,
+
+      orderBy: {
+        id: "asc",
+      },
+
+      select: {
+        id: true,
+        name: true,
+        artist: true,
+        filePath: true,
       },
     });
+
+    const hasMore = songs.length > limit;
+
+    if (hasMore) {
+      songs.pop();
+    }
 
     res.json({
       success: true,
       songs,
+      page,
+      hasMore,
     });
   } catch (error) {
     next(error);

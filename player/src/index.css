@@ -23,7 +23,25 @@
 }
 
 .song-table .ant-table-body::-webkit-scrollbar {
-  width: 20px !important;
+  width: 40px !important;
+  overflow-y: auto !important;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+.song-table-drag {
+  cursor: grab;
+  touch-action: none;
+}
+
+.song-table-drag:active {
+  cursor: grabbing;
+}
+
+.song-table .ant-table-body {
+  overflow-y: auto !important;
+  user-select: none;
 }
 
 .song-table .ant-table-body::-webkit-scrollbar-track {
@@ -33,6 +51,21 @@
 .song-table .ant-table-body::-webkit-scrollbar-thumb {
   background: #00ffff !important;
   border-radius: 6px;
+  width: 50px;
+}
+
+.song-table .ant-table-body {
+  height: 250px !important;
+  max-height: 250px !important;
+  overflow-y: auto !important;
+}
+
+.song-table .ant-table-placeholder {
+  height: 250px !important;
+}
+
+.song-table .ant-table-placeholder > td {
+  height: 250px !important;
 }
 
 .ant-table-thead > tr > th {

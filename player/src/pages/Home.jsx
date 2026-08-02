@@ -13,6 +13,8 @@ import VideoPlayer from "../components/VideoPlayer";
 function Home() {
   const [songs, setSongs] = useState([]);
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -29,20 +31,29 @@ function Home() {
   const rowRefs = useRef([]);
   const videoRef = useRef(null);
 
-  const getSongs = async (q = "") => {
+  const getSongs = async (q = "", currentPage = 1, append = false) => {
+    if (loading) return;
+
     try {
       setLoading(true);
 
-      const res = await api.get(`/songs?search=${query}`);
+      const res = await api.get(
+        `/songs?search=${encodeURIComponent(q)}&page=${currentPage}&limit=50`,
+      );
 
-      setSongs(res.songs);
+      if (append) {
+        setSongs((prev) => [...prev, ...res.songs]);
+      } else {
+        setSongs(res.songs);
+      }
+
+      setHasMore(res.hasMore);
     } catch (error) {
       console.log(error);
     } finally {
       setLoading(false);
     }
   };
-
   // setiap kali activeIndex berubah, scroll ke baris itu
   useEffect(() => {
     if (rowRefs.current[activeIndex]) {
@@ -54,8 +65,25 @@ function Home() {
   }, [activeIndex]);
 
   useEffect(() => {
-    getSongs(query);
+    const timer = setTimeout(() => {
+      setPage(1);
+      setHasMore(true);
+
+      getSongs(query, 1, false);
+    }, 250);
+
+    return () => clearTimeout(timer);
   }, [query]);
+
+  const handleLoadMore = async () => {
+    if (loading || !hasMore) return;
+
+    const nextPage = page + 1;
+
+    setPage(nextPage);
+
+    await getSongs(query, nextPage, true);
+  };
 
   useEffect(() => {
     if (!playlist.length) {
@@ -193,6 +221,10 @@ function Home() {
             setActiveIndex={setActiveIndex}
             addSong={addSong}
             rowRefs={rowRefs}
+            query={query}
+            setQuery={setQuery}
+            hasMore={hasMore}
+            onLoadMore={handleLoadMore}
           />
 
           <PlayerSidebar

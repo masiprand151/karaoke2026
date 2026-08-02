@@ -16,13 +16,13 @@
   background-color: transparent !important;
 }
 
-.song-table .ant-table-body {
+.ant-table-body {
   overflow-y: scroll !important;
   scrollbar-width: auto;
   scrollbar-color: #00ffff #222;
 }
 
-.song-table .ant-table-body::-webkit-scrollbar {
+.ant-table-body::-webkit-scrollbar {
   width: 40px !important;
   overflow-y: auto !important;
   touch-action: pan-y;
@@ -88,8 +88,8 @@
 }
 /* hover seluruh baris */
 .ant-table-tbody > tr:hover > td {
-  background: #00ffff !important;
-  color: #000 !important; /* biar kontras dengan background cyan */
+  background: #535353 !important;
+  color: #fff !important; /* biar kontras dengan background cyan */
 }
 
 .ant-table-tbody > tr.active-row > td {

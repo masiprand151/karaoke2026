@@ -195,7 +195,7 @@ function SongList({
           size="small"
           sticky
           scroll={{ y: 250 }}
-          loading={loading}
+          // loading={loading}
           rowClassName={(_, index) => {
             return index === activeIndex ? "active-row" : "";
           }}

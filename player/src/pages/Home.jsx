@@ -55,14 +55,14 @@ function Home() {
     }
   };
   // setiap kali activeIndex berubah, scroll ke baris itu
-  useEffect(() => {
-    if (rowRefs.current[activeIndex]) {
-      rowRefs.current[activeIndex].scrollIntoView({
-        behavior: "smooth",
-        block: "nearest",
-      });
-    }
-  }, [activeIndex]);
+  // useEffect(() => {
+  //   if (rowRefs.current[activeIndex]) {
+  //     rowRefs.current[activeIndex].scrollIntoView({
+  //       behavior: "smooth",
+  //       block: "nearest",
+  //     });
+  //   }
+  // }, [activeIndex]);
 
   useEffect(() => {
     const timer = setTimeout(() => {

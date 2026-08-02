@@ -113,19 +113,6 @@ function PlayerControls({
       </Col>
 
       <Col span={7}>
-        <div
-          style={{
-            textAlign: "center",
-            marginBottom: 4,
-            marginTop: 4,
-            fontWeight: 600,
-            color: "#fff",
-          }}
-        >
-          {formatTime(isSeeking ? sliderValue : currentTime)} /{" "}
-          {formatTime(duration)}
-        </div>
-
         <Slider
           min={0}
           max={duration || 0}
@@ -134,6 +121,10 @@ function PlayerControls({
           onChangeComplete={handleSliderComplete}
           tooltip={{
             formatter: formatTime,
+          }}
+          style={{
+            background: "#989d9f",
+            borderRadius: 10,
           }}
         />
       </Col>

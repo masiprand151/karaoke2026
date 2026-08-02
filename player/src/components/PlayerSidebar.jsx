@@ -36,11 +36,6 @@ function PlayerSidebar({
       </Title>
 
       <PlaylistTable />
-
-      <div style={{ color: "#fff", marginBottom: 16 }}>
-        Sekarang: {playlist[0]?.name}
-      </div>
-
       <div
         style={{
           background: "#222",

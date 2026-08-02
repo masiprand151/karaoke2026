@@ -68,28 +68,19 @@ export default function PlaylistTable() {
       />
 
       <Flex justify="center" gap="middle" style={{ margin: 8 }}>
-        <Button type="primary" onClick={clearPlaylist}>
+        <Button onClick={clearPlaylist}>
           <CloseCircleOutlined />
         </Button>
-        <Button
-          type="primary"
-          onClick={() => removeSong(playlist[selectedIndex].key)}
-        >
+        <Button onClick={() => removeSong(playlist[selectedIndex].key)}>
           <DeleteOutlined />
         </Button>
-        <Button type="primary">
+        <Button onClick={() => moveSong(selectedIndex, 1)}>
           <ToTopOutlined />
         </Button>
-        <Button
-          type="primary"
-          onClick={() => moveSong(selectedIndex, selectedIndex - 1)}
-        >
+        <Button onClick={() => moveSong(selectedIndex, selectedIndex - 1)}>
           <UpOutlined />
         </Button>
-        <Button
-          type="primary"
-          onClick={() => moveSong(selectedIndex, selectedIndex + 1)}
-        >
+        <Button onClick={() => moveSong(selectedIndex, selectedIndex + 1)}>
           <DownOutlined />
         </Button>
       </Flex>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   Button,
   Modal,
@@ -21,7 +21,7 @@ export default function Standby() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [pin, setPin] = useState("");
-
+  const inputRef = useRef(null);
   const { showAlert } = useAlert();
   const navigate = useNavigate();
 
@@ -67,7 +67,17 @@ export default function Standby() {
       >
         {/* Tombol login di kiri atas */}
         <div style={{ position: "absolute", top: 16, left: 16 }}>
-          <Button type="primary" onClick={() => setOpen(true)}>
+          <Button
+            type="primary"
+            onClick={() => {
+              setOpen(true);
+              setTimeout(() => {
+                if (inputRef.current) {
+                  inputRef.current.focus();
+                }
+              }, 0);
+            }}
+          >
             <SettingOutlined />
           </Button>
         </div>
@@ -87,18 +97,15 @@ export default function Standby() {
           <Flex vertical style={{ padding: "10% 30%" }}>
             <Title level={5}>Masukkan PIN</Title>
             <Input.Password
+              ref={inputRef}
               value={pin}
               style={{ marginBottom: 16 }}
               placeholder="PIN"
               onChange={handleChange}
+              autoFocus
             />
 
-            <NumberPad
-              onNumberClick={handleNumberClick}
-              onClear={handleClear}
-              onDelete={handleDelete}
-            />
-
+            <NumberPad value={pin} onChange={setPin} inputRef={inputRef} />
             <Button
               type="primary"
               block

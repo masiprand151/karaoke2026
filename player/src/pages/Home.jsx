@@ -144,19 +144,23 @@ function Home() {
   };
 
   const handleNext = () => {
-    setPlaylist((prev) => {
-      const next = prev.slice(1);
+    if (playlist.length === 1) return;
 
-      if (next.length === 0) {
-        setIsPlaying(false);
-        setIsStopped(true);
-      } else {
-        setIsPlaying(true);
-        setIsStopped(false);
-      }
+    const next = playlist.slice(1);
 
-      return next;
-    });
+    setPlaylist(next);
+
+    setSeekOffset(0);
+    setCurrentTime(0);
+    setStreamVersion(0);
+
+    if (next.length === 0) {
+      setIsPlaying(false);
+      setIsStopped(true);
+    } else {
+      setIsPlaying(true);
+      setIsStopped(false);
+    }
   };
 
   // handle volume
@@ -299,6 +303,7 @@ function Home() {
           seekOffset={seekOffset}
           streamVersion={streamVersion}
           volume={volume}
+          onNext={handleNext}
         />
       </Row>
     </ConfigProvider>

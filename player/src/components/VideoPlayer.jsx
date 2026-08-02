@@ -11,6 +11,7 @@ function VideoPlayer({
   seekOffset,
   streamVersion,
   volume,
+  onNext,
 }) {
   const currentSong = playlist[0];
 
@@ -49,16 +50,7 @@ function VideoPlayer({
             // kalau repeat aktif, onEnded tidak perlu mengurus playlist
             if (isRepeat) return;
 
-            setPlaylist((prev) => {
-              const next = prev.slice(1);
-
-              if (next.length === 0) {
-                setIsPlaying(false);
-                setIsStopped(true);
-              }
-
-              return next;
-            });
+            onNext?.();
           }}
           onPlay={() => {
             setIsPlaying(true);

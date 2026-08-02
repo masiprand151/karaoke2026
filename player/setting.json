@@ -8,5 +8,7 @@
 
   "display": {
     "screenmode": 2
-  }
+  },
+  "background": "C:\\Users\\frandy\\Desktop\\karaoke2026\\player\\bg\\bg1.jpeg",
+  "color": "dark"
 }

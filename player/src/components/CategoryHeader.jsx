@@ -2,7 +2,7 @@ import { Row, Button } from "antd";
 
 function CategoryHeader() {
   return (
-    <Row justify="center" style={{ padding: "8px 0", background: "#111" }}>
+    <Row justify="center" style={{ padding: "8px 0" }}>
       {[
         "ALL",
         "INDO",
@@ -18,11 +18,9 @@ function CategoryHeader() {
       ].map((cat) => (
         <Button
           key={cat}
+          type="dashed"
           style={{
             margin: "0 4px",
-            background: "#400",
-            color: "#fff",
-            border: "1px solid #f00",
           }}
         >
           {cat}

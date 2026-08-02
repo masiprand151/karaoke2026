@@ -72,4 +72,33 @@ function saveConfig(config) {
   return config;
 }
 
-module.exports = { getSongsFromFolder, getConfigPath, getConfig, saveConfig };
+// ==========================
+// BACKGROUND
+// ==========================
+function getBackground() {
+  const config = getConfig();
+
+  const filePath = config.background;
+
+  if (!filePath) {
+    return null;
+  }
+
+  if (!fs.existsSync(filePath)) {
+    console.error("BACKGROUND TIDAK DITEMUKAN:", filePath);
+    return null;
+  }
+
+  return {
+    name: path.basename(filePath),
+    path: filePath,
+  };
+}
+
+module.exports = {
+  getSongsFromFolder,
+  getConfigPath,
+  getConfig,
+  saveConfig,
+  getBackground,
+};

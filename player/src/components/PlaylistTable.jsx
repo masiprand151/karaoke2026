@@ -37,8 +37,9 @@ export default function PlaylistTable() {
   }, [selectedIndex]);
 
   return (
-    <div style={{ height: "60%", background: "#111", marginBottom: 8 }}>
+    <div style={{ height: "60%", marginBottom: 8 }}>
       <Table
+        className="song-table"
         rowKey={"key"}
         dataSource={playlist.filter((_, index) => index !== 0)} // tetap simpan index 0, tapi tidak ditampilkan
         columns={[{ title: "Title", dataIndex: "name" }]}

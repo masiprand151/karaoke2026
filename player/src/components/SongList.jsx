@@ -160,7 +160,7 @@ function SongList({
     <Col
       span={16}
       style={{
-        padding: 18,
+        padding: 10,
         height: "100%",
         display: "flex",
         flexDirection: "column",

@@ -68,12 +68,12 @@ function PlayerControls({
       style={{
         height: "12%",
       }}
+      justify={"center"}
     >
       <Col span={16}>
         <Flex justify="space-around">
           <Button
             icon={<RedoOutlined />}
-            type="primary"
             danger={isRepeat}
             style={buttonStyle}
             onClick={onRepeat}
@@ -81,21 +81,18 @@ function PlayerControls({
 
           <Button
             icon={isPlaying ? <PauseCircleOutlined /> : <PlayCircleOutlined />}
-            type="primary"
             style={buttonStyle}
             onClick={onPlayPause}
           />
 
           <Button
             icon={<ForwardOutlined />}
-            type="primary"
             style={buttonStyle}
             onClick={onNext}
           />
 
           <Button
             icon={<BorderOutlined />}
-            type="primary"
             style={buttonStyle}
             onClick={onStop}
           />
@@ -104,29 +101,27 @@ function PlayerControls({
 
           <Button icon={<PhoneOutlined />} type="primary" style={buttonStyle} />
 
-          <Button
-            icon={<MessageOutlined />}
-            type="primary"
-            style={buttonStyle}
-          />
+          <Button icon={<MessageOutlined />} style={buttonStyle} />
         </Flex>
       </Col>
 
       <Col span={7}>
-        <Slider
-          min={0}
-          max={duration || 0}
-          value={sliderValue}
-          onChange={handleSliderChange}
-          onChangeComplete={handleSliderComplete}
-          tooltip={{
-            formatter: formatTime,
-          }}
-          style={{
-            background: "#989d9f",
-            borderRadius: 10,
-          }}
-        />
+        <Flex>
+          <Slider
+            min={0}
+            max={duration || 0}
+            value={sliderValue}
+            onChange={handleSliderChange}
+            onChangeComplete={handleSliderComplete}
+            tooltip={{
+              formatter: formatTime,
+            }}
+            style={{
+              borderRadius: 10,
+              flex: 1,
+            }}
+          />
+        </Flex>
       </Col>
     </Row>
   );

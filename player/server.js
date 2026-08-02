@@ -6,7 +6,7 @@ const ffmpegPath = require("ffmpeg-static");
 const ffprobePath = require("ffprobe-static").path;
 const mime = require("mime-types");
 const cors = require("cors");
-
+const { getConfig } = require("./lib");
 const { app } = require("electron");
 
 let server = null;
@@ -122,6 +122,18 @@ function startLocalVideoServer() {
     } catch (error) {
       console.log(error);
     }
+  });
+
+  app.get("/background", (req, res) => {
+    const config = getConfig();
+
+    const file = config.background;
+
+    if (!file || !fs.existsSync(file)) {
+      return res.sendStatus(404);
+    }
+
+    res.sendFile(path.resolve(file));
   });
 
   app.get("/stream", (req, res) => {

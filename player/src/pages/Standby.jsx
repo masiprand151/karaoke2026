@@ -9,11 +9,14 @@ import {
   Col,
   Drawer,
   Flex,
+  ConfigProvider,
+  theme as antdTheme,
 } from "antd";
 import { CloseOutlined, SettingOutlined } from "@ant-design/icons";
 import NumberPad from "../components/NumberPad";
 import { useAlert } from "../contexts/AlertContext";
 import { useNavigate } from "react-router-dom";
+import useBackgroundTheme from "../hooks/useBackgroundTheme";
 
 const { Title } = Typography;
 
@@ -24,6 +27,8 @@ export default function Standby() {
   const inputRef = useRef(null);
   const { showAlert } = useAlert();
   const navigate = useNavigate();
+  const backgroundUrl = "http://127.0.0.1:8765/background";
+  const backgroundTheme = useBackgroundTheme(backgroundUrl);
 
   const handleNumberClick = (num) => setPin((prev) => prev + num);
   const handleClear = () => setPin("");
@@ -57,102 +62,139 @@ export default function Standby() {
   };
 
   return (
-    <Row style={{ height: "100vh" }} id="left-panel">
-      {/* Kolom kiri */}
-      <Col
-        span={12}
-        style={{
-          background: "radial-gradient(circle, #001529, #000)",
-        }}
-      >
-        {/* Tombol login di kiri atas */}
-        <div style={{ position: "absolute", top: 16, left: 16 }}>
-          <Button
-            type="primary"
-            onClick={() => {
-              setOpen(true);
-              setTimeout(() => {
-                if (inputRef.current) {
-                  inputRef.current.focus();
-                }
-              }, 0);
-            }}
-          >
-            <SettingOutlined />
-          </Button>
-        </div>
+    <ConfigProvider
+      theme={{
+        algorithm: backgroundTheme.isDark
+          ? antdTheme.darkAlgorithm
+          : antdTheme.defaultAlgorithm,
 
-        {/* Drawer login di sisi kiri */}
-        <Drawer
-          title="Login Room"
-          placement="left"
-          open={open}
-          onClose={() => setOpen(false)}
-          width={1024}
+        token: {
+          colorPrimary: backgroundTheme.primaryColor,
+          colorText: backgroundTheme.textColor,
+        },
+        components: {
+          Button: {
+            // tombol biasa
+            defaultColor: backgroundTheme.textColor,
+
+            // hover tombol biasa
+            defaultHoverColor: backgroundTheme.isDark ? "#ffffff" : "#000000",
+            defaultHoverBorderColor: backgroundTheme.isDark
+              ? "#ffffff"
+              : "#000000",
+
+            // primary
+            primaryColor: "#ffffff",
+          },
+        },
+      }}
+    >
+      {/* UI Anda */}
+      <Row style={{ height: "100vh" }} id="left-panel">
+        {/* Kolom kiri */}
+        <Col
+          span={12}
           style={{
-            background: "radial-gradient(circle, #001529, #000)",
+            backgroundImage: 'url("http://127.0.0.1:8765/background")',
+
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
           }}
-          closeIcon={<CloseOutlined style={{ color: "white", fontSize: 20 }} />}
         >
-          <Flex vertical style={{ padding: "10% 30%" }}>
-            <Title level={5}>Masukkan PIN</Title>
-            <Input.Password
-              ref={inputRef}
-              value={pin}
-              style={{ marginBottom: 16 }}
-              placeholder="PIN"
-              onChange={handleChange}
-              autoFocus
-            />
+          {/* Tombol login di kiri atas */}
+          {!open && (
+            <div style={{ position: "absolute", top: 16, left: 16 }}>
+              <Button
+                type="primary"
+                onClick={() => {
+                  setOpen(true);
+                  setTimeout(() => {
+                    if (inputRef.current) {
+                      inputRef.current.focus();
+                    }
+                  }, 0);
+                }}
+              >
+                <SettingOutlined />
+              </Button>
+            </div>
+          )}
 
-            <NumberPad value={pin} onChange={setPin} inputRef={inputRef} />
-            <Button
-              type="primary"
-              block
-              style={{ marginTop: 16 }}
-              onClick={handleLogin}
-            >
-              Maintenance
-            </Button>
-            <Button
-              block
-              style={{ marginTop: 16, background: "black", color: "#fff" }}
-            >
-              Restart
-            </Button>
-            <Button
-              type="primary"
-              block
-              style={{ marginTop: 16 }}
-              onClick={handleClose}
-              danger
-            >
-              Exit
-            </Button>
-          </Flex>
-        </Drawer>
-      </Col>
+          {/* Drawer login di sisi kiri */}
+          <Drawer
+            title="Login Room"
+            placement="left"
+            open={open}
+            onClose={() => setOpen(false)}
+            width={1024}
+            style={{
+              background: "transparent",
+            }}
+            closeIcon={
+              <CloseOutlined style={{ color: "white", fontSize: 20 }} />
+            }
+          >
+            <Flex vertical style={{ padding: "10% 30%" }}>
+              <Title level={5}>Masukkan PIN</Title>
+              <Input.Password
+                ref={inputRef}
+                value={pin}
+                style={{ marginBottom: 16 }}
+                placeholder="PIN"
+                onChange={handleChange}
+                autoFocus
+              />
 
-      {/* Kanan: video */}
-      <Col span={12} style={{ background: "#fff" }}>
-        <video
-          key={"wallpaper"}
-          src={`http://127.0.0.1:8765/wallpaper`}
-          autoPlay
-          controls
-          loop
-          playsInline
-          muted
-          preload="auto"
-          style={{
-            width: "100%",
-            height: "100%",
-            objectFit: "contain",
-            display: "block",
-            background: "black",
-          }}
-        />
-      </Col>
-    </Row>
+              <NumberPad value={pin} onChange={setPin} inputRef={inputRef} />
+              <Button
+                type="primary"
+                block
+                style={{ marginTop: 16 }}
+                onClick={handleLogin}
+              >
+                Maintenance
+              </Button>
+              <Button
+                block
+                style={{ marginTop: 16, background: "black", color: "#fff" }}
+              >
+                Restart
+              </Button>
+              <Button
+                type="primary"
+                block
+                style={{ marginTop: 16 }}
+                onClick={handleClose}
+                danger
+              >
+                Exit
+              </Button>
+            </Flex>
+          </Drawer>
+        </Col>
+
+        {/* Kanan: video */}
+        <Col span={12} style={{ background: "#fff" }}>
+          <video
+            key={"wallpaper"}
+            src={`http://127.0.0.1:8765/wallpaper`}
+            autoPlay
+            controls
+            loop
+            playsInline
+            muted
+            preload="auto"
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "contain",
+              display: "block",
+              background: "black",
+            }}
+          />
+        </Col>
+      </Row>
+    </ConfigProvider>
   );
 }

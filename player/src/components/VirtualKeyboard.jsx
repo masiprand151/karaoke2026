@@ -127,7 +127,6 @@ function VirtualKeyboard({ value = "", onChange, onEnter, inputRef }) {
       style={{
         width: "100%",
         padding: 6,
-        background: "#001529",
         borderRadius: 8,
         boxSizing: "border-box",
       }}
@@ -145,8 +144,6 @@ function VirtualKeyboard({ value = "", onChange, onEnter, inputRef }) {
           {row.map((key) => (
             <Button
               key={key}
-              color="primary"
-              variant="outlined"
               style={{
                 flex: 1,
                 minWidth: 0,
@@ -154,7 +151,7 @@ function VirtualKeyboard({ value = "", onChange, onEnter, inputRef }) {
                 padding: 0,
                 fontSize: 14,
                 fontWeight: "bold",
-                background: "transparent",
+                // background: "transparent",
               }}
               onClick={() => handleKey(key)}
             >
@@ -173,14 +170,12 @@ function VirtualKeyboard({ value = "", onChange, onEnter, inputRef }) {
         }}
       >
         <Button
-          color="primary"
-          variant="outlined"
           icon={<ArrowUpOutlined />}
           style={{
             height: 36,
             flex: 1.2,
 
-            background: "transparent",
+            // background: "transparent",
           }}
           onClick={() => setShift((prev) => !prev)}
         >
@@ -188,12 +183,9 @@ function VirtualKeyboard({ value = "", onChange, onEnter, inputRef }) {
         </Button>
 
         <Button
-          color="primary"
-          variant="outlined"
           style={{
             height: 36,
             flex: 4,
-            background: "transparent",
           }}
           onClick={handleSpace}
         >
@@ -201,12 +193,9 @@ function VirtualKeyboard({ value = "", onChange, onEnter, inputRef }) {
         </Button>
 
         <Button
-          color="danger"
-          variant="outlined"
           style={{
             height: 36,
             flex: 1,
-            background: "transparent",
           }}
           onClick={handleClear}
         >
@@ -214,25 +203,19 @@ function VirtualKeyboard({ value = "", onChange, onEnter, inputRef }) {
         </Button>
 
         <Button
-          color="primary"
-          variant="outlined"
           icon={<ArrowLeftOutlined />}
           style={{
             height: 36,
-            background: "transparent",
             flex: 1,
           }}
           onClick={handleBackspace}
         />
 
         <Button
-          color="primary"
-          variant="outlined"
           icon={<EnterOutlined />}
           style={{
             height: 36,
             flex: 1.4,
-            background: "transparent",
           }}
           onClick={onEnter}
         >

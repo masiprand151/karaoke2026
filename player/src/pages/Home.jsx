@@ -9,6 +9,8 @@ import SongList from "../components/SongList";
 import PlayerSidebar from "../components/PlayerSidebar";
 import PlayerControls from "../components/PlayerControls";
 import VideoPlayer from "../components/VideoPlayer";
+import useBackgroundTheme from "../hooks/useBackgroundTheme";
+import { ConfigProvider, theme as antdTheme } from "antd";
 
 function Home() {
   const [songs, setSongs] = useState([]);
@@ -30,6 +32,9 @@ function Home() {
   const [streamVersion, setStreamVersion] = useState(0);
   const rowRefs = useRef([]);
   const videoRef = useRef(null);
+
+  const backgroundUrl = "http://127.0.0.1:8765/background";
+  const backgroundTheme = useBackgroundTheme(backgroundUrl);
 
   const getSongs = async (q = "", currentPage = 1, append = false) => {
     if (loading) return;
@@ -196,74 +201,107 @@ function Home() {
   }, [playlist[0]?.key]);
 
   return (
-    <Row style={{ height: "100vh" }}>
-      <Col
-        span={12}
-        style={{
-          background: "radial-gradient(circle, #001529, #000)",
-        }}
-      >
-        <CategoryHeader />
+    <ConfigProvider
+      theme={{
+        algorithm: backgroundTheme.isDark
+          ? antdTheme.darkAlgorithm
+          : antdTheme.defaultAlgorithm,
 
-        <Row
-          gutter={{
-            xs: 8,
-            sm: 16,
-            md: 24,
-            lg: 32,
+        token: {
+          colorPrimary: backgroundTheme.primaryColor,
+          colorText: backgroundTheme.textColor,
+        },
+        components: {
+          Button: {
+            // tombol biasa
+            defaultColor: backgroundTheme.textColor,
+
+            // hover tombol biasa
+            defaultHoverColor: backgroundTheme.isDark ? "#ffffff" : "#000000",
+            defaultHoverBorderColor: backgroundTheme.isDark
+              ? "#ffffff"
+              : "#000000",
+
+            // primary
+            primaryColor: "#ffffff",
+          },
+        },
+      }}
+    >
+      <Row style={{ height: "100vh" }}>
+        <Col
+          span={12}
+          style={{
+            backgroundImage: 'url("http://127.0.0.1:8765/background")',
+
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
           }}
-          style={{ height: "80%" }}
         >
-          <SongList
-            songs={songs}
-            loading={loading}
-            activeIndex={activeIndex}
-            setActiveIndex={setActiveIndex}
-            addSong={addSong}
-            rowRefs={rowRefs}
-            query={query}
-            setQuery={setQuery}
-            hasMore={hasMore}
-            onLoadMore={handleLoadMore}
-          />
+          <CategoryHeader />
 
-          <PlayerSidebar
-            playlist={playlist}
-            volume={volume}
-            setVolume={setVolume}
-            pitch={pitch}
-            setPitch={setPitch}
-          />
-        </Row>
+          <Row
+            gutter={{
+              xs: 8,
+              sm: 16,
+              md: 24,
+              lg: 32,
+            }}
+            style={{ height: "80%" }}
+            justify={"center"}
+          >
+            <SongList
+              songs={songs}
+              loading={loading}
+              activeIndex={activeIndex}
+              setActiveIndex={setActiveIndex}
+              addSong={addSong}
+              rowRefs={rowRefs}
+              query={query}
+              setQuery={setQuery}
+              hasMore={hasMore}
+              onLoadMore={handleLoadMore}
+            />
 
-        <PlayerControls
+            <PlayerSidebar
+              playlist={playlist}
+              volume={volume}
+              setVolume={setVolume}
+              pitch={pitch}
+              setPitch={setPitch}
+            />
+          </Row>
+
+          <PlayerControls
+            isPlaying={isPlaying}
+            onPlayPause={handlePlayPause}
+            onStop={handleStop}
+            onNext={handleNext}
+            onRepeat={() => setRepeat((prev) => !prev)}
+            isRepeat={repeat}
+            currentTime={currentTime}
+            duration={duration}
+            onSeek={handleSeek}
+          />
+        </Col>
+
+        <VideoPlayer
+          videoRef={videoRef}
+          playlist={playlist}
           isPlaying={isPlaying}
-          onPlayPause={handlePlayPause}
-          onStop={handleStop}
-          onNext={handleNext}
-          onRepeat={() => setRepeat((prev) => !prev)}
+          setIsPlaying={setIsPlaying}
+          setPlaylist={setPlaylist}
+          setIsStopped={setIsStopped}
+          isStopped={isStopped}
           isRepeat={repeat}
-          currentTime={currentTime}
-          duration={duration}
-          onSeek={handleSeek}
+          seekTime={seekTime}
+          seekOffset={seekOffset}
+          streamVersion={streamVersion}
+          volume={volume}
         />
-      </Col>
-
-      <VideoPlayer
-        videoRef={videoRef}
-        playlist={playlist}
-        isPlaying={isPlaying}
-        setIsPlaying={setIsPlaying}
-        setPlaylist={setPlaylist}
-        setIsStopped={setIsStopped}
-        isStopped={isStopped}
-        isRepeat={repeat}
-        seekTime={seekTime}
-        seekOffset={seekOffset}
-        streamVersion={streamVersion}
-        volume={volume}
-      />
-    </Row>
+      </Row>
+    </ConfigProvider>
   );
 }
 

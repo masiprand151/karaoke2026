@@ -38,17 +38,17 @@ function PlayerSidebar({
       <PlaylistTable />
       <div
         style={{
-          background: "#222",
           padding: 12,
           borderRadius: 8,
         }}
       >
         {/* volume */}
-        <div style={{ color: "#fff", marginBottom: 16 }}>VOLUME</div>
+        <div style={{ marginBottom: 16 }}>
+          <Title level={5}>VOLUME</Title>
+        </div>
 
         <Flex justify="space-around" align="center" style={{ marginBottom: 8 }}>
           <Button
-            type="primary"
             style={{
               width: 40,
               height: 40,
@@ -69,7 +69,6 @@ function PlayerSidebar({
           </div>
 
           <Button
-            type="primary"
             style={{
               width: 40,
               height: 40,
@@ -81,11 +80,12 @@ function PlayerSidebar({
         </Flex>
 
         {/* pitch */}
-        <div style={{ color: "#fff", marginBottom: 16 }}>PITCH</div>
+        <div style={{ marginBottom: 16 }}>
+          <Title level={5}>PITCH</Title>
+        </div>
 
         <Flex justify="space-around" align="center">
           <Button
-            type="primary"
             style={{
               width: 40,
               height: 40,
@@ -106,7 +106,6 @@ function PlayerSidebar({
           </div>
 
           <Button
-            type="primary"
             style={{
               width: 40,
               height: 40,

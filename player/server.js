@@ -25,7 +25,10 @@ function startLocalVideoServer() {
 
   app.use(
     cors({
-      origin: true,
+      origin: "*",
+      methods: ["GET", "HEAD", "OPTIONS"],
+      allowedHeaders: ["Range", "Content-Type"],
+      exposedHeaders: ["Content-Range", "Accept-Ranges", "Content-Length"],
     }),
   );
   app.use(express.json());

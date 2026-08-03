@@ -30,6 +30,7 @@ function Home() {
   const [seekTime, setSeekTime] = useState(0);
   const [seekOffset, setSeekOffset] = useState(0);
   const [streamVersion, setStreamVersion] = useState(0);
+  const [audioChannel, setAudioChannel] = useState(false);
   const rowRefs = useRef([]);
   const videoRef = useRef(null);
 
@@ -143,24 +144,57 @@ function Home() {
     setIsStopped(true);
   };
 
+  // const handleNext = () => {
+  //   if (playlist.length === 1) return;
+
+  //   const next = playlist.slice(1);
+
+  //   setPlaylist(next);
+
+  //   setSeekOffset(0);
+  //   setCurrentTime(0);
+  //   setStreamVersion(0);
+
+  //   if (next.length === 0) {
+  //     setIsPlaying(false);
+  //     setIsStopped(true);
+  //   } else {
+  //     setIsPlaying(true);
+  //     setIsStopped(false);
+  //   }
+  // };
+
   const handleNext = () => {
-    if (playlist.length === 1) return;
+    // Jika tidak ada lagu berikutnya, BLOKIR NEXT
+    if (playlist.length <= 1) {
+      return;
+    }
 
-    const next = playlist.slice(1);
+    const current = playlist[0];
+    const next = playlist[1];
 
-    setPlaylist(next);
+    // hapus lagu pertama
+
+    setPlaylist((prev) => prev.slice(1));
 
     setSeekOffset(0);
     setCurrentTime(0);
     setStreamVersion(0);
 
-    if (next.length === 0) {
-      setIsPlaying(false);
-      setIsStopped(true);
-    } else {
-      setIsPlaying(true);
-      setIsStopped(false);
+    // Kalau lagu berikutnya file yang SAMA
+    if (current.filePath === next.filePath) {
+      requestAnimationFrame(() => {
+        const video = videoRef.current;
+
+        if (!video) return;
+
+        video.currentTime = 0;
+        video.play().catch(console.error);
+      });
     }
+
+    setIsPlaying(true);
+    setIsStopped(false);
   };
 
   // handle volume
@@ -287,6 +321,8 @@ function Home() {
             currentTime={currentTime}
             duration={duration}
             onSeek={handleSeek}
+            audioChannel={audioChannel}
+            setAudioChannel={setAudioChannel}
           />
         </Col>
 
@@ -304,6 +340,8 @@ function Home() {
           streamVersion={streamVersion}
           volume={volume}
           onNext={handleNext}
+          pitch={pitch}
+          audioChannel={audioChannel}
         />
       </Row>
     </ConfigProvider>

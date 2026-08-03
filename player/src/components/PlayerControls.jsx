@@ -10,6 +10,7 @@ import {
   PhoneOutlined,
   BorderOutlined,
   MessageOutlined,
+  AudioMutedOutlined,
 } from "@ant-design/icons";
 
 function PlayerControls({
@@ -22,6 +23,8 @@ function PlayerControls({
   currentTime,
   duration,
   onSeek,
+  setAudioChannel,
+  audioChannel,
 }) {
   const [sliderValue, setSliderValue] = useState(0);
   const [isSeeking, setIsSeeking] = useState(false);
@@ -97,7 +100,12 @@ function PlayerControls({
             onClick={onStop}
           />
 
-          <Button icon={<AudioOutlined />} type="primary" style={buttonStyle} />
+          <Button
+            icon={audioChannel ? <AudioOutlined /> : <AudioMutedOutlined />}
+            type="primary"
+            style={buttonStyle}
+            onClick={() => setAudioChannel((prev) => !prev)}
+          />
 
           <Button icon={<PhoneOutlined />} type="primary" style={buttonStyle} />
 

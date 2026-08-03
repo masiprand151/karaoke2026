@@ -1,4 +1,6 @@
 import { Col } from "antd";
+import useKaraokeAudio from "../hooks/useKaraokeAudio";
+import { useEffect } from "react";
 
 function VideoPlayer({
   videoRef,
@@ -12,8 +14,11 @@ function VideoPlayer({
   streamVersion,
   volume,
   onNext,
+  pitch,
+  audioChannel,
 }) {
   const currentSong = playlist[0];
+  const { setupAudio } = useKaraokeAudio(videoRef, pitch, volume, audioChannel);
 
   return (
     <Col
@@ -32,7 +37,8 @@ function VideoPlayer({
         <video
           ref={videoRef}
           // PENTING: paksa video baru ketika seek
-          key={`${currentSong.key}-${streamVersion}`}
+          crossOrigin="anonymous"
+          // key={`${currentSong.key}-${streamVersion}`}
           src={`http://127.0.0.1:8765/stream?file=${encodeURIComponent(
             currentSong.filePath,
           )}&start=${seekOffset}`}
@@ -52,7 +58,8 @@ function VideoPlayer({
 
             onNext?.();
           }}
-          onPlay={() => {
+          onPlay={async () => {
+            await setupAudio();
             setIsPlaying(true);
             setIsStopped(false);
           }}

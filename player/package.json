@@ -19,7 +19,8 @@
     "mime-types": "^3.0.2",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "react-router-dom": "^7.18.1"
+    "react-router-dom": "^7.18.1",
+    "soundtouchjs": "^0.3.0"
   },
   "devDependencies": {
     "@types/react": "^19.2.17",

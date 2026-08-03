@@ -2,7 +2,7 @@
   "roomId": 1,
   "roomName": "ROOM 01",
   "pin": "1234",
-  "cstime": 10000,
+  "cstime": 10,
 
   "server": "http://127.0.0.1:8000",
 

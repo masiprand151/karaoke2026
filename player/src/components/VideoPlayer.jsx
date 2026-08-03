@@ -1,6 +1,8 @@
-import { Col } from "antd";
+import { Col, Typography } from "antd";
 import useKaraokeAudio from "../hooks/useKaraokeAudio";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+
+const { Title } = Typography;
 
 function VideoPlayer({
   videoRef,
@@ -16,9 +18,34 @@ function VideoPlayer({
   onNext,
   pitch,
   audioChannel,
+  remainingSeconds,
+  remainingText,
+  runningTexts,
 }) {
   const currentSong = playlist[0];
   const { setupAudio } = useKaraokeAudio(videoRef, pitch, volume, audioChannel);
+  const [runningText, setRunningText] = useState(null);
+
+  const isFiveMinutesLeft = remainingSeconds > 0 && remainingSeconds <= 5 * 60;
+
+  useEffect(() => {
+    const playNow = playlist[0]?.name;
+    const playNext = playlist[1]?.name;
+    const artistNow = playlist[0]?.artist;
+    const artistNext = playlist[1]?.artist;
+    setRunningText(
+      runningTexts
+        ? runningTexts
+        : [
+            "Selamat menikmati karaoke bersama kami",
+            "Dilarang membawa obat-obatan terlarang",
+            playNow && `Sekarang: ${playNow} - ${artistNow}`,
+            playNext && `Next: ${playNext} - ${artistNext}`,
+          ]
+            .filter(Boolean)
+            .join(" • "),
+    );
+  }, [playlist[0]?.key]);
 
   return (
     <Col
@@ -32,6 +59,56 @@ function VideoPlayer({
         justifyContent: "center",
       }}
     >
+      <div
+        style={{
+          position: "absolute",
+          width: "100%",
+          zIndex: 100000,
+          top: 0,
+          left: 0,
+          padding: "8px 16px",
+          display: "flex",
+          alignItems: "center",
+          boxSizing: "border-box",
+          background: "rgba(0, 0, 0, 0.5)",
+        }}
+      >
+        {/* REMAINING TIME */}
+        <Title
+          level={3}
+          type={isFiveMinutesLeft ? "danger" : "success"}
+          style={{
+            margin: 0,
+            flexShrink: 0,
+            marginRight: 20,
+          }}
+        >
+          {remainingText}
+        </Title>
+
+        {/* RUNNING TEXT */}
+        <div
+          className="running-text-container"
+          style={{
+            flex: 1,
+            overflow: "hidden",
+            whiteSpace: "nowrap",
+          }}
+        >
+          <div className="running-text">
+            <Title
+              level={3}
+              type="success"
+              style={{
+                textTransform: "uppercase",
+              }}
+            >
+              {runningText}
+            </Title>
+          </div>
+        </div>
+      </div>
+
       {/* VIDEO KARAOKE */}
       {currentSong && !isStopped && (
         <video

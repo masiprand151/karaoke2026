@@ -96,3 +96,31 @@
   background: #00ffff !important;
   color: #000 !important;
 }
+
+.running-text-container {
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.running-text {
+  display: inline-block;
+
+  /* mulai dari luar sebelah kanan */
+  padding-left: 100%;
+  padding-top: 10px;
+  font-size: 20px;
+  font-weight: 600;
+
+  animation: runningText 18s linear infinite;
+}
+
+@keyframes runningText {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-100%);
+  }
+}

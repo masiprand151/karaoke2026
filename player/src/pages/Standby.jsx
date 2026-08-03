@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Button,
   Modal,
@@ -17,6 +17,7 @@ import NumberPad from "../components/NumberPad";
 import { useAlert } from "../contexts/AlertContext";
 import { useNavigate } from "react-router-dom";
 import useBackgroundTheme from "../hooks/useBackgroundTheme";
+import useSetting from "../hooks/useSetting";
 
 const { Title } = Typography;
 
@@ -24,30 +25,21 @@ export default function Standby() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [pin, setPin] = useState("");
+  const [maintenance, setMaintenance] = useState(false);
+  const [checkin, setCheckin] = useState(false);
   const inputRef = useRef(null);
   const { showAlert } = useAlert();
   const navigate = useNavigate();
   const backgroundUrl = "http://127.0.0.1:8765/background";
   const backgroundTheme = useBackgroundTheme(backgroundUrl);
+  const { setting } = useSetting();
 
   const handleNumberClick = (num) => setPin((prev) => prev + num);
   const handleClear = () => setPin("");
   const handleDelete = () => setPin((prev) => prev.slice(0, -1));
+
   const handleLogin = () => {
-    if (pin === "1234") {
-      showAlert({
-        type: "success",
-        message: "Login berhasil",
-      });
-      navigate("/home");
-      setOpen(false);
-      setPin("");
-    } else {
-      showAlert({
-        type: "error",
-        message: "PIN salah!",
-      });
-    }
+    setMaintenance(true);
   };
 
   const handleChange = (e) => {
@@ -56,10 +48,25 @@ export default function Standby() {
   };
 
   const handleClose = () => {
-    if (pin === "1") {
+    if (pin === setting?.pin) {
       window.electron.closeApp();
     }
   };
+
+  useEffect(() => {
+    if (maintenance) {
+      if (pin === setting?.pin) {
+        navigate("/home", {
+          state: {
+            maintenance,
+            checkin,
+          },
+        });
+        setOpen(false);
+        setPin("");
+      }
+    }
+  }, [checkin, maintenance]);
 
   return (
     <ConfigProvider

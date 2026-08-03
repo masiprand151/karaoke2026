@@ -11,6 +11,9 @@ import PlayerControls from "../components/PlayerControls";
 import VideoPlayer from "../components/VideoPlayer";
 import useBackgroundTheme from "../hooks/useBackgroundTheme";
 import { ConfigProvider, theme as antdTheme } from "antd";
+import { useLocation, useNavigate } from "react-router-dom";
+import useSetting from "../hooks/useSetting";
+import useRoomSession from "../hooks/useRoomSession";
 
 function Home() {
   const [songs, setSongs] = useState([]);
@@ -31,11 +34,22 @@ function Home() {
   const [seekOffset, setSeekOffset] = useState(0);
   const [streamVersion, setStreamVersion] = useState(0);
   const [audioChannel, setAudioChannel] = useState(false);
+  const [remaining, setRemaining] = useState(0);
+  const location = useLocation();
+  const setting = useSetting();
+  const navigate = useNavigate();
   const rowRefs = useRef([]);
   const videoRef = useRef(null);
+  const { maintenance, checkin } = location.state || {};
 
   const backgroundUrl = "http://127.0.0.1:8765/background";
   const backgroundTheme = useBackgroundTheme(backgroundUrl);
+  const { mode, isMaintenance, isCheckin, remainingSeconds, remainingText } =
+    useRoomSession({
+      maintenance,
+      checkin,
+      maintenanceMinutes: setting?.cstime ?? 10,
+    });
 
   const getSongs = async (q = "", currentPage = 1, append = false) => {
     if (loading) return;
@@ -60,15 +74,6 @@ function Home() {
       setLoading(false);
     }
   };
-  // setiap kali activeIndex berubah, scroll ke baris itu
-  // useEffect(() => {
-  //   if (rowRefs.current[activeIndex]) {
-  //     rowRefs.current[activeIndex].scrollIntoView({
-  //       behavior: "smooth",
-  //       block: "nearest",
-  //     });
-  //   }
-  // }, [activeIndex]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -143,26 +148,6 @@ function Home() {
     setIsPlaying(false);
     setIsStopped(true);
   };
-
-  // const handleNext = () => {
-  //   if (playlist.length === 1) return;
-
-  //   const next = playlist.slice(1);
-
-  //   setPlaylist(next);
-
-  //   setSeekOffset(0);
-  //   setCurrentTime(0);
-  //   setStreamVersion(0);
-
-  //   if (next.length === 0) {
-  //     setIsPlaying(false);
-  //     setIsStopped(true);
-  //   } else {
-  //     setIsPlaying(true);
-  //     setIsStopped(false);
-  //   }
-  // };
 
   const handleNext = () => {
     // Jika tidak ada lagu berikutnya, BLOKIR NEXT
@@ -342,6 +327,8 @@ function Home() {
           onNext={handleNext}
           pitch={pitch}
           audioChannel={audioChannel}
+          remainingSeconds={remainingSeconds}
+          remainingText={remainingText}
         />
       </Row>
     </ConfigProvider>

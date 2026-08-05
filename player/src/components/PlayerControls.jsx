@@ -1,5 +1,5 @@
 import { Row, Col, Flex, Button, Slider } from "antd";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 import {
   PlayCircleOutlined,
@@ -12,9 +12,9 @@ import {
   MessageOutlined,
   AudioMutedOutlined,
 } from "@ant-design/icons";
-import { useSocket } from "../hooks/useSocket";
 import useSetting from "../hooks/useSetting";
 import Messgae from "./Messgae";
+import { useSocket } from "../contexts/SocketContext";
 
 function PlayerControls({
   isPlaying,
@@ -32,7 +32,7 @@ function PlayerControls({
   const [sliderValue, setSliderValue] = useState(0);
   const [isSeeking, setIsSeeking] = useState(false);
   const { setting } = useSetting();
-  const { emit, on, socket } = useSocket(setting?.server);
+  const { socket, connected } = useSocket();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([]);
 
@@ -72,20 +72,15 @@ function PlayerControls({
     onSeek(value);
   };
 
-  useEffect(() => {
-    // join room
-    emit("room-join", {
-      roomId: setting?.roomId,
-      name: setting?.roomName,
-    });
-  }, [setting]);
-
-  const handleSend = (msgs) => {
-    emit("chat", {
-      to: "cashier",
-      data: msgs,
-    });
-  };
+  const handleSend = useCallback(
+    (msgs) => {
+      socket.emit("chat", {
+        to: "cashier",
+        data: msgs,
+      });
+    },
+    [socket],
+  );
 
   useEffect(() => {
     if (!socket) return;
@@ -104,6 +99,13 @@ function PlayerControls({
       socket?.off("chat", handleReply);
     };
   }, [socket]);
+
+  const handleCall = useCallback(() => {
+    socket.emit("call", {
+      roomId: setting?.roomId,
+      name: setting?.roomName,
+    });
+  }, [socket, setting]);
 
   return (
     <Row
@@ -151,12 +153,7 @@ function PlayerControls({
             icon={<PhoneOutlined />}
             type="primary"
             style={buttonStyle}
-            onClick={() =>
-              emit("call", {
-                roomId: setting?.roomId,
-                name: setting?.roomName,
-              })
-            }
+            onClick={handleCall}
           />
 
           <Button

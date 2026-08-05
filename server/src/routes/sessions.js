@@ -2,6 +2,7 @@ const prisma = require("../configs/prisma");
 const route = require("express").Router();
 const AppError = require("../helpers/AppError");
 const recalculateTransaction = require("../helpers/recalculateTransaction");
+const { getIo } = require("./socket.io");
 
 // Check-in session
 route.post("/checkin", async (req, res, next) => {
@@ -143,13 +144,17 @@ route.post("/checkin", async (req, res, next) => {
         },
       });
 
-      await tx.room.update({
+      const roomUpdate = await tx.room.update({
         where: { id: roomId },
         data: { status: "used" },
       });
 
-      return { session, transaction };
+      return { transaction, session, room: roomUpdate };
     });
+
+    const io = getIo();
+
+    io.to(result.room.name).emit("checkin", result);
 
     res.status(201).json({ success: true, ...result });
   } catch (error) {

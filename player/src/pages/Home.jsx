@@ -14,6 +14,7 @@ import { ConfigProvider, theme as antdTheme } from "antd";
 import { useLocation, useNavigate } from "react-router-dom";
 import useSetting from "../hooks/useSetting";
 import useRoomSession from "../hooks/useRoomSession";
+import { useSocket } from "../contexts/SocketContext";
 
 function Home() {
   const [songs, setSongs] = useState([]);
@@ -34,22 +35,26 @@ function Home() {
   const [seekOffset, setSeekOffset] = useState(0);
   const [streamVersion, setStreamVersion] = useState(0);
   const [audioChannel, setAudioChannel] = useState(false);
-  const [remaining, setRemaining] = useState(0);
   const location = useLocation();
-  const { setting } = useSetting();
   const navigate = useNavigate();
   const rowRefs = useRef([]);
   const videoRef = useRef(null);
+  const { setting } = useSetting();
   const { maintenance, checkin } = location.state || {};
 
+  const { socket, connected } = useSocket();
   const backgroundUrl = "http://127.0.0.1:8765/background";
   const backgroundTheme = useBackgroundTheme(backgroundUrl);
-  const { mode, isMaintenance, isCheckin, remainingSeconds, remainingText } =
-    useRoomSession({
-      maintenance,
-      checkin,
-      maintenanceMinutes: setting?.cstime ?? 10,
-    });
+  const { mode, isMaintenance, isCheckin, remaining } = useRoomSession({
+    maintenance,
+    checkin,
+    maintenanceMinutes: setting?.cstime ?? 10,
+    roomId: setting?.roomId,
+  });
+
+  useEffect(() => {
+    if (!checkin && !maintenance) navigate("/");
+  }, [checkin, maintenance]);
 
   const getSongs = async (q = "", currentPage = 1, append = false) => {
     if (loading) return;
@@ -327,8 +332,8 @@ function Home() {
           onNext={handleNext}
           pitch={pitch}
           audioChannel={audioChannel}
-          remainingSeconds={remainingSeconds}
-          remainingText={remainingText}
+          remainingText={remaining?.remainingText}
+          remainingSeconds={remaining?.remainingMs}
         />
       </Row>
     </ConfigProvider>

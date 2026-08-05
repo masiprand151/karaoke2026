@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
+import { data, useNavigate } from "react-router-dom";
 import {
   Layout,
   Typography,
@@ -33,9 +33,9 @@ import api from "../utils/api";
 import { getRemainingTime } from "../utils/Time";
 import { useConfirm } from "../contexts/ConfirmContext";
 import useSetting from "../hooks/useSetting";
-import { useSocket } from "../hooks/useSocket";
 import Message from "../components/Messgae";
 import { useNotification } from "../contexts/useNotification";
+import { useSocket } from "../contexts/SocketContext";
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
@@ -84,7 +84,6 @@ function Home() {
   const { showConfirm } = useConfirm();
   const [current, setCurrent] = useState("mail");
   const { setting } = useSetting();
-  const { emit, on, socket, off } = useSocket(setting?.server);
   const [messages, setMessages] = useState([]);
   const [open, setOpen] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
@@ -92,39 +91,40 @@ function Home() {
   const navigate = useNavigate();
   const { showNotification } = useNotification();
   const WARNING_TIME = 15 * 60 * 1000;
-
-  // join socket
-  useEffect(() => {
-    emit("cashier-join");
-  }, [setting]);
+  const { socket, conected } = useSocket();
 
   // call
   useEffect(() => {
+    if (!socket) return;
     const handleCall = (data) => {
-      const ok = showConfirm({
-        title: `Room ${data.roomId} memanggil`,
+      showConfirm({
+        title: `${data.name} memanggil`,
         description: `${data.name} memanggil pada ${new Date(data.time).toLocaleTimeString()}`,
       });
     };
 
-    on("call-cashier", handleCall);
+    socket.on("call-cashier", handleCall);
 
     return () => {
-      off("call-cashier", handleCall); // bersihkan listener
+      socket.off("call-cashier", handleCall); // bersihkan listener
     };
-  }, [on]);
+  }, [socket]);
 
-  const onSend = (data) => {
-    if (!selectedRoom || data.length === 0) return;
+  const onSend = useCallback(
+    (data) => {
+      if (!socket) return;
+      if (!selectedRoom || data.length === 0) return;
 
-    const lastMsg = data[data.length - 1];
+      const lastMsg = data[data.length - 1];
 
-    emit("reply-chat-room", {
-      roomId: selectedRoom,
-      name: rooms.find((r) => r.id === selectedRoom).name,
-      message: lastMsg.text, // kirim objek pesan terakhir
-    });
-  };
+      socket.emit("reply-chat-room", {
+        roomId: selectedRoom,
+        name: rooms.find((r) => r.id === selectedRoom).name,
+        message: lastMsg.text, // kirim objek pesan terakhir
+      });
+    },
+    [socket, selectedRoom],
+  );
 
   useEffect(() => {
     if (!socket) return;

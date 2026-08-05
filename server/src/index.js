@@ -20,9 +20,9 @@ createIo(server);
 app.use("/songs", require("./routes/songs"));
 
 app.use("/auth", require("./routes/auth"));
+app.use("/room", require("./routes/room"));
 
 app.use(protectedAuth);
-app.use("/room", require("./routes/room"));
 app.use("/session", require("./routes/sessions"));
 app.use("/fnb", require("./routes/fnb"));
 app.use("/lady", require("./routes/lady"));

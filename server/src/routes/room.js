@@ -37,6 +37,12 @@ route.get("/:id", async (req, res, next) => {
       },
       include: {
         pricings: true,
+        sessions: {
+          where: {
+            closed: false,
+          },
+          take: 1,
+        },
       },
     });
 

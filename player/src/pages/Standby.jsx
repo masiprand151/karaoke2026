@@ -18,6 +18,7 @@ import { useAlert } from "../contexts/AlertContext";
 import { useNavigate } from "react-router-dom";
 import useBackgroundTheme from "../hooks/useBackgroundTheme";
 import useSetting from "../hooks/useSetting";
+import { useSocket } from "../contexts/SocketContext";
 
 const { Title } = Typography;
 
@@ -33,13 +34,22 @@ export default function Standby() {
   const backgroundUrl = "http://127.0.0.1:8765/background";
   const backgroundTheme = useBackgroundTheme(backgroundUrl);
   const { setting } = useSetting();
+  const { socket, connected } = useSocket();
 
   const handleNumberClick = (num) => setPin((prev) => prev + num);
   const handleClear = () => setPin("");
   const handleDelete = () => setPin((prev) => prev.slice(0, -1));
 
   const handleLogin = () => {
-    setMaintenance(true);
+    if (pin !== setting?.pin) return;
+    navigate("/home", {
+      state: {
+        maintenance: true,
+        checkin: false,
+      },
+    });
+    setOpen(false);
+    setPin("");
   };
 
   const handleChange = (e) => {
@@ -54,19 +64,17 @@ export default function Standby() {
   };
 
   useEffect(() => {
-    if (maintenance) {
-      if (pin === setting?.pin) {
-        navigate("/home", {
-          state: {
-            maintenance,
-            checkin,
-          },
-        });
-        setOpen(false);
-        setPin("");
-      }
-    }
-  }, [checkin, maintenance]);
+    if (!socket || !connected) return;
+    socket.on("checkin", (data) => {
+      window.localStorage.setItem("data-checkin", JSON.stringify(data));
+      navigate("/home", {
+        state: {
+          maintenance: false,
+          checkin: true,
+        },
+      });
+    });
+  }, [socket, connected]);
 
   return (
     <ConfigProvider

@@ -1,9 +1,11 @@
 const { Server } = require("socket.io");
+const prisma = require("../configs/prisma");
 
 const rooms = new Map();
+let io;
 
 const createIo = (server) => {
-  const io = new Server(server, {
+  io = new Server(server, {
     cors: { origin: "*", methods: ["GET", "POST"] },
   });
 
@@ -11,11 +13,13 @@ const createIo = (server) => {
     console.log("Client connected:", socket.id);
 
     // room join
-    socket.on("room-join", ({ roomId, name }) => {
+    socket.on("room-join", async ({ roomId, name }) => {
       const channel = name;
+
       socket.join(channel);
+      console.log(channel, " joined");
+
       rooms.set(socket.id, { roomId, name, channel });
-      console.log(`${channel} joined`);
     });
 
     // kasir join
@@ -51,6 +55,20 @@ const createIo = (server) => {
       });
     });
 
+    // kasir checkin + data transaction & session
+    socket.on("cashier-checkin", ({ roomId, name, data }) => {
+      const channel = name;
+
+      const sockets = io.sockets.adapter.rooms.get(channel);
+
+      // kirim ke room dan trima di room
+      io.to(channel).emit("room-checkin", {
+        roomId,
+        name,
+        data,
+      });
+    });
+
     socket.on("disconnect", () => {
       const info = rooms.get(socket.id);
       if (info) {
@@ -63,4 +81,10 @@ const createIo = (server) => {
   });
 };
 
-module.exports = { createIo };
+const getIo = () => {
+  if (!io) throw new Error("Socket.IO belum diinisialisasi");
+
+  return io;
+};
+
+module.exports = { createIo, getIo };

@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
+const { getConfig } = require("./lib");
 
 let isQuitting = false;
 function createWindow() {
@@ -51,4 +52,8 @@ ipcMain.on("app:close", () => {
 ipcMain.on("app:closing:done", () => {
   isQuitting = true;
   app.quit();
+});
+
+ipcMain.handle("setting:get", async () => {
+  return getConfig();
 });

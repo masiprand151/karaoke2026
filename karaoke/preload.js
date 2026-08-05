@@ -9,4 +9,5 @@ contextBridge.exposeInMainWorld("electron", {
   appClosingDone() {
     ipcRenderer.send("app:closing:done");
   },
+  getSetting: () => ipcRenderer.invoke("setting:get"),
 });

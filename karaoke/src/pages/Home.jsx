@@ -11,6 +11,7 @@ import {
   Space,
   Menu,
   Flex,
+  Modal,
 } from "antd";
 import {
   LogoutOutlined,
@@ -29,6 +30,8 @@ import {
 import api from "../utils/api";
 import { getRemainingTime } from "../utils/Time";
 import { useConfirm } from "../contexts/ConfirmContext";
+import useSetting from "../hooks/useSetting";
+import { useSocket } from "../hooks/useSocket";
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
@@ -76,10 +79,33 @@ function Home() {
   const [error, setError] = useState(null);
   const { showConfirm } = useConfirm();
   const [current, setCurrent] = useState("mail");
+  const { setting } = useSetting();
+  const { emit, on, socket } = useSocket(setting?.server);
+  const [roomCall, setRoomCall] = useState(null);
 
   const navigate = useNavigate();
-
   const WARNING_TIME = 15 * 60 * 1000;
+
+  // join socket
+  useEffect(() => {
+    emit("cashier-join");
+  }, [setting]);
+
+  // call
+  useEffect(() => {
+    const handleCall = (data) => {
+      const ok = showConfirm({
+        title: `Room ${data.roomId} memanggil`,
+        description: `${data.name} memanggil pada ${new Date(data.time).toLocaleTimeString()}`,
+      });
+    };
+
+    on("call-cashier", handleCall);
+
+    return () => {
+      socket?.off("call-cashier", handleCall); // bersihkan listener
+    };
+  }, [on]);
 
   const fetchRooms = async () => {
     try {

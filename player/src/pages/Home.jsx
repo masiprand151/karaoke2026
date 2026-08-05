@@ -36,7 +36,7 @@ function Home() {
   const [audioChannel, setAudioChannel] = useState(false);
   const [remaining, setRemaining] = useState(0);
   const location = useLocation();
-  const setting = useSetting();
+  const { setting } = useSetting();
   const navigate = useNavigate();
   const rowRefs = useRef([]);
   const videoRef = useRef(null);

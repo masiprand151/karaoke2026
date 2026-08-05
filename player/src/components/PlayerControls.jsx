@@ -12,6 +12,8 @@ import {
   MessageOutlined,
   AudioMutedOutlined,
 } from "@ant-design/icons";
+import { useSocket } from "../hooks/useSocket";
+import useSetting from "../hooks/useSetting";
 
 function PlayerControls({
   isPlaying,
@@ -28,6 +30,8 @@ function PlayerControls({
 }) {
   const [sliderValue, setSliderValue] = useState(0);
   const [isSeeking, setIsSeeking] = useState(false);
+  const { setting } = useSetting();
+  const { emit, on } = useSocket(setting?.server);
 
   const buttonStyle = {
     width: 64,
@@ -64,6 +68,16 @@ function PlayerControls({
     // Baru seek FFmpeg setelah slider dilepas
     onSeek(value);
   };
+
+  useEffect(() => {
+    console.log(setting);
+
+    // join room
+    emit("room-join", {
+      roomId: setting?.roomId,
+      name: setting?.roomName,
+    });
+  }, [setting]);
 
   return (
     <Row
@@ -107,7 +121,17 @@ function PlayerControls({
             onClick={() => setAudioChannel((prev) => !prev)}
           />
 
-          <Button icon={<PhoneOutlined />} type="primary" style={buttonStyle} />
+          <Button
+            icon={<PhoneOutlined />}
+            type="primary"
+            style={buttonStyle}
+            onClick={() =>
+              emit("call", {
+                roomId: setting?.roomId,
+                name: setting?.roomName,
+              })
+            }
+          />
 
           <Button icon={<MessageOutlined />} style={buttonStyle} />
         </Flex>

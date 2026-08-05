@@ -2,6 +2,9 @@ const express = require("express");
 const cors = require("cors");
 const AppError = require("./helpers/AppError");
 const { protectedAuth } = require("./middleware/auth.middleware");
+const http = require("http");
+// const { Server } = require("socket.io");
+const { createIo } = require("./routes/socket.io");
 
 const app = express();
 app.use(express.json());
@@ -9,6 +12,10 @@ app.use(cors());
 require("dotenv").config();
 
 const port = process.env.PORT || 3000;
+
+const server = http.createServer(app);
+
+createIo(server);
 
 app.use("/songs", require("./routes/songs"));
 
@@ -39,6 +46,6 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.listen(port, () => {
+server.listen(port, () => {
   console.log("Server running on http://localhost:" + port);
 });

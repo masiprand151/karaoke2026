@@ -35,6 +35,7 @@ import { useConfirm } from "../contexts/ConfirmContext";
 import useSetting from "../hooks/useSetting";
 import { useSocket } from "../hooks/useSocket";
 import Message from "../components/Messgae";
+import { useNotification } from "../contexts/useNotification";
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
@@ -87,8 +88,9 @@ function Home() {
   const [messages, setMessages] = useState([]);
   const [open, setOpen] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
-
+  const [unreadCount, setUnreadCount] = useState(0);
   const navigate = useNavigate();
+  const { showNotification } = useNotification();
   const WARNING_TIME = 15 * 60 * 1000;
 
   // join socket
@@ -128,10 +130,17 @@ function Home() {
     if (!socket) return;
 
     const handleChat = (msg) => {
-      console.log("Pesan dari room:", msg);
-
       // normalisasi jadi array sekali saja
-      const arr = Array.isArray(msg) ? msg : [msg];
+      const n = Array.isArray(msg) ? msg : [msg];
+      const arr = n.map((m) => ({ ...m }));
+      const last = msg[msg.length - 1];
+
+      if (last.from !== "cashier") {
+        setUnreadCount(
+          (prev) => prev + msg.filter((f) => f.from !== "cashier").length,
+        );
+        showNotification(`Pesan baru ${last.from}`, last.text);
+      }
 
       setMessages((prev) => {
         // hindari duplikat: cek apakah pesan sudah ada
@@ -142,6 +151,7 @@ function Home() {
                 p.text === m.text && p.from === m.from && p.roomId === m.roomId,
             ),
         );
+
         return [...prev, ...newMsgs];
       });
     };
@@ -251,14 +261,14 @@ function Home() {
             />
           )}
 
-          <Badge
-            count={messages.filter((msg) => msg.from !== "cashier").length}
-            offset={[0, 5]}
-          >
+          <Badge count={unreadCount} offset={[0, 5]}>
             <Button
               type="default"
               icon={<MessageOutlined />}
-              onClick={() => setOpen(true)}
+              onClick={() => {
+                setOpen(true);
+                setUnreadCount(0);
+              }}
             />
           </Badge>
 

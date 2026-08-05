@@ -14,6 +14,7 @@ import {
 } from "@ant-design/icons";
 import { useSocket } from "../hooks/useSocket";
 import useSetting from "../hooks/useSetting";
+import Messgae from "./Messgae";
 
 function PlayerControls({
   isPlaying,
@@ -31,7 +32,9 @@ function PlayerControls({
   const [sliderValue, setSliderValue] = useState(0);
   const [isSeeking, setIsSeeking] = useState(false);
   const { setting } = useSetting();
-  const { emit, on } = useSocket(setting?.server);
+  const { emit, on, socket } = useSocket(setting?.server);
+  const [open, setOpen] = useState(false);
+  const [messages, setMessages] = useState([]);
 
   const buttonStyle = {
     width: 64,
@@ -70,14 +73,37 @@ function PlayerControls({
   };
 
   useEffect(() => {
-    console.log(setting);
-
     // join room
     emit("room-join", {
       roomId: setting?.roomId,
       name: setting?.roomName,
     });
   }, [setting]);
+
+  const handleSend = (msgs) => {
+    emit("chat", {
+      to: "cashier",
+      data: msgs,
+    });
+  };
+
+  useEffect(() => {
+    if (!socket) return;
+    const handleReply = (msg) => {
+      console.log("Balasan kasir:", msg);
+      // tambahkan ke state messages
+      setMessages((prev) => [
+        ...prev,
+        { from: "cashier", text: msg.message || msg.text, roomId: msg.roomId },
+      ]);
+    };
+
+    socket?.on("chat", handleReply);
+
+    return () => {
+      socket?.off("chat", handleReply);
+    };
+  }, [socket]);
 
   return (
     <Row
@@ -133,7 +159,11 @@ function PlayerControls({
             }
           />
 
-          <Button icon={<MessageOutlined />} style={buttonStyle} />
+          <Button
+            icon={<MessageOutlined />}
+            style={buttonStyle}
+            onClick={() => setOpen(true)}
+          />
         </Flex>
       </Col>
 
@@ -155,6 +185,14 @@ function PlayerControls({
           />
         </Flex>
       </Col>
+      <Messgae
+        open={open}
+        setOpen={setOpen}
+        messages={messages}
+        setMessages={setMessages}
+        roomName={setting?.roomName}
+        onSend={handleSend}
+      />
     </Row>
   );
 }

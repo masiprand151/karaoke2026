@@ -12,6 +12,7 @@ import {
   Menu,
   Flex,
   Modal,
+  Badge,
 } from "antd";
 import {
   LogoutOutlined,
@@ -25,6 +26,7 @@ import {
   TeamOutlined,
   CustomerServiceOutlined,
   ReloadOutlined,
+  MessageOutlined,
 } from "@ant-design/icons";
 
 import api from "../utils/api";
@@ -32,6 +34,7 @@ import { getRemainingTime } from "../utils/Time";
 import { useConfirm } from "../contexts/ConfirmContext";
 import useSetting from "../hooks/useSetting";
 import { useSocket } from "../hooks/useSocket";
+import Message from "../components/Messgae";
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
@@ -80,8 +83,10 @@ function Home() {
   const { showConfirm } = useConfirm();
   const [current, setCurrent] = useState("mail");
   const { setting } = useSetting();
-  const { emit, on, socket } = useSocket(setting?.server);
-  const [roomCall, setRoomCall] = useState(null);
+  const { emit, on, socket, off } = useSocket(setting?.server);
+  const [messages, setMessages] = useState([]);
+  const [open, setOpen] = useState(false);
+  const [selectedRoom, setSelectedRoom] = useState(null);
 
   const navigate = useNavigate();
   const WARNING_TIME = 15 * 60 * 1000;
@@ -103,9 +108,50 @@ function Home() {
     on("call-cashier", handleCall);
 
     return () => {
-      socket?.off("call-cashier", handleCall); // bersihkan listener
+      off("call-cashier", handleCall); // bersihkan listener
     };
   }, [on]);
+
+  const onSend = (data) => {
+    if (!selectedRoom || data.length === 0) return;
+
+    const lastMsg = data[data.length - 1];
+
+    emit("reply-chat-room", {
+      roomId: selectedRoom,
+      name: rooms.find((r) => r.id === selectedRoom).name,
+      message: lastMsg.text, // kirim objek pesan terakhir
+    });
+  };
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleChat = (msg) => {
+      console.log("Pesan dari room:", msg);
+
+      // normalisasi jadi array sekali saja
+      const arr = Array.isArray(msg) ? msg : [msg];
+
+      setMessages((prev) => {
+        // hindari duplikat: cek apakah pesan sudah ada
+        const newMsgs = arr.filter(
+          (m) =>
+            !prev.some(
+              (p) =>
+                p.text === m.text && p.from === m.from && p.roomId === m.roomId,
+            ),
+        );
+        return [...prev, ...newMsgs];
+      });
+    };
+
+    socket.on("chat", handleChat);
+
+    return () => {
+      socket.off("chat", handleChat);
+    };
+  }, [socket]);
 
   const fetchRooms = async () => {
     try {
@@ -192,7 +238,7 @@ function Home() {
         <Title level={3} style={{ margin: 0, color: "white" }}>
           <AntDesignOutlined /> Karaoke Billing
         </Title>
-        <Flex gap={5} justify="center" align="center">
+        <Flex gap={"large"} justify="center" align="center">
           {JSON.parse(localStorage.getItem("user"))?.role === "admin" && (
             <Menu
               onClick={onClickMenu}
@@ -204,6 +250,17 @@ function Home() {
               }}
             />
           )}
+
+          <Badge
+            count={messages.filter((msg) => msg.from !== "cashier").length}
+            offset={[0, 5]}
+          >
+            <Button
+              type="default"
+              icon={<MessageOutlined />}
+              onClick={() => setOpen(true)}
+            />
+          </Badge>
 
           <Button
             type="primary"
@@ -282,6 +339,17 @@ function Home() {
           {error && <Text type="danger">{error}</Text>}
         </Space>
       </Content>
+      <Message
+        open={open}
+        setOpen={setOpen}
+        messages={messages}
+        setMessages={setMessages}
+        roomName={"cashier"}
+        rooms={rooms}
+        selectedRoom={selectedRoom}
+        setSelectedRoom={setSelectedRoom}
+        onSend={onSend}
+      />
     </Layout>
   );
 }

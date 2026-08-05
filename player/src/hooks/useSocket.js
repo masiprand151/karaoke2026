@@ -1,15 +1,12 @@
-// useSocket.js
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { io } from "socket.io-client";
 
 export const useSocket = (url, options = {}) => {
   const socketRef = useRef(null);
 
   useEffect(() => {
-    // connect ke server
     socketRef.current = io(url, options);
 
-    // log connect/disconnect
     socketRef.current.on("connect", () => {
       console.log("Connected:", socketRef.current.id);
     });
@@ -17,27 +14,22 @@ export const useSocket = (url, options = {}) => {
       console.log("Disconnected");
     });
 
-    // cleanup saat unmount
     return () => {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-      }
+      socketRef.current.disconnect();
     };
   }, [url]);
 
-  // helper emit
-  const emit = (event, data) => {
-    if (socketRef.current) {
-      socketRef.current.emit(event, data);
-    }
-  };
+  const emit = useCallback((event, data) => {
+    socketRef.current?.emit(event, data);
+  }, []);
 
-  // helper on
-  const on = (event, callback) => {
-    if (socketRef.current) {
-      socketRef.current.on(event, callback);
-    }
-  };
+  const on = useCallback((event, callback) => {
+    socketRef.current?.on(event, callback);
+  }, []);
 
-  return { socket: socketRef.current, emit, on };
+  const off = useCallback((event, callback) => {
+    socketRef.current?.off(event, callback);
+  }, []);
+
+  return { socket: socketRef.current, emit, on, off };
 };

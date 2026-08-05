@@ -12,7 +12,7 @@ const createIo = (server) => {
 
     // room join
     socket.on("room-join", ({ roomId, name }) => {
-      const channel = `${name}-${roomId}`;
+      const channel = name;
       socket.join(channel);
       rooms.set(socket.id, { roomId, name, channel });
       console.log(`${channel} joined`);
@@ -33,12 +33,16 @@ const createIo = (server) => {
 
     // room chat ke kasir
     socket.on("chat", ({ to, data }) => {
+      console.log(to, ":", data);
+
       io.to(to).emit("chat", data);
     });
 
     // kasir balas ke room
     socket.on("reply-chat-room", ({ roomId, name, message }) => {
-      const channel = `${name}-${roomId}`;
+      const channel = name;
+
+      console.log(channel, { from: "cashier", message, time: Date.now() });
 
       io.to(channel).emit("chat", {
         from: "cashier",

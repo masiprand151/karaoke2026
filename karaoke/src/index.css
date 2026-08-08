@@ -21,3 +21,38 @@ body {
 .ant-table-tbody > tr:hover {
   cursor: pointer;
 }
+
+.receipt {
+  width: 58mm; /* atau 80mm sesuai printer */
+  font-family: monospace !important;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.receipt .center {
+  text-align: center;
+  margin: 0;
+}
+
+p {
+  padding: 0 !important;
+  margin: 2px 0 !important;
+}
+.receipt table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.receipt td {
+  padding: 2px 0;
+}
+
+.receipt .right {
+  text-align: right;
+}
+
+.receipt hr {
+  border: none;
+  border-top: 1px dashed #000;
+  margin: 4px 0;
+}

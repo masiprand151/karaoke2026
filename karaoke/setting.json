@@ -3,6 +3,8 @@
   "roomName": "Room 1",
   "pin": "1234",
   "cstime": 10,
+  "printTitle": "Karaoke Billing",
+  "printSize": 58,
 
   "server": "http://127.0.0.1:8000",
 

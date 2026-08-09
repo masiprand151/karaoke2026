@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import api from "../utils/api";
 import { useAlert } from "../contexts/AlertContext";
 
-function useLadies(sessionId) {
+function useLadies(sessionId, handlePrint) {
   const { showAlert } = useAlert();
   const [ladies, setLadies] = useState([]);
   const [query, setQuery] = useState("");
@@ -60,6 +60,7 @@ function useLadies(sessionId) {
         type: "success",
         message: `Berhasil order lady ${selected.name}`,
       });
+      handlePrint();
       setTimeout(() => {
         setShow(false);
         setSelected({});

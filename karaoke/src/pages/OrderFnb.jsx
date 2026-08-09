@@ -5,6 +5,7 @@ import { formatRp } from "../utils/rupiah";
 import useFnbs from "../hooks/useFnbs";
 import { useReactToPrint } from "react-to-print";
 import { ReceiptFnb } from "../components/Receipt";
+import { useAlert } from "../contexts/AlertContext";
 const { Search } = Input;
 
 function OrderFnb() {
@@ -14,6 +15,21 @@ function OrderFnb() {
   // data yang dikirim via navigate
   const { roomName, customerName } = location.state || {};
   const navigate = useNavigate();
+  const componentRef = useRef();
+  const { showAlert } = useAlert();
+
+  const handlePrintFnb = async () => {
+    const htmlContent = componentRef.current.outerHTML;
+    const res = await window.electron.printReceipt({
+      htmlContent,
+      printerTarget: "kitchen",
+    });
+    showAlert({
+      type: res.success ? "success" : "error",
+      message: res.message,
+    });
+  };
+
   const {
     fnbs,
     query,
@@ -28,12 +44,7 @@ function OrderFnb() {
     confirmOrder,
     addToCart,
     removeFromCart,
-  } = useFnbs(sessionId);
-  const componentRef = useRef();
-
-  const handlePrintFnb = useReactToPrint({
-    contentRef: componentRef,
-  });
+  } = useFnbs(sessionId, handlePrintFnb);
 
   return (
     <Row gutter={16} style={{ height: "100%" }}>
@@ -156,10 +167,7 @@ function OrderFnb() {
                 type="primary"
                 block
                 disabled={cart.length <= 0}
-                onClick={(e) => {
-                  confirmOrder(e);
-                  handlePrintFnb();
-                }}
+                onClick={confirmOrder}
               >
                 Confirm Order
               </Button>

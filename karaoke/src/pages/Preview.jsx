@@ -58,7 +58,7 @@ export default function Preview() {
     const htmlContent = componentRef.current.outerHTML;
     const res = await window.electron.printReceipt({
       htmlContent,
-      printerTarget: null,
+      printerTarget: "cashier",
     });
     showAlert({
       type: res.success ? "success" : "error",

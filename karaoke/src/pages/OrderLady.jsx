@@ -19,6 +19,7 @@ import useLadies from "../hooks/useLadies";
 import { ExclamationCircleOutlined } from "@ant-design/icons";
 import { ReceiptLady } from "../components/Receipt";
 import { useReactToPrint } from "react-to-print";
+import { useAlert } from "../contexts/AlertContext";
 
 const { Title } = Typography;
 const { Search } = Input;
@@ -27,12 +28,23 @@ function OrderLady() {
   const { sessionId } = useParams();
   const location = useLocation();
   const { roomName, customerName } = location.state || {};
+  const { showAlert } = useAlert();
 
   const componentRef = useRef();
-  const handlePrintLady = useReactToPrint({
-    contentRef: componentRef,
-  });
+
   const navigate = useNavigate();
+
+  const handlePrintLady = async () => {
+    const htmlContent = componentRef.current.outerHTML;
+    const res = await window.electron.printReceipt({
+      htmlContent,
+      printerTarget: "lady",
+    });
+    showAlert({
+      type: res.success ? "success" : "error",
+      message: res.message,
+    });
+  };
   const {
     ladies,
     query,
@@ -44,7 +56,7 @@ function OrderLady() {
     handleOrder,
     setSelected,
     setQuery,
-  } = useLadies(sessionId);
+  } = useLadies(sessionId, handlePrintLady);
 
   return (
     <>
@@ -140,14 +152,7 @@ function OrderLady() {
               Cancel
             </Button>,
 
-            <Button
-              key="submit"
-              type="primary"
-              onClick={(e) => {
-                handleOrder(e);
-                handlePrintLady();
-              }}
-            >
+            <Button key="submit" type="primary" onClick={handleOrder}>
               Submit
             </Button>,
           ]}

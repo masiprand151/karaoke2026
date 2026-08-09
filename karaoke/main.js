@@ -72,6 +72,7 @@ ipcMain.handle(
     const targetPrinter = printers.find(
       (p) => p.name === config?.printers[printerTarget],
     );
+
     const deviceName = targetPrinter ? targetPrinter.name : null;
 
     return new Promise((resolve) => {

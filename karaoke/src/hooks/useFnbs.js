@@ -8,7 +8,7 @@ import { useAlert } from "../contexts/AlertContext";
  * @param {number} sessionId
  * @returns
  */
-function useFnbs(sessionId) {
+function useFnbs(sessionId, handlePrint) {
   const navigate = useNavigate();
   const { showAlert } = useAlert();
   const [fnbs, setFnbs] = useState([]);
@@ -69,6 +69,7 @@ function useFnbs(sessionId) {
       );
       // alert("Yey! berhasil order");
       showAlert({ type: "success", message: "Yey! berhasil order" });
+      handlePrint();
       navigate(-1);
       setCart([]);
     } catch (error) {

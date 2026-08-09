@@ -5,6 +5,11 @@
   "cstime": 10,
   "printTitle": "Karaoke Billing",
   "printSize": 58,
+  "printers": {
+    "cashier": "EPSON_TM_U220_CASHIER",
+    "kitchen": "EPSON_TM_U220_KITCHEN",
+    "lady": "EPSON_TM_U220_LADY"
+  },
 
   "server": "http://127.0.0.1:8000",
 

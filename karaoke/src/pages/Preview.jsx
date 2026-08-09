@@ -54,14 +54,21 @@ export default function Preview() {
 
   const componentRef = useRef();
 
-  const handlePrint = useReactToPrint({
-    contentRef: componentRef,
-  });
+  const handlePrint = async () => {
+    const htmlContent = componentRef.current.outerHTML;
+    const res = await window.electron.printReceipt({
+      htmlContent,
+      printerTarget: null,
+    });
+    showAlert({
+      type: res.success ? "success" : "error",
+      message: res.message,
+    });
+  };
 
   const getPreview = async () => {
     try {
       const res = await api.get(`/session/preview/${sessionId}`);
-      console.log(res);
 
       setData(res);
     } catch (error) {

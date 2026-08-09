@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
+const fs = require("fs");
 const { getConfig } = require("./lib");
 
 let isQuitting = false;
@@ -57,3 +58,63 @@ ipcMain.on("app:closing:done", () => {
 ipcMain.handle("setting:get", async () => {
   return getConfig();
 });
+ipcMain.handle(
+  "print-receipt",
+  async (event, { htmlContent, printerTarget = null }) => {
+    const config = getConfig();
+    const win = new BrowserWindow({ show: false });
+    await win.loadURL(
+      "data:text/html;charset=utf-8," + encodeURIComponent(htmlContent),
+    );
+
+    const printers = await win.webContents.getPrintersAsync();
+
+    const targetPrinter = printers.find(
+      (p) => p.name === config?.printers[printerTarget],
+    );
+    const deviceName = targetPrinter ? targetPrinter.name : null;
+
+    return new Promise((resolve) => {
+      win.webContents.print(
+        {
+          silent: true,
+          printBackground: true,
+          deviceName,
+        },
+        async (success, errorType) => {
+          if (!success) {
+            console.error("Printer error:", errorType);
+
+            try {
+              const pdfData = await win.webContents.printToPDF({
+                printBackground: true,
+                pageSize: "A4",
+              });
+
+              const pdfPath = path.join(__dirname, "receipt-fallback.pdf");
+              fs.writeFileSync(pdfPath, pdfData);
+
+              resolve({
+                success: true,
+                message: "Printer tidak terdeteksi, PDF disimpan.",
+                path: pdfPath,
+              });
+            } catch (err) {
+              console.error("PDF generation failed:", err);
+              resolve({
+                success: false,
+                message: "Gagal membuat PDF fallback.",
+              });
+            }
+          } else {
+            resolve({
+              success: true,
+              message: "Print berhasil ke printer.",
+            });
+          }
+          win.close();
+        },
+      );
+    });
+  },
+);

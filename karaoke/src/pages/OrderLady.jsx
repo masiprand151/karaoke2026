@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   Row,
   Col,
@@ -17,12 +17,21 @@ import {
 import { formatRp } from "../utils/rupiah";
 import useLadies from "../hooks/useLadies";
 import { ExclamationCircleOutlined } from "@ant-design/icons";
+import { ReceiptLady } from "../components/Receipt";
+import { useReactToPrint } from "react-to-print";
 
 const { Title } = Typography;
 const { Search } = Input;
 
 function OrderLady() {
   const { sessionId } = useParams();
+  const location = useLocation();
+  const { roomName, customerName } = location.state || {};
+
+  const componentRef = useRef();
+  const handlePrintLady = useReactToPrint({
+    contentRef: componentRef,
+  });
   const navigate = useNavigate();
   const {
     ladies,
@@ -131,7 +140,14 @@ function OrderLady() {
               Cancel
             </Button>,
 
-            <Button key="submit" type="primary" onClick={handleOrder}>
+            <Button
+              key="submit"
+              type="primary"
+              onClick={(e) => {
+                handleOrder(e);
+                handlePrintLady();
+              }}
+            >
               Submit
             </Button>,
           ]}
@@ -163,6 +179,15 @@ function OrderLady() {
               <Button onClick={handlePlus}>+</Button>
             </Space>
           </Space>
+          {/* Komponen slip CO Lady tersembunyi */}
+          <div style={{ display: "none" }}>
+            <ReceiptLady
+              ref={componentRef}
+              orders={[selected]} // hanya lady yang dipilih
+              roomName={roomName}
+              customerName={customerName}
+            />
+          </div>
         </Modal>
       </Row>
     </>

@@ -155,7 +155,7 @@ export const Receipt = forwardRef(({ session }, ref) => {
       </p>
       <p className="center">Status: {session.status}</p>
       <hr />
-      <p className="center">Terima kasih 🎶</p>
+      <p className="center">Terima kasih</p>
     </div>
   );
 });
@@ -200,7 +200,45 @@ export const ReceiptFnb = forwardRef(({ cart, session }, ref) => {
         </tbody>
       </table>
       <hr />
-      <p className="center">Terima kasih 🎶</p>
+      <p className="center">Terima kasih</p>
     </div>
   );
 });
+
+export const ReceiptLady = forwardRef(
+  ({ orders, roomName, customerName }, ref) => {
+    const { setting } = useSetting();
+
+    return (
+      <div
+        ref={ref}
+        className="receipt"
+        style={{
+          width: `${setting?.printSze}mm`,
+        }}
+      >
+        <h3 className="center">Order Lady</h3>
+        <p className="center">{dayjs().format("YYYY-MM-DD HH:mm:ss")}</p>
+        <hr />
+        <p>Room: {roomName}</p>
+        <p>Customer: {customerName}</p>
+        <hr />
+        <table>
+          <tbody>
+            {orders.map((lady, i) => (
+              <tr key={i}>
+                <td>{lady.name}</td>
+                <td>x{lady.quantity}</td>
+                <td className="right">
+                  {formatRp(lady.basePrice * lady.quantity)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <hr />
+        <p className="center">Terima kasih</p>
+      </div>
+    );
+  },
+);

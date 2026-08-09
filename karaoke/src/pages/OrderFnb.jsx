@@ -170,7 +170,7 @@ function OrderFnb() {
             </Space>
           </div>
           {/* Komponen slip CO Bar tersembunyi */}
-          <div>
+          <div style={{ display: "none" }}>
             <ReceiptFnb
               ref={componentRef}
               cart={cart}

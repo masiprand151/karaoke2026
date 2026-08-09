@@ -374,7 +374,14 @@ export default function Preview() {
                     type="primary"
                     size="small"
                     icon={<UserAddOutlined />}
-                    onClick={() => navigate(`/lady/order/${sessionId}`)}
+                    onClick={() =>
+                      navigate(`/lady/order/${sessionId}`, {
+                        state: {
+                          roomName: data?.room?.name,
+                          customerName: data?.customerName,
+                        },
+                      })
+                    }
                     disabled={loading || data?.status === "paid"}
                   />
                 </div>
@@ -539,17 +546,20 @@ export default function Preview() {
       />
 
       <Modal
-        title="Struk POS"
+        title="Print ( Pastikan nota sudah benar! )"
         open={openPrint}
         onCancel={() => setOpenPrint(false)}
         footer={[
           <Button key="print" type="primary" onClick={handlePrint}>
-            Print
+            Print Now
           </Button>,
           <Button key="close" onClick={() => setOpenPrint(false)}>
             Tutup
           </Button>,
         ]}
+        // width="100%"
+        style={{ top: 10 }}
+        bodyStyle={{ height: "80vh", overflowY: "auto" }}
       >
         {data && <Receipt ref={componentRef} session={data} />}
       </Modal>

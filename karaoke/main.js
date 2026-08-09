@@ -85,32 +85,14 @@ ipcMain.handle(
         async (success, errorType) => {
           if (!success) {
             console.error("Printer error:", errorType);
-
-            try {
-              const pdfData = await win.webContents.printToPDF({
-                printBackground: true,
-                pageSize: "A4",
-              });
-
-              const pdfPath = path.join(__dirname, "receipt-fallback.pdf");
-              fs.writeFileSync(pdfPath, pdfData);
-
-              resolve({
-                success: true,
-                message: "Printer tidak terdeteksi, PDF disimpan.",
-                path: pdfPath,
-              });
-            } catch (err) {
-              console.error("PDF generation failed:", err);
-              resolve({
-                success: false,
-                message: "Gagal membuat PDF fallback.",
-              });
-            }
+            resolve({
+              success: false,
+              message: "Gagal membuat PDF fallback!",
+            });
           } else {
             resolve({
               success: true,
-              message: "Print berhasil ke printer.",
+              message: "Print berhasil!",
             });
           }
           win.close();

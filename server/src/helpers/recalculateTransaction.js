@@ -14,25 +14,22 @@ async function recalculateTransaction(sessionId, trx, discountRate = 0) {
   if (!session || !session.transaction) {
     throw new AppError(404, "Transaction tidak ditemukan");
   }
-
   //---------------------------------------
   // ROOM (pakai pricing)
   //---------------------------------------
-  const roomAmount = Number(session.transaction.amount); // baseRate × duration
+  const roomAmount = Number(session.transaction.amount); // base rate × duration
   let roomTax =
     (roomAmount * Number(session.transaction.pricing.taxRate || 0)) / 100;
   let roomService =
     (roomAmount * Number(session.transaction.pricing.serviceCharge || 0)) / 100;
-  let roomTotal = roomAmount + roomTax + roomService;
 
   // --- Diskon Room ---
   const existingDis = Number(session.transaction.roomDis || 0);
-  const totalDiscountRate = existingDis + discountRate; // jumlahkan persentase
-  const discountAmount = (roomTotal * totalDiscountRate) / 100;
+  const totalDiscountRate = existingDis + discountRate;
+  const discountAmount = (roomAmount * totalDiscountRate) / 100;
 
-  roomTotal -= discountAmount;
+  let roomTotal = roomAmount - discountAmount; // hanya base setelah diskon
 
-  // Kalau diskon penuh (>=100%), nolkan Room tax/service
   if (totalDiscountRate >= 100) {
     roomTax = 0;
     roomService = 0;
@@ -67,7 +64,6 @@ async function recalculateTransaction(sessionId, trx, discountRate = 0) {
   const serviceAmount = roomService + fnbService;
   const grandTotal =
     roomTotal + fnbSubtotal + ladyTotal + taxAmount + serviceAmount;
-
   //---------------------------------------
   // UPDATE TRANSACTION
   //---------------------------------------

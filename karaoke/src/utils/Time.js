@@ -39,3 +39,18 @@ export function getRemainingTime(start, end) {
     isExpired: remaining <= 0,
   };
 }
+
+export function formatDuration(minutes) {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+
+  if (hours > 0 && mins > 0) {
+    return `${hours} jam ${mins} menit`;
+  } else if (hours > 0) {
+    return `${hours} jam`;
+  } else if (mins !== 0) {
+    return `${mins} menit`;
+  } else {
+    return mins;
+  }
+}

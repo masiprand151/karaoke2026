@@ -34,31 +34,9 @@ import { useAlert } from "../contexts/AlertContext";
 import dayjs from "dayjs";
 import { useReactToPrint } from "react-to-print";
 import useSetting from "../hooks/useSetting";
+import { Receipt } from "../components/Receipt";
 
 const { Text } = Typography;
-
-function normalizeOrders(orders, type = "fnb") {
-  const map = new Map();
-
-  orders.forEach((item) => {
-    const name = type === "fnb" ? item.fnb.name : item.lady.name;
-    const qty = Number(item.quantity);
-    const total = Number(item.totalAmount);
-
-    if (map.has(name)) {
-      const existing = map.get(name);
-      map.set(name, {
-        ...existing,
-        quantity: existing.quantity + qty,
-        totalAmount: Number(existing.totalAmount) + total,
-      });
-    } else {
-      map.set(name, { name, quantity: qty, totalAmount: total });
-    }
-  });
-
-  return Array.from(map.values());
-}
 
 export default function Preview() {
   const { sessionId } = useParams();
@@ -78,122 +56,6 @@ export default function Preview() {
 
   const handlePrint = useReactToPrint({
     contentRef: componentRef,
-  });
-
-  const Receipt = forwardRef(({ session }, ref) => {
-    if (!session) return null;
-    const normalizedFnbs = normalizeOrders(session.sessionFnbs, "fnb");
-    const normalizedLadies = normalizeOrders(session.sessionLadies, "lady");
-
-    return (
-      <div
-        ref={ref}
-        className="receipt"
-        style={{
-          width: `${setting?.printSze}mm`,
-        }}
-      >
-        <h3 className="center">{setting?.printTitle}</h3>
-        <p className="center">{session.transaction.number}</p>
-        <p className="center">{dayjs().format("YYYY-MM-DD HH:mm:ss")}</p>
-        <hr />
-        <p>Room: {session.room.name}</p>
-        <p>Customer: {session.customerName}</p>
-        <p>Duration: {session.durationMinutes} menit</p>
-        <hr />
-
-        {/* Room subtotal */}
-        <table>
-          <tbody>
-            <tr>
-              <td>Room Charge</td>
-              <td className="right">{formatRp(session.amount)}</td>
-            </tr>
-          </tbody>
-        </table>
-
-        {/* F&B subtotal */}
-        {normalizedFnbs?.length > 0 && (
-          <>
-            <p>
-              <strong>F&B Orders</strong>
-            </p>
-            <table>
-              <tbody>
-                {normalizedFnbs.map((fnb, i) => (
-                  <tr key={i}>
-                    <td>{fnb.name}</td>
-                    <td>x{fnb.quantity}</td>
-                    <td className="right">{formatRp(fnb.totalAmount)}</td>
-                  </tr>
-                ))}
-                <tr>
-                  <td colSpan={2}>
-                    <strong>F&B Subtotal</strong>
-                  </td>
-                  <td className="right">{formatRp(session.fnbSubtotal)}</td>
-                </tr>
-              </tbody>
-            </table>
-          </>
-        )}
-        <hr />
-        {/* Lady subtotal */}
-        {normalizedLadies?.length > 0 && (
-          <>
-            <p>
-              <strong>Lady Companion</strong>
-            </p>
-            <table>
-              <tbody>
-                {normalizedLadies.map((lady, i) => (
-                  <tr key={i}>
-                    <td>{lady.name}</td>
-                    <td>x{lady.quantity}</td>
-                    <td className="right">{formatRp(lady.totalAmount)}</td>
-                  </tr>
-                ))}
-                <tr>
-                  <td colSpan={2}>
-                    <strong>Lady Subtotal</strong>
-                  </td>
-                  <td className="right">{formatRp(session.ladyTotal)}</td>
-                </tr>
-              </tbody>
-            </table>
-          </>
-        )}
-
-        <hr />
-        <table>
-          <tbody>
-            <tr>
-              <td>Ppn</td>
-              <td className="right">{formatRp(session.taxAmount)}</td>
-            </tr>
-            <tr>
-              <td>Service</td>
-              <td className="right">{formatRp(session.serviceAmount)}</td>
-            </tr>
-            <tr>
-              <td>
-                <strong>Grand Total</strong>
-              </td>
-              <td className="right">
-                <strong>{formatRp(session.grandTotal)}</strong>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <hr />
-        <p className="center">
-          Metode Bayar: {session.transaction.paymentMethod}
-        </p>
-        <p className="center">Status: {session.status}</p>
-        <hr />
-        <p className="center">Terima kasih 🎶</p>
-      </div>
-    );
   });
 
   const getPreview = async () => {
@@ -309,7 +171,6 @@ export default function Preview() {
         padding: 20,
       }}
     >
-      {/* <Receipt ref={componentRef} session={data} /> */}
       <Row gutter={16}>
         <Col span={10}>
           <Card

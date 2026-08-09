@@ -11,7 +11,6 @@ export const Receipt = forwardRef(({ session }, ref) => {
   const normalizedFnbs = normalizeOrders(session.sessionFnbs, "fnb");
   const normalizedLadies = normalizeOrders(session.sessionLadies, "lady");
   const pricing = session?.pricing;
-  console.log(session);
   const durationMinutes = session?.durationMinutes || 0;
   const extendMinutes = session?.extendMinutes || 0;
   const freeMinutes = session?.freeMinutes || 0;
@@ -60,14 +59,6 @@ export const Receipt = forwardRef(({ session }, ref) => {
           </tr>
         </tbody>
       </table>
-      {/* <p>
-        Room: {session.room.name} - {pricing?.name.toUpperCase()}
-      </p>
-      <p>Customer: {session.customerName}</p>
-      <p>Duration: {formatDuration(session.durationMinutes)}</p>
-      <p>extend: {formatDuration(session.extendMinutes)}</p>
-      <p>Free: {formatDuration(session.freeMinutes)}</p>
-      <p>Total: {formatDuration(totalMinutes)} </p> */}
 
       <hr />
 
@@ -163,6 +154,51 @@ export const Receipt = forwardRef(({ session }, ref) => {
         Metode Bayar: {session.transaction.paymentMethod}
       </p>
       <p className="center">Status: {session.status}</p>
+      <hr />
+      <p className="center">Terima kasih 🎶</p>
+    </div>
+  );
+});
+
+export const ReceiptFnb = forwardRef(({ cart, session }, ref) => {
+  const { setting } = useSetting();
+  return (
+    <div
+      ref={ref}
+      className="receipt"
+      style={{
+        width: `${setting?.printSze}mm`,
+      }}
+    >
+      <h3 className="center">F&B Order</h3>
+      <p className="center">{dayjs().format("YYYY-MM-DD HH:mm:ss")}</p>
+      <hr />
+      <table>
+        <tbody>
+          <tr>
+            <td>Room</td>
+            <td>{session.room.name}</td>
+          </tr>
+          <tr>
+            <td>Customer</td>
+            <td>{session.customerName}</td>
+          </tr>
+        </tbody>
+      </table>
+      <hr />
+      <table>
+        <tbody>
+          {cart.map((item, i) => (
+            <tr key={i}>
+              <td>{item.name}</td>
+              <td>x{item.quantity}</td>
+              <td className="right">
+                {formatRp(item.basePrice * item.quantity)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
       <hr />
       <p className="center">Terima kasih 🎶</p>
     </div>

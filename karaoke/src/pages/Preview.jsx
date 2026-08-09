@@ -61,6 +61,7 @@ export default function Preview() {
   const getPreview = async () => {
     try {
       const res = await api.get(`/session/preview/${sessionId}`);
+      console.log(res);
 
       setData(res);
     } catch (error) {
@@ -346,7 +347,14 @@ export default function Preview() {
                     type="primary"
                     size="small"
                     icon={<ShoppingCartOutlined />}
-                    onClick={() => navigate(`/fnb/order/${sessionId}`)}
+                    onClick={() =>
+                      navigate(`/fnb/order/${sessionId}`, {
+                        state: {
+                          roomName: data?.room?.name,
+                          customerName: data?.customerName,
+                        },
+                      })
+                    }
                     disabled={loading || data?.status === "paid"}
                   />
                 </div>

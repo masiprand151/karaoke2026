@@ -1,12 +1,18 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Row, Col, Card, Table, Button, Input, Space } from "antd";
 import { formatRp } from "../utils/rupiah";
 import useFnbs from "../hooks/useFnbs";
+import { useReactToPrint } from "react-to-print";
+import { ReceiptFnb } from "../components/Receipt";
 const { Search } = Input;
 
 function OrderFnb() {
   const { sessionId } = useParams();
+  const location = useLocation();
+
+  // data yang dikirim via navigate
+  const { roomName, customerName } = location.state || {};
   const navigate = useNavigate();
   const {
     fnbs,
@@ -23,6 +29,11 @@ function OrderFnb() {
     addToCart,
     removeFromCart,
   } = useFnbs(sessionId);
+  const componentRef = useRef();
+
+  const handlePrintFnb = useReactToPrint({
+    contentRef: componentRef,
+  });
 
   return (
     <Row gutter={16} style={{ height: "100%" }}>
@@ -145,7 +156,10 @@ function OrderFnb() {
                 type="primary"
                 block
                 disabled={cart.length <= 0}
-                onClick={confirmOrder}
+                onClick={(e) => {
+                  confirmOrder(e);
+                  handlePrintFnb();
+                }}
               >
                 Confirm Order
               </Button>
@@ -154,6 +168,14 @@ function OrderFnb() {
                 Cancel
               </Button>
             </Space>
+          </div>
+          {/* Komponen slip CO Bar tersembunyi */}
+          <div>
+            <ReceiptFnb
+              ref={componentRef}
+              cart={cart}
+              session={{ room: { name: roomName }, customerName: customerName }}
+            />
           </div>
         </Card>
       </Col>

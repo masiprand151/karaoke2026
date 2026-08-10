@@ -28,6 +28,7 @@ app.use("/fnb", require("./routes/fnb"));
 app.use("/lady", require("./routes/lady"));
 app.use("/user", require("./routes/user"));
 app.use("/pricing", require("./routes/pricing"));
+app.use("/reports", require("./routes/report"));
 
 // middleware error
 app.use((err, req, res, next) => {

@@ -27,6 +27,7 @@ import {
   CustomerServiceOutlined,
   ReloadOutlined,
   MessageOutlined,
+  BarChartOutlined,
 } from "@ant-design/icons";
 
 import api from "../utils/api";
@@ -70,6 +71,11 @@ const menuItems = [
     label: "User",
     key: "/admin/user",
     icon: <UserOutlined />, // manajemen user
+  },
+  {
+    label: "Report",
+    key: "/admin/report",
+    icon: <BarChartOutlined />, // manajemen user
   },
   {
     label: "Reload",

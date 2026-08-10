@@ -87,6 +87,8 @@ model User {
   sessions Session[]
 
   purchases Purchase[]
+
+  sessionLogs SessionLog[]
 }
 
 //////////////////////////////////////////////////////
@@ -368,6 +370,7 @@ model SessionLog {
   createdAt     DateTime @default(now())
 
   session       Session  @relation(fields: [sessionId], references: [id])
+  user          User     @relation(fields: [userId], references: [id])
 }
 
 

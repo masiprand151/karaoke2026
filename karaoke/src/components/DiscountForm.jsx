@@ -1,15 +1,20 @@
 import { useState } from "react";
 import { Modal, Form, InputNumber, Button, App, Space, message } from "antd";
 import api from "../utils/api";
+import { useConfirm } from "../contexts/ConfirmContext";
+import { useAlert } from "../contexts/AlertContext";
 
 function DiscountForm({ transactionId, onClose, open }) {
   const { modal, message } = App.useApp();
   const [count, setCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const { showConfirm } = useConfirm();
+  const { showAlert } = useAlert();
   const handleDiscount = async () => {
-    const confirmed = window.confirm(
-      `Apa kamu yakin ingin memberikan discount room sebesar ${count}%?`,
-    );
+    const confirmed = await showConfirm({
+      title: "Discount",
+      description: `Apa kamu yakin ingin memberikan discount room sebesar ${count}%?`,
+    });
 
     if (!confirmed) {
       setCount(0);
@@ -25,10 +30,16 @@ function DiscountForm({ transactionId, onClose, open }) {
         discount: Number(count),
       });
 
-      alert("Berhasil melakukan discount");
+      showAlert({
+        type: "success",
+        message: "Berhasil melakukan discount",
+      });
       onClose();
     } catch (error) {
-      alert(error.message);
+      showAlert({
+        type: "error",
+        message: error.message,
+      });
     } finally {
       setLoading(false);
     }

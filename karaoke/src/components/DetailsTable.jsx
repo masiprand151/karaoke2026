@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { formatRp } from "../utils/rupiah";
 import LadyCountdown from "./LadyCountdown";
 import { Row, Col, Card, Button, Table, Flex } from "antd";
@@ -9,6 +9,7 @@ import { Space } from "antd";
 import EditLadyModal from "./EditLadyModal";
 import { useAlert } from "../contexts/AlertContext";
 import { useConfirm } from "../contexts/ConfirmContext";
+import { ReceiptVoid } from "./Receipt";
 
 function DetailsTable({ data, refresh, loading }) {
   const { showAlert } = useAlert();
@@ -17,6 +18,9 @@ function DetailsTable({ data, refresh, loading }) {
   const [showLadyEdit, setShowLadyEdit] = useState(false);
   const [selectFnb, setSelectFnb] = useState(null);
   const [selectLady, setSelectLady] = useState(null);
+  const [voidItems, setVoidItems] = useState([]);
+
+  const componentRef = useRef();
 
   const handleEditFnb = async (updated) => {
     try {
@@ -27,6 +31,13 @@ function DetailsTable({ data, refresh, loading }) {
         type: "success",
         message: `Berhasil update order f&b ${updated.fnb.name}`,
       });
+      setVoidItems([
+        {
+          name: updated.fnb.name,
+          quantity: updated.quantity,
+          totalAmount: updated.totalAmount,
+        },
+      ]);
       refresh();
     } catch (err) {
       showAlert({
@@ -41,10 +52,18 @@ function DetailsTable({ data, refresh, loading }) {
       const res = await api.put(`/lady/order/${updated.id}`, {
         quantity: Number(updated?.quantity),
       });
+
       showAlert({
         type: "success",
         message: `Berhasil update order lady ${updated.lady.name}`,
       });
+      setVoidItems([
+        {
+          name: updated.lady.name,
+          quantity: updated.quantity,
+          totalAmount: updated.totalAmount,
+        },
+      ]);
       refresh();
     } catch (err) {
       showAlert({
@@ -66,6 +85,16 @@ function DetailsTable({ data, refresh, loading }) {
         type: "success",
         message: `Berhasil void order f&b ${row.fnb.name}`,
       });
+
+      // simpan item yang batal ke voidItems
+      setVoidItems([
+        {
+          name: row.fnb.name,
+          quantity: row.quantity,
+          totalAmount: row.totalAmount,
+        },
+      ]);
+
       refresh();
     } catch (err) {
       showAlert({
@@ -87,6 +116,15 @@ function DetailsTable({ data, refresh, loading }) {
         type: "success",
         message: `Berhasil stop order lady ${row.lady.name}`,
       });
+
+      setVoidItems([
+        {
+          name: row.lady.name,
+          quantity: row.quantity,
+          totalAmount: row.totalAmount,
+        },
+      ]);
+
       refresh();
     } catch (err) {
       showAlert({
@@ -95,6 +133,23 @@ function DetailsTable({ data, refresh, loading }) {
       });
     }
   };
+  useEffect(() => {
+    if (voidItems.length > 0) {
+      const htmlContent = componentRef.current.outerHTML;
+      window.electron
+        .printReceipt({
+          htmlContent,
+          printerTarget: "cashier",
+        })
+        .then((printer) => {
+          showAlert({
+            type: printer.success ? "success" : "error",
+            message: printer.message,
+          });
+          setVoidItems([]);
+        });
+    }
+  }, [voidItems]);
 
   const fnbColumns = [
     {
@@ -237,6 +292,10 @@ function DetailsTable({ data, refresh, loading }) {
         lady={selectLady}
         onSave={handleEditLady}
       />
+
+      <div style={{ display: "none" }}>
+        <ReceiptVoid ref={componentRef} session={data} voidItems={voidItems} />
+      </div>
     </>
   );
 }

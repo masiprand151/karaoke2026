@@ -345,3 +345,64 @@ export const ReceiptLady = forwardRef(
     );
   },
 );
+
+export const ReceiptVoid = forwardRef(({ session, voidItems = [] }, ref) => {
+  const { setting } = useSetting();
+
+  if (!session) return null;
+
+  return (
+    <div
+      ref={ref}
+      style={{
+        width: `${setting?.printSize}mm`,
+        ...style.receipt,
+      }}
+    >
+      <h3 style={style.center}>*** VOID / BATAL ORDER ***</h3>
+      <p style={style.center}>No Transaksi: {session?.transaction?.number}</p>
+      <p style={style.center}>{dayjs().format("YYYY-MM-DD HH:mm:ss")}</p>
+      <hr style={style.hr} />
+      <table style={style.table}>
+        <tbody>
+          <tr>
+            <td style={style.td}>Room</td>
+            <td style={style.right}>{session?.room?.name}</td>
+          </tr>
+          <tr>
+            <td style={style.td}>Customer</td>
+            <td style={style.right}>{session?.customerName}</td>
+          </tr>
+          <tr>
+            <td style={style.td}>Description</td>
+            <td style={style.right}>{session?.cancelReason || "-"}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      {/* Tambahkan detail item yang di-void */}
+      {voidItems?.length > 0 && (
+        <>
+          <hr style={style.hr} />
+          <p>
+            <strong>Item yang dibatalkan:</strong>
+          </p>
+          <table style={style.table}>
+            <tbody>
+              {voidItems.map((item, i) => (
+                <tr key={i}>
+                  <td style={style.td}>{item.name}</td>
+                  <td style={style.right}>x{item.quantity}</td>
+                  <td style={style.right}>{formatRp(item.totalAmount)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
+
+      <hr style={style.hr} />
+      <p style={style.center}>Slip ini bukti pembatalan</p>
+    </div>
+  );
+});

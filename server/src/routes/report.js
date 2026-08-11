@@ -5,9 +5,22 @@ const AppError = require("../helpers/AppError");
 // helper untuk ambil range dari query
 function getDateRange(req) {
   const { start, end } = req.query;
+
+  const startDate = start ? new Date(start) : undefined;
+
+  const endDate = end ? new Date(end) : undefined;
+
+  if (startDate) {
+    startDate.setHours(0, 0, 0, 0);
+  }
+
+  if (endDate) {
+    endDate.setHours(23, 59, 59, 999);
+  }
+
   return {
-    gte: start ? new Date(start) : undefined,
-    lte: end ? new Date(end) : undefined,
+    gte: startDate,
+    lte: endDate,
   };
 }
 
@@ -20,9 +33,54 @@ route.get("/cancel", async (req, res, next) => {
         action: "delete",
         createdAt: range,
       },
-      include: { session: true, user: true },
+      include: {
+        session: {
+          include: {
+            room: true,
+          },
+        },
+        user: true,
+      },
     });
-    res.json(cancelLogs);
+    // Ambil semua fnbId dari oldValue
+    const fnbIds = [
+      ...new Set(
+        cancelLogs
+          .filter((log) => log.type === "fnb")
+          .map((log) => log.oldValue?.fnbId)
+          .filter(Boolean),
+      ),
+    ];
+
+    // Ambil data F&B
+    const fnbs = await prisma.fnb.findMany({
+      where: {
+        id: {
+          in: fnbIds,
+        },
+      },
+    });
+
+    // Jadikan Map supaya pencarian cepat
+    const fnbMap = new Map(fnbs.map((fnb) => [fnb.id, fnb]));
+
+    const formatted = cancelLogs.map((log) => {
+      let fnb = null;
+
+      if (log.type === "fnb") {
+        const fnbId = log.oldValue?.fnbId;
+
+        fnb = fnbMap.get(fnbId) || null;
+      }
+
+      return {
+        ...log,
+
+        fnb,
+      };
+    });
+
+    res.json(formatted);
   } catch (err) {
     next(new AppError(err.message));
   }

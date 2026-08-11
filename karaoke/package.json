@@ -13,6 +13,8 @@
     "@ant-design/charts": "^2.6.7",
     "@ant-design/icons": "^6.3.2",
     "antd": "^5.29.3",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-router-dom": "^7.18.1",

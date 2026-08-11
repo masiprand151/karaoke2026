@@ -8,6 +8,7 @@ const mime = require("mime-types");
 const cors = require("cors");
 const { getConfig } = require("./lib");
 const { app } = require("electron");
+const { streamYoutube } = require("./yt");
 
 let server = null;
 
@@ -163,6 +164,17 @@ function startLocalVideoServer() {
     return transcode(file, req, res, start);
   });
 
+  // yt
+  app.get("/youtube/stream", (req, res) => {
+    const id = String(req.query.id || "").trim();
+
+    if (!id) {
+      return res.status(400).send("YouTube ID required");
+    }
+
+    return streamYoutube(id, req, res);
+  });
+
   server = app.listen(8765, "127.0.0.1", () => {
     console.log("================================");
     console.log("STARTING VIDEO SERVER");
@@ -236,6 +248,45 @@ function transcode(file, req, res, start = 0) {
     "Transfer-Encoding": "chunked",
   });
 
+  // const args = [
+  //   "-hide_banner",
+  //   "-loglevel",
+  //   "error",
+
+  //   "-i",
+  //   file,
+
+  //   "-map",
+  //   "0:v:0",
+  //   "-map",
+  //   "0:a:0?",
+
+  //   "-c:v",
+  //   "libx264",
+  //   "-preset",
+  //   "veryfast",
+  //   "-pix_fmt",
+  //   "yuv420p",
+
+  //   "-c:a",
+  //   "aac",
+  //   "-b:a",
+  //   "192k",
+  //   "-ac",
+  //   "2",
+
+  //   "-movflags",
+  //   "frag_keyframe+empty_moov+default_base_moof",
+
+  //   "-f",
+  //   "mp4",
+  //   "pipe:1",
+  // ];
+
+  // const ffmpeg = spawn(ffmpegPath, args, {
+  //   windowsHide: true,
+  // });
+
   const ffmpeg = spawn(
     ffmpegPath,
     [
@@ -293,7 +344,7 @@ function transcode(file, req, res, start = 0) {
   ffmpeg.stdout.pipe(res);
 
   ffmpeg.stderr.on("data", (data) => {
-    // console.log("[FFMPEG]", data.toString());
+    console.log("[FFMPEG]", data.toString());
   });
 
   ffmpeg.on("error", (err) => {

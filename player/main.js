@@ -4,9 +4,10 @@ const { startLocalVideoServer, stopLocalVideoServer } = require("./server");
 const { getSongsFromFolder } = require("./lib");
 
 const { getConfig } = require("./lib");
+const { getYtDlpPath, searchYoutube } = require("./yt");
 
 const config = getConfig();
-
+app.disableHardwareAcceleration();
 let isQuitting = false;
 let win = null;
 function createWindow() {
@@ -40,6 +41,7 @@ function createWindow() {
 
 app.whenReady().then(() => {
   startLocalVideoServer();
+
   createWindow();
 
   app.on("activate", () => {
@@ -74,4 +76,11 @@ ipcMain.handle("get-songs", async (event, folderPath) => {
 
 ipcMain.handle("setting:get", async () => {
   return getConfig();
+});
+
+ipcMain.handle("youtube", async (event, query = "") => {
+  const result = await searchYoutube(`karaoke ${query}`, 10);
+  console.log(result);
+
+  return result;
 });

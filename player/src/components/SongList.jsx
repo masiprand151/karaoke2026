@@ -19,6 +19,7 @@ function SongList({
   query,
   hasMore,
   onLoadMore,
+  isOffline,
 }) {
   const [activeId, setActiveId] = useState(0);
   const inputRef = useRef(null);
@@ -31,6 +32,8 @@ function SongList({
   const selectedRowRef = useRef(null);
 
   useEffect(() => {
+    console.log(songs);
+
     setActiveId(songs[activeIndex]?.id);
   }, [songs, activeIndex]);
 
@@ -59,9 +62,32 @@ function SongList({
     };
   }, [loading, hasMore, onLoadMore]);
 
+  const thum = {
+    title: "",
+    width: 80,
+    render: (_, row) => {
+      if (!row.thumbnail) return null;
+
+      return (
+        <img
+          src={row.thumbnail}
+          alt={row.name}
+          style={{
+            width: 60,
+            height: 40,
+            objectFit: "cover",
+            borderRadius: 4,
+            display: "block",
+          }}
+        />
+      );
+    },
+  };
+
   const columnsTitle = [
-    { title: "Title", dataIndex: "name" },
-    { title: "Artist", dataIndex: "artist" },
+    ...(!isOffline ? [thum] : []),
+    { title: "Title", ellipsis: true, dataIndex: "name" },
+    { title: "Artist", ellipsis: true, dataIndex: "artist" },
     {
       title: "",
       width: 40,
@@ -189,6 +215,7 @@ function SongList({
         <Table
           className="song-table"
           rowKey={"id"}
+          loading={isOffline && loading ? false : loading}
           dataSource={songs}
           columns={columnsTitle}
           pagination={false}

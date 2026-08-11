@@ -11,4 +11,5 @@ contextBridge.exposeInMainWorld("electron", {
   },
   getSongs: (folderPath) => ipcRenderer.invoke("get-songs", folderPath),
   getSetting: () => ipcRenderer.invoke("setting:get"),
+  getYoutube: (query) => ipcRenderer.invoke("youtube", query),
 });

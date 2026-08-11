@@ -7,9 +7,10 @@ import useSetting from "../hooks/useSetting";
 
 const { Title } = Typography;
 
-function CategoryHeader() {
+function CategoryHeader({ setQuery, query, mode, setMode }) {
   const [open, setOpen] = useState(false);
   const [pin, setPin] = useState("");
+  const [active, setActive] = useState("ALL");
   const inputRef = useRef(null);
   const navigate = useNavigate();
   const { setting } = useSetting();
@@ -17,9 +18,20 @@ function CategoryHeader() {
     // jika tombol setting
     if (typeof key !== "string") {
       setOpen(true);
+    } else if (key === "YOUTUBE") {
+      setMode((prev) => !prev);
     } else {
       // jika key mau ambil category
+      let keyCat = "";
+      if (key === "INDO") {
+        keyCat = "INDONESIA";
+      } else {
+        keyCat = key;
+      }
+
+      setQuery(keyCat === "ALL" ? "" : keyCat.toLowerCase());
     }
+    setActive(key);
   };
 
   const handleNumberClick = (num) => setPin((prev) => prev + num);
@@ -51,12 +63,13 @@ function CategoryHeader() {
         "JEPANG",
         "KOREA",
         "HOUSE",
-        "OTHERS",
+        "YOUTUBE",
         <SettingOutlined />,
       ].map((cat) => (
         <Button
           key={cat}
           type="dashed"
+          danger={active === cat}
           style={{
             margin: "0 4px",
           }}

@@ -35,6 +35,7 @@ function Home() {
   const [seekOffset, setSeekOffset] = useState(0);
   const [streamVersion, setStreamVersion] = useState(0);
   const [audioChannel, setAudioChannel] = useState(false);
+  const [isOffline, setIsOffline] = useState(true);
   const location = useLocation();
   const navigate = useNavigate();
   const rowRefs = useRef([]);
@@ -65,7 +66,6 @@ function Home() {
       const res = await api.get(
         `/songs?search=${encodeURIComponent(q)}&page=${currentPage}&limit=50`,
       );
-
       if (append) {
         setSongs((prev) => [...prev, ...res.songs]);
       } else {
@@ -80,7 +80,39 @@ function Home() {
     }
   };
 
+  const getYoutube = async (q = "") => {
+    if (loading) return;
+
+    try {
+      setLoading(true);
+
+      const res = await window.electron.getYoutube(q);
+
+      console.log("YOUTUBE:", res);
+
+      setSongs(Array.isArray(res) ? res : []);
+      setHasMore(false);
+    } catch (error) {
+      console.log("YOUTUBE ERROR:", error);
+      setSongs([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
+    if (isOffline) return;
+
+    const timer = setTimeout(() => {
+      getYoutube(query);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [query, isOffline]);
+
+  useEffect(() => {
+    console.log(query);
+    if (!isOffline) return;
     const timer = setTimeout(() => {
       setPage(1);
       setHasMore(true);
@@ -89,7 +121,7 @@ function Home() {
     }, 250);
 
     return () => clearTimeout(timer);
-  }, [query]);
+  }, [query, isOffline]);
 
   const handleLoadMore = async () => {
     if (loading || !hasMore) return;
@@ -157,6 +189,7 @@ function Home() {
   const handleNext = () => {
     // Jika tidak ada lagu berikutnya, BLOKIR NEXT
     if (playlist.length <= 1) {
+      handleStop();
       return;
     }
 
@@ -267,7 +300,12 @@ function Home() {
             backgroundRepeat: "no-repeat",
           }}
         >
-          <CategoryHeader />
+          <CategoryHeader
+            query={query}
+            setQuery={setQuery}
+            mode={isOffline}
+            setMode={setIsOffline}
+          />
 
           <Row
             gutter={{
@@ -290,6 +328,7 @@ function Home() {
               setQuery={setQuery}
               hasMore={hasMore}
               onLoadMore={handleLoadMore}
+              isOffline={isOffline}
             />
 
             <PlayerSidebar
@@ -334,6 +373,7 @@ function Home() {
           audioChannel={audioChannel}
           remainingText={remaining?.remainingText}
           remainingSeconds={remaining?.remainingMs}
+          isOffline={isOffline}
         />
       </Row>
     </ConfigProvider>

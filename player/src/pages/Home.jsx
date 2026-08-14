@@ -42,6 +42,7 @@ function Home() {
   const videoRef = useRef(null);
   const { setting } = useSetting();
   const { maintenance, checkin } = location.state || {};
+  const [playingSource, setPlayingSource] = useState(null);
 
   const { socket, connected } = useSocket();
   const backgroundUrl = "http://127.0.0.1:8765/background";
@@ -59,6 +60,7 @@ function Home() {
 
   const getSongs = async (q = "", currentPage = 1, append = false) => {
     if (loading) return;
+    if (!isOffline) return;
 
     try {
       setLoading(true);
@@ -82,7 +84,7 @@ function Home() {
 
   const getYoutube = async (q = "") => {
     if (loading) return;
-
+    if (isOffline) return;
     try {
       setLoading(true);
 
@@ -138,6 +140,7 @@ function Home() {
       setStreamVersion(0);
       return;
     }
+    if (playingSource?.type === "youtube") return;
 
     const file = playlist[0].filePath;
 
@@ -156,7 +159,7 @@ function Home() {
       .catch((error) => {
         console.error("METADATA ERROR:", error);
       });
-  }, [playlist[0]?.filePath]);
+  }, [playlist[0]?.filePath, isOffline, playingSource?.type]);
 
   const handlePlayPause = () => {
     const video = videoRef.current;
@@ -239,9 +242,10 @@ function Home() {
     if (!video) return;
 
     const handleTimeUpdate = () => {
-      const realTime = isOffline
-        ? seekOffset + video.currentTime
-        : video.currentTime;
+      const realTime =
+        playingSource?.type === "offline"
+          ? seekOffset + video.currentTime
+          : video.currentTime;
 
       setCurrentTime(realTime);
     };
@@ -257,7 +261,7 @@ function Home() {
     const video = videoRef.current;
 
     if (!video) return;
-    if (!isOffline) {
+    if (playingSource?.type === "youtube") {
       video.currentTime = value;
       return;
     }
@@ -271,6 +275,27 @@ function Home() {
     setSeekOffset(0);
     setCurrentTime(0);
     setStreamVersion(0);
+
+    const song = playlist[0];
+
+    if (!song) {
+      setPlayingSource(null);
+      return;
+    }
+
+    if (song.source === "youtube") {
+      setPlayingSource({
+        type: "youtube",
+        key: song.key ?? song.id,
+        id: song.id,
+      });
+    } else {
+      setPlayingSource({
+        type: "offline",
+        key: song.key,
+        filePath: song.filePath,
+      });
+    }
   }, [playlist[0]?.key]);
 
   return (
@@ -389,6 +414,7 @@ function Home() {
           roomId={setting?.roomId}
           serverUrl={setting?.server}
           setCurrentTime={setCurrentTime}
+          playingSource={playingSource}
         />
       </Row>
     </ConfigProvider>

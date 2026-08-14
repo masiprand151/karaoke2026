@@ -14,26 +14,56 @@ function CategoryHeader({ setQuery, query, mode, setMode }) {
   const inputRef = useRef(null);
   const navigate = useNavigate();
   const { setting } = useSetting();
+
+  // const handleClick = (key) => {
+  //   // jika tombol setting
+  //   if (typeof key !== "string") {
+  //     setOpen(true);
+  //   } else if (key === "YOUTUBE") {
+  //     setMode((prev) => !prev);
+  //   } else {
+  //     // jika key mau ambil category
+  //     let keyCat = "";
+  //     if (key === "INDO") {
+  //       keyCat = "INDONESIA";
+  //     } else {
+  //       keyCat = key;
+  //     }
+
+  //     setQuery(keyCat === "ALL" ? "" : keyCat.toLowerCase());
+  //   }
+  //   setActive(key);
+  // };
   const handleClick = (key) => {
-    // jika tombol setting
+    // SETTING
     if (typeof key !== "string") {
       setOpen(true);
-    } else if (key === "YOUTUBE") {
-      setMode((prev) => !prev);
-    } else {
-      // jika key mau ambil category
-      let keyCat = "";
-      if (key === "INDO") {
-        keyCat = "INDONESIA";
-      } else {
-        keyCat = key;
-      }
-
-      setQuery(keyCat === "ALL" ? "" : keyCat.toLowerCase());
+      return;
     }
+
+    // YOUTUBE
+    if (key === "YOUTUBE") {
+      setMode(false); // online
+      setQuery("");
+      setActive(key);
+      return;
+    }
+
+    // SEMUA SELAIN YOUTUBE = OFFLINE
+    setMode(true);
+
+    let keyCat = "";
+
+    if (key === "INDO") {
+      keyCat = "INDONESIA";
+    } else {
+      keyCat = key;
+    }
+
+    setQuery(keyCat === "ALL" ? "" : keyCat.toLowerCase());
+
     setActive(key);
   };
-
   const handleNumberClick = (num) => setPin((prev) => prev + num);
   const handleClear = () => setPin("");
   const handleDelete = () => setPin((prev) => prev.slice(0, -1));

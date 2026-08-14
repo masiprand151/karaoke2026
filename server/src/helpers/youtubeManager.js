@@ -3,7 +3,7 @@ class YouTubeManager {
     search,
     stream,
     searchCacheTtl = 5 * 60 * 1000,
-    maxConcurrent = 2,
+    maxConcurrent = 20, // security
   }) {
     this.searchHandler = search;
     this.streamHandler = stream;

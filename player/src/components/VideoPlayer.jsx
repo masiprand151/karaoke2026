@@ -24,10 +24,12 @@ function VideoPlayer({
   isOffline,
   serverUrl,
   roomId,
+  playingSource,
 }) {
   const currentSong = playlist[0];
   const { setupAudio } = useKaraokeAudio(videoRef, pitch, volume, audioChannel);
   const [runningText, setRunningText] = useState(null);
+  const [videoSrc, setVideoSrc] = useState("");
 
   const isFiveMinutesLeft = remainingSeconds > 0 && remainingSeconds <= 5 * 60;
 
@@ -49,6 +51,25 @@ function VideoPlayer({
             .join(" • "),
     );
   }, [playlist[0]?.key]);
+
+  // useEffect(() => {
+  //   if (!currentSong) {
+  //     setVideoSrc("");
+  //     return;
+  //   }
+
+  //   if (isOffline) {
+  //     setVideoSrc(
+  //       `http://127.0.0.1:8765/stream?file=${encodeURIComponent(
+  //         currentSong.filePath,
+  //       )}&start=${seekOffset}`,
+  //     );
+  //   } else {
+  //     setVideoSrc(
+  //       `${serverUrl.trim("/")}/youtube/stream?id=${currentSong.id}&roomId=${roomId}`,
+  //     );
+  //   }
+  // }, [currentSong?.key, isOffline, seekOffset, serverUrl, roomId]);
 
   return (
     <Col
@@ -118,12 +139,21 @@ function VideoPlayer({
           ref={videoRef}
           // PENTING: paksa video baru ketika seek
           crossOrigin="anonymous"
+          // src={
+          //   isOffline
+          //     ? `http://127.0.0.1:8765/stream?file=${encodeURIComponent(
+          //         currentSong.filePath,
+          //       )}&start=${seekOffset}`
+          //     : `${serverUrl.trim("/")}/youtube/stream?id=${currentSong.id}&roomId=${roomId}`
+          // }
           src={
-            isOffline
+            playingSource?.type === "offline"
               ? `http://127.0.0.1:8765/stream?file=${encodeURIComponent(
-                  currentSong.filePath,
+                  playingSource.filePath,
                 )}&start=${seekOffset}`
-              : `${serverUrl.trim("/")}/youtube/stream?id=${currentSong.id}&roomId=${roomId}`
+              : playingSource?.type === "youtube"
+                ? `${serverUrl.trim("/")}/youtube/stream?id=${playingSource.id}&roomId=${roomId}`
+                : undefined
           }
           autoPlay
           loop={isRepeat}

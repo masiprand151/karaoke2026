@@ -32,8 +32,6 @@ function SongList({
   const selectedRowRef = useRef(null);
 
   useEffect(() => {
-    console.log(songs);
-
     setActiveId(songs[activeIndex]?.id);
   }, [songs, activeIndex]);
 

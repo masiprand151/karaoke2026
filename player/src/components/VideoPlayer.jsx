@@ -22,6 +22,8 @@ function VideoPlayer({
   remainingText,
   runningTexts,
   isOffline,
+  serverUrl,
+  roomId,
 }) {
   const currentSong = playlist[0];
   const { setupAudio } = useKaraokeAudio(videoRef, pitch, volume, audioChannel);
@@ -116,17 +118,17 @@ function VideoPlayer({
           ref={videoRef}
           // PENTING: paksa video baru ketika seek
           crossOrigin="anonymous"
-          key={`${currentSong.key}-${streamVersion}`}
           src={
             isOffline
               ? `http://127.0.0.1:8765/stream?file=${encodeURIComponent(
                   currentSong.filePath,
                 )}&start=${seekOffset}`
-              : `http://127.0.0.1:8765/youtube/stream?id=${currentSong.id}`
+              : `${serverUrl.trim("/")}/youtube/stream?id=${currentSong.id}&roomId=${roomId}`
           }
           autoPlay
           loop={isRepeat}
           playsInline
+          // controls
           preload="auto"
           style={{
             width: "100%",

@@ -80,7 +80,6 @@ ipcMain.handle("setting:get", async () => {
 
 ipcMain.handle("youtube", async (event, query = "") => {
   const result = await searchYoutube(`karaoke ${query}`, 10);
-  console.log(result);
 
   return result;
 });

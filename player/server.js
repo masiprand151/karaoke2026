@@ -165,15 +165,15 @@ function startLocalVideoServer() {
   });
 
   // yt
-  app.get("/youtube/stream", (req, res) => {
-    const id = String(req.query.id || "").trim();
+  // app.get("/youtube/stream", (req, res) => {
+  //   const id = String(req.query.id || "").trim();
 
-    if (!id) {
-      return res.status(400).send("YouTube ID required");
-    }
+  //   if (!id) {
+  //     return res.status(400).send("YouTube ID required");
+  //   }
 
-    return streamYoutube(id, req, res);
-  });
+  //   return streamYoutube(id, req, res);
+  // });
 
   server = app.listen(8765, "127.0.0.1", () => {
     console.log("================================");

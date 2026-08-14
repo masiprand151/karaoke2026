@@ -18,6 +18,7 @@ const server = http.createServer(app);
 createIo(server);
 
 app.use("/songs", require("./routes/songs"));
+app.use("/youtube", require("./routes/youtube"));
 
 app.use("/auth", require("./routes/auth"));
 app.use("/room", require("./routes/room"));

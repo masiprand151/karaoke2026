@@ -86,9 +86,8 @@ function Home() {
     try {
       setLoading(true);
 
-      const res = await window.electron.getYoutube(q);
-
-      console.log("YOUTUBE:", res);
+      // const res = await window.electron.getYoutube(q);
+      const res = await api.get(`/youtube/search?q=${q}&limit=10`);
 
       setSongs(Array.isArray(res) ? res : []);
       setHasMore(false);
@@ -111,7 +110,6 @@ function Home() {
   }, [query, isOffline]);
 
   useEffect(() => {
-    console.log(query);
     if (!isOffline) return;
     const timer = setTimeout(() => {
       setPage(1);
@@ -228,6 +226,12 @@ function Home() {
     video.volume = volume / 100;
   }, [volume]);
 
+  useEffect(() => {
+    if (!isOffline) {
+      setDuration(Number(playlist[0]?.duration));
+    }
+  }, [playlist[0]?.duration]);
+
   // handle slider
   useEffect(() => {
     const video = videoRef.current;
@@ -235,7 +239,9 @@ function Home() {
     if (!video) return;
 
     const handleTimeUpdate = () => {
-      const realTime = seekOffset + video.currentTime;
+      const realTime = isOffline
+        ? seekOffset + video.currentTime
+        : video.currentTime;
 
       setCurrentTime(realTime);
     };
@@ -245,12 +251,18 @@ function Home() {
     return () => {
       video.removeEventListener("timeupdate", handleTimeUpdate);
     };
-  }, [playlist[0]?.filePath, seekOffset, streamVersion]);
+  }, [playlist[0]?.filePath, seekOffset, streamVersion, playlist[0]?.url]);
 
   const handleSeek = (value) => {
+    const video = videoRef.current;
+
+    if (!video) return;
+    if (!isOffline) {
+      video.currentTime = value;
+      return;
+    }
     setSeekOffset(value);
     setCurrentTime(value);
-
     // paksa VideoPlayer membuat stream baru
     setStreamVersion((prev) => prev + 1);
   };
@@ -374,6 +386,9 @@ function Home() {
           remainingText={remaining?.remainingText}
           remainingSeconds={remaining?.remainingMs}
           isOffline={isOffline}
+          roomId={setting?.roomId}
+          serverUrl={setting?.server}
+          setCurrentTime={setCurrentTime}
         />
       </Row>
     </ConfigProvider>

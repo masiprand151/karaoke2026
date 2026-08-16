@@ -5,6 +5,15 @@ const { spawn, exec } = require("child_process");
 const prisma = require("../configs/prisma");
 const os = require("os");
 
+function convertToUNC(localPath) {
+  // ambil drive prefix, misalnya "D:\", "C:\", "E:\"
+  const driveRegex = /^[A-Z]:\\/i;
+  const baseUNC = `\\\\${os.hostname() || process.env.COMPUTERNAME}`;
+
+  // replace drive prefix dengan UNC base
+  return localPath.replace(driveRegex, baseUNC + "\\");
+}
+
 // ambil daftar drive
 route.get("/drives", async (req, res, next) => {
   try {
@@ -103,15 +112,6 @@ route.get("/scan", async (req, res, next) => {
     next(error);
   }
 });
-
-function convertToUNC(localPath) {
-  // ambil drive prefix, misalnya "D:\", "C:\", "E:\"
-  const driveRegex = /^[A-Z]:\\/i;
-  const baseUNC = `\\\\${os.hostname() || process.env.COMPUTERNAME}`;
-
-  // replace drive prefix dengan UNC base
-  return localPath.replace(driveRegex, baseUNC + "\\");
-}
 
 route.post("/import", async (req, res, next) => {
   try {

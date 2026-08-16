@@ -1,0 +1,383 @@
+const prisma = require("../configs/prisma");
+const AppError = require("../helpers/AppError");
+const recalculateTransaction = require("../helpers/recalculateTransaction");
+
+const getAllLadies = async (req, res, next) => {
+  try {
+    const search = req.query.search || "";
+    const lady = await prisma.lady.findMany({
+      where: {
+        name: {
+          contains: search,
+        },
+        deletedAt: null,
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      ladies: lady,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const createNewLady = async (req, res, next) => {
+  try {
+    const { name, basePrice } = req.body;
+
+    const lady = await prisma.lady.findFirst({
+      where: {
+        name,
+      },
+    });
+
+    if (lady) {
+      throw new AppError(400, "Nama lady sudah di gunakan!");
+    }
+
+    await prisma.lady.create({
+      data: {
+        name,
+        basePrice: Number(basePrice),
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const editLady = async (req, res, next) => {
+  try {
+    const { ladyId } = req.params;
+    const { name, basePrice, isJob } = req.body;
+
+    const lady = await prisma.lady.findUnique({
+      where: {
+        id: Number(ladyId),
+      },
+    });
+
+    if (!lady) {
+      throw new AppError(404, "Lady tidak di temukan");
+    }
+
+    const data = {};
+    if (name) data.name = name;
+    if (basePrice) data.basePrice = Number(basePrice);
+    data.isJob = isJob;
+
+    await prisma.lady.update({
+      where: {
+        id: lady.id,
+      },
+      data,
+    });
+
+    res.status(200).json({
+      success: true,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const deleteLady = async (req, res, next) => {
+  try {
+    const { ladyId } = req.params;
+
+    const lady = await prisma.lady.findUnique({
+      where: {
+        id: Number(ladyId),
+      },
+    });
+
+    if (!lady) {
+      throw new AppError(404, "Lady tidak di temukan");
+    }
+
+    await prisma.lady.update({
+      where: {
+        id: lady.id,
+      },
+      data: {
+        deletedAt: new Date(),
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const order = async (req, res, next) => {
+  try {
+    const { sessionId, ladyId, quantity, limit = null } = req.body;
+
+    const result = await prisma.$transaction(async (trx) => {
+      //------------------------------------------
+      // VALIDASI LADY
+      //------------------------------------------
+      const lady = await trx.lady.findUnique({ where: { id: Number(ladyId) } });
+      if (!lady) throw new AppError(404, "Lady tidak ditemukan");
+      if (lady.isJob)
+        throw new AppError(400, `Lady ${lady.name} sedang di dalam room`);
+
+      const trcn = await trx.transaction.findUnique({
+        where: {
+          sessionId: Number(sessionId),
+        },
+        include: {
+          pricing: true,
+        },
+      });
+      // cek berapa Lady gratis sudah dipakai
+      const usedFreeLadies = await trx.sessionLady.count({
+        where: { sessionId: Number(sessionId), unitPrice: 0 },
+      });
+      //------------------------------------------
+      // HITUNG HARGA & WAKTU
+      //------------------------------------------
+      let unitPrice = Number(lady.basePrice);
+      let totalAmount = unitPrice * Number(quantity);
+      let start = new Date();
+      let end = new Date(start.getTime() + Number(quantity) * 3600000);
+
+      const freeLimit = trcn.pricing.ladyQty || 0;
+
+      if (trcn.pricing.isPackage) {
+        if (usedFreeLadies < freeLimit) {
+          unitPrice = 0;
+          totalAmount = 0;
+        }
+        const jam = trcn.pricing.durationMinutes / 60;
+
+        end = new Date(start.getTime() + Number(jam) * 3600000);
+      }
+
+      //------------------------------------------
+      // SIMPAN SESSION LADY
+      //------------------------------------------
+      const sessionLady = await trx.sessionLady.create({
+        data: {
+          sessionId: Number(sessionId),
+          ladyId: Number(ladyId),
+          quantity: trcn.pricing.isPackage
+            ? trcn.pricing.durationMinutes / 60
+            : Number(quantity),
+          unitPrice,
+          start,
+          end,
+          totalAmount,
+        },
+      });
+
+      // Update status Lady jadi sedang kerja
+      await trx.lady.update({
+        where: { id: ladyId },
+        data: { isJob: true },
+      });
+
+      //------------------------------------------
+      // UPDATE TRANSACTION (pakai helper)
+      //------------------------------------------
+      const updatedTransaction = await recalculateTransaction(sessionId, trx);
+
+      // log
+      await trx.sessionLog.create({
+        data: {
+          sessionId: sessionLady.sessionId,
+          transactionId: updatedTransaction.id,
+          type: "lady",
+          targetId: sessionLady.id,
+          action: "create",
+          oldValue: {},
+          newValue: sessionLady,
+          role: req.user.role,
+          userId: req.user.id,
+        },
+      });
+
+      return { sessionLady, transaction: updatedTransaction };
+    });
+
+    res.json({ success: true, result });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updateOrderLady = async (req, res, next) => {
+  try {
+    const { id } = req.params; // id sessionLady
+    const { quantity } = req.body;
+    const { role } = req.user;
+    const result = await prisma.$transaction(async (trx) => {
+      //------------------------------------------
+      // VALIDASI SESSION LADY
+      //------------------------------------------
+      const sessionLady = await trx.sessionLady.findUnique({
+        where: { id: Number(id) },
+        include: { lady: true },
+      });
+      if (!sessionLady) throw new AppError(404, "Order Lady tidak ditemukan");
+      // validasi jika quantity lebih kecil dari sebelumnya
+      if (Number(quantity) < Number(sessionLady.quantity) && role !== "admin") {
+        throw new AppError(400, "Akses di tolak!");
+      }
+
+      //------------------------------------------
+      // HITUNG ULANG HARGA & WAKTU
+      //------------------------------------------
+      const unitPrice = Number(sessionLady.unitPrice);
+      const totalAmount = unitPrice * Number(quantity);
+
+      // gunakan start existing dari DB
+      const start = new Date(sessionLady.start);
+      const end = new Date(start.getTime() + Number(quantity) * 3600000);
+
+      //------------------------------------------
+      // UPDATE SESSION LADY
+      //------------------------------------------
+      const updatedLadyOrder = await trx.sessionLady.update({
+        where: { id: sessionLady.id },
+        data: {
+          quantity: Number(quantity),
+          unitPrice,
+          totalAmount,
+          start, // tetap pakai start lama
+          end, // end dihitung ulang dari start lama
+        },
+      });
+
+      //------------------------------------------
+      // UPDATE TRANSACTION (pakai helper)
+      //------------------------------------------
+      const updatedTransaction = await recalculateTransaction(
+        sessionLady.sessionId,
+        trx,
+      );
+
+      // log
+      await trx.sessionLog.create({
+        data: {
+          sessionId: sessionLady.sessionId,
+          transactionId: updatedTransaction.id,
+          type: "lady",
+          targetId: sessionLady.id,
+          action: "update",
+          oldValue: sessionLady,
+          newValue: updatedLadyOrder,
+          role,
+          userId: req.user.id,
+        },
+      });
+
+      return { ladyOrder: updatedLadyOrder, transaction: updatedTransaction };
+    });
+
+    res.json({ success: true, result });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const deleteOrderLady = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const result = await prisma.$transaction(async (trx) => {
+      const sessionLady = await trx.sessionLady.findUnique({
+        where: { id: Number(id) },
+      });
+      if (!sessionLady) throw new AppError(404, "Order Lady tidak ditemukan");
+
+      await trx.sessionLady.delete({ where: { id: sessionLady.id } });
+
+      // Update status Lady jadi tidak kerja
+      await trx.lady.update({
+        where: { id: sessionLady.ladyId },
+        data: { isJob: false },
+      });
+
+      // Log delete
+      await trx.sessionLog.create({
+        data: {
+          sessionId: sessionLady.sessionId,
+          transactionId: sessionLady.transactionId,
+          type: "lady",
+          targetId: sessionLady.id,
+          action: "delete",
+          oldValue: sessionLady,
+          newValue: null,
+          role: req.user.role,
+          userId: req.user.id,
+        },
+      });
+
+      const updatedTransaction = await recalculateTransaction(
+        sessionLady.sessionId,
+        trx,
+      );
+
+      return { deletedLadyId: sessionLady.id, transaction: updatedTransaction };
+    });
+
+    res.json({ success: true, result });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const stopLady = async (req, res, next) => {
+  try {
+    const { ladyId } = req.params;
+
+    const lady = await prisma.lady.findUnique({
+      where: {
+        id: Number(ladyId),
+      },
+    });
+
+    if (!lady) {
+      throw new AppError(404, "Lady tidak di temukan");
+    }
+
+    if (!lady.isJob) {
+      throw new AppError(401, "Lady sedang tidak job");
+    }
+
+    await prisma.lady.update({
+      where: {
+        id: lady.id,
+        isJob: true,
+      },
+      data: {
+        isJob: false,
+      },
+    });
+
+    res.status(200).json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = {
+  getAllLadies,
+  createNewLady,
+  editLady,
+  deleteLady,
+  order,
+  updateOrderLady,
+  deleteOrderLady,
+  stopLady,
+};

@@ -54,10 +54,6 @@ function Home() {
     roomId: setting?.roomId,
   });
 
-  useEffect(() => {
-    if (!checkin && !maintenance) navigate("/");
-  }, [checkin, maintenance]);
-
   const getSongs = async (q = "", currentPage = 1, append = false) => {
     if (loading) return;
     if (!isOffline) return;

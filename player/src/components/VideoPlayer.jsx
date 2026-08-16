@@ -52,35 +52,20 @@ function VideoPlayer({
     );
   }, [playlist[0]?.key]);
 
-  // useEffect(() => {
-  //   if (!currentSong) {
-  //     setVideoSrc("");
-  //     return;
-  //   }
-
-  //   if (isOffline) {
-  //     setVideoSrc(
-  //       `http://127.0.0.1:8765/stream?file=${encodeURIComponent(
-  //         currentSong.filePath,
-  //       )}&start=${seekOffset}`,
-  //     );
-  //   } else {
-  //     setVideoSrc(
-  //       `${serverUrl.trim("/")}/youtube/stream?id=${currentSong.id}&roomId=${roomId}`,
-  //     );
-  //   }
-  // }, [currentSong?.key, isOffline, seekOffset, serverUrl, roomId]);
-
   return (
     <Col
       span={12}
       style={{
-        background: "black",
         padding: 0,
         overflow: "hidden",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+        position: "relative",
+        height: "100vh",
+        background: "black",
+        padding: 0,
+        overflow: "hidden",
       }}
     >
       <div
@@ -139,13 +124,6 @@ function VideoPlayer({
           ref={videoRef}
           // PENTING: paksa video baru ketika seek
           crossOrigin="anonymous"
-          // src={
-          //   isOffline
-          //     ? `http://127.0.0.1:8765/stream?file=${encodeURIComponent(
-          //         currentSong.filePath,
-          //       )}&start=${seekOffset}`
-          //     : `${serverUrl.trim("/")}/youtube/stream?id=${currentSong.id}&roomId=${roomId}`
-          // }
           src={
             playingSource?.type === "offline"
               ? `http://127.0.0.1:8765/stream?file=${encodeURIComponent(
@@ -158,7 +136,7 @@ function VideoPlayer({
           autoPlay
           loop={isRepeat}
           playsInline
-          // controls
+          controls={false}
           preload="auto"
           style={{
             width: "100%",
@@ -198,6 +176,7 @@ function VideoPlayer({
           loop
           playsInline
           muted
+          controls={false}
           preload="auto"
           style={{
             width: "100%",

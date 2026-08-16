@@ -7,7 +7,7 @@ const { protectedAuth } = require("../middleware/auth.middleware");
 const route = require("express").Router();
 
 route.get("/", protectedAuth(), getAllRooms);
-route.get("/:id", protectedAuth(), getCurrentRoom);
+route.get("/:id", getCurrentRoom);
 route.post("/move", protectedAuth(), moveRoom);
 
 module.exports = route;

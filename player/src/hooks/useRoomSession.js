@@ -50,18 +50,18 @@ export default function useRoomSession({
 
   useEffect(() => {
     getRoom();
-  }, []);
+  }, [mode]);
 
   useEffect(() => {
     if (!room || mode !== "checkin") return;
     const interval = setInterval(() => {
       const session = room.sessions[0];
-      if (!session) {
-        navigate("/");
-        return;
-      }
-      const time = getRemainingTime(session.start, session.end);
 
+      const time = getRemainingTime(session.start, session.end);
+      if (time.remainingMs <= 0) {
+        window.localStorage.removeItem("data-checkin");
+        navigate("/", { replace: true });
+      }
       setRemaining(time);
     }, 1000);
 
@@ -72,13 +72,13 @@ export default function useRoomSession({
   // TENTUKAN MODE
   // ==========================================
   useEffect(() => {
-    if (maintenance && !checkin) {
-      setMode("maintenance");
+    if (checkin === true) {
+      setMode("checkin");
       return;
     }
 
-    if (checkin) {
-      setMode("checkin");
+    if (maintenance === true) {
+      setMode("maintenance");
       return;
     }
 
@@ -103,7 +103,8 @@ export default function useRoomSession({
 
       setRemaining(getRemainingTime(Date.now(), endTime));
       if (remaining <= 0) {
-        navigate("/");
+        window.localStorage.removeItem("data-checkin");
+        navigate("/", { replace: true });
       }
     };
 

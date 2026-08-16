@@ -16,9 +16,9 @@ const wallpaper = app.isPackaged
   ? path.join(
       process.env.PROGRAMDATA || "C:\\ProgramData",
       "KaraokePlayer",
-      "wallpaper.mp4",
+      "Animasi.mp4",
     )
-  : path.join(process.cwd(), "wallpaper.mp4");
+  : path.join(process.cwd(), "Animasi.mp4");
 function startLocalVideoServer() {
   if (server) return;
 
@@ -38,6 +38,7 @@ function startLocalVideoServer() {
     if (!fs.existsSync(wallpaper)) {
       return res.sendStatus(404);
     }
+
     res.sendFile(wallpaper, (err) => {
       if (err) {
         console.error("SEND FILE ERROR:", err);

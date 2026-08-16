@@ -428,6 +428,7 @@ const checkout = async (req, res, next) => {
         where: { id: Number(sessionId) },
         include: {
           transaction: true,
+          room: true,
           sessionLadies: { include: { lady: true } },
         },
       });
@@ -457,9 +458,11 @@ const checkout = async (req, res, next) => {
           closed: true,
         },
       });
-      return { transaction: session.transaction };
+      return { transaction: session.transaction, room: session.room };
     });
+    const io = getIo();
 
+    io.to(result.room.name).emit("checkout", result);
     res.json({ success: true, result });
   } catch (error) {
     next(error);

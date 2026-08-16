@@ -63,19 +63,6 @@ export default function Standby() {
     }
   };
 
-  useEffect(() => {
-    if (!socket || !connected) return;
-    socket.on("checkin", (data) => {
-      window.localStorage.setItem("data-checkin", JSON.stringify(data));
-      navigate("/home", {
-        state: {
-          maintenance: false,
-          checkin: true,
-        },
-      });
-    });
-  }, [socket, connected]);
-
   return (
     <ConfigProvider
       theme={{
@@ -190,22 +177,22 @@ export default function Standby() {
         </Col>
 
         {/* Kanan: video */}
-        <Col span={12} style={{ background: "#fff" }}>
+        <Col span={12}>
           <video
             key={"wallpaper"}
             src={`http://127.0.0.1:8765/wallpaper`}
             autoPlay
-            controls
+            controls={false}
             loop
             playsInline
             muted
             preload="auto"
             style={{
+              background: "black",
               width: "100%",
               height: "100%",
               objectFit: "contain",
               display: "block",
-              background: "black",
             }}
           />
         </Col>

@@ -13,6 +13,16 @@ const createFetch = (baseUrl = "") => {
         ...options,
       });
 
+      // ==========================================
+      // TOKEN EXPIRED / UNAUTHORIZED
+      // ==========================================
+
+      if (res.status === 401) {
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
+        window.electron.closeApp();
+      }
+
       if (!res.ok) {
         const errorText = await res.text();
         throw new Error(errorText || `HTTP error! status: ${res.status}`);

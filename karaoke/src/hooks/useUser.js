@@ -11,7 +11,6 @@ function useUser() {
     try {
       const res = await api.get(`/user?search=${search}`);
       setUsers(res.users);
-      console.log(res.users);
     } catch (error) {
       showAlert({
         type: "error",

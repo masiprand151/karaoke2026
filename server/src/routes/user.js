@@ -10,12 +10,12 @@ const {
 } = require("../middleware/auth.middleware");
 const route = require("express").Router();
 
-route.get("/", protectedAuth, getAllUser);
+route.get("/", protectedAuth(), getAllUser);
 
-route.post("/", protectedAuth, protectedAdmin, createNewUser);
+route.post("/", protectedAuth("admin"), createNewUser);
 // update user
-route.put("/:userId", protectedAuth, protectedAdmin, updatedUser);
+route.put("/:userId", protectedAuth("admin"), updatedUser);
 // delete user
-route.delete("/:userId", protectedAuth, protectedAdmin, deleteUser);
+route.delete("/:userId", protectedAuth("admin"), deleteUser);
 
 module.exports = route;

@@ -3,6 +3,8 @@ const bcrypt = require("bcrypt");
 const AppError = require("../helpers/AppError");
 const jwt = require("jsonwebtoken");
 
+const JWT_SECRET = process.env.JWT_SECRET || "110498";
+
 const login = async (req, res, next) => {
   const { username, password } = req.body;
   try {
@@ -28,7 +30,7 @@ const login = async (req, res, next) => {
         username: user.username,
         role: user.role,
       },
-      "110498",
+      JWT_SECRET,
       {
         expiresIn: "1d",
       },

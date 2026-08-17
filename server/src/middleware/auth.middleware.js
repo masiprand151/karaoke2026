@@ -1,7 +1,7 @@
 const AppError = require("../helpers/AppError");
 const jwt = require("jsonwebtoken");
 
-const JWT_SECRET = "110498";
+const JWT_SECRET = process.env.JWT_SECRET || "110498";
 
 if (!JWT_SECRET) {
   throw new Error("JWT_SECRET belum dikonfigurasi");
@@ -29,8 +29,6 @@ const protectedAuth = (role = null) => {
       const user = jwt.verify(token, JWT_SECRET);
       if (role) {
         if (user.role !== role) {
-          console.log("ok");
-
           throw new AppError(403, "Akses ditolak");
         }
       }

@@ -37,7 +37,7 @@ ${error?.stack || "-"}
 `;
 
   // Tampilkan ke console
-  console.error(error);
+  // console.error(error);
 
   // Simpan ke file
   fs.appendFile(logFile, message, (err) => {

@@ -1,0 +1,322 @@
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  user-select: none;
+}
+
+body {
+  background: #f5f7fa;
+  font-size: 13px;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+}
+
+/* =========================
+   SIDEBAR
+========================= */
+
+.sidebar {
+  width: 220px;
+  min-width: 220px;
+  min-height: 100vh;
+  background: #101d2d;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+}
+
+.brand {
+  height: 72px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-icon {
+  font-size: 28px;
+  color: #0d6efd;
+}
+
+.brand-title {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.brand-subtitle {
+  color: #adb5bd;
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+
+.sidebar .nav-link {
+  color: #d8dee6;
+  padding: 10px 18px;
+  margin: 2px 10px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sidebar .nav-link:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.sidebar .nav-link.active {
+  background: #0d6efd;
+  color: #fff;
+}
+
+.sidebar .nav-link i {
+  font-size: 16px;
+  width: 20px;
+}
+
+.server-box {
+  margin: auto 12px 12px;
+  padding: 14px;
+  border: 1px solid #26384d;
+  border-radius: 7px;
+  background: #132438;
+  color: #d8dee6;
+}
+
+/* =========================
+   MAIN
+========================= */
+
+.main-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.topbar {
+  height: 66px;
+  background: #fff;
+  border-bottom: 1px solid #dee2e6;
+  display: flex;
+  align-items: center;
+  padding: 0 18px;
+  gap: 15px;
+}
+
+.user-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  background: #e9ecef;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 20px;
+}
+
+/* =========================
+   CARD
+========================= */
+
+.section-card,
+.transaction-card {
+  border: 1px solid #dee2e6;
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.section-card .card-header,
+.transaction-card .card-header {
+  min-height: 45px;
+  display: flex;
+  align-items: center;
+}
+
+/* =========================
+   ROOM
+========================= */
+
+.room-card {
+  min-height: 180px;
+  border-color: #dfe3e8;
+  transition: 0.15s;
+}
+
+.room-card:hover {
+  border-color: #0d6efd;
+  transform: translateY(-1px);
+}
+
+.room-timer {
+  font-size: 20px;
+  font-weight: 600;
+  margin-top: 10px;
+}
+
+.room-empty {
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #adb5bd;
+}
+
+/* =========================
+   PRODUCT
+========================= */
+
+.product-card {
+  border-color: #dee2e6;
+  overflow: hidden;
+}
+
+.product-card:hover {
+  border-color: #0d6efd;
+}
+
+.product-image {
+  height: 75px;
+  object-fit: cover;
+}
+
+.product-add {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  width: 25px;
+  height: 25px;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 18px;
+}
+
+/* =========================
+   LADIES
+========================= */
+
+.lady-card {
+  border-color: #6f42c1;
+  overflow: hidden;
+}
+
+.lady-image {
+  height: 100px;
+  object-fit: cover;
+}
+
+.lady-add {
+  position: absolute;
+  right: 5px;
+  top: 5px;
+  width: 25px;
+  height: 25px;
+  padding: 0;
+  border-radius: 50%;
+}
+
+/* =========================
+   TRANSACTION
+========================= */
+
+.transaction-card {
+  min-height: 100%;
+}
+
+.transaction-info > div {
+  display: flex;
+  justify-content: space-between;
+  padding: 7px 0;
+}
+
+.transaction-info strong {
+  font-weight: 500;
+}
+
+.transaction-card .nav-link {
+  font-size: 12px;
+  color: #495057;
+}
+
+.transaction-card .nav-link.active {
+  color: #0d6efd;
+  font-weight: 600;
+}
+
+/* =========================
+   TABLE
+========================= */
+
+.table {
+  font-size: 12px;
+  vertical-align: middle;
+}
+
+.table th {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.table td {
+  white-space: nowrap;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 1400px) {
+  .sidebar {
+    width: 200px;
+    min-width: 200px;
+  }
+
+  .room-card {
+    min-height: 165px;
+  }
+
+  .product-image {
+    height: 65px;
+  }
+
+  .lady-image {
+    height: 80px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .sidebar {
+    width: 70px;
+    min-width: 70px;
+  }
+
+  .brand-title,
+  .brand-subtitle,
+  .sidebar .nav-link span,
+  .server-box {
+    display: none;
+  }
+
+  .brand {
+    justify-content: center;
+    padding: 10px;
+  }
+
+  .sidebar .nav-link {
+    justify-content: center;
+    padding: 12px;
+  }
+
+  .sidebar .nav-link i {
+    margin: 0;
+  }
+}

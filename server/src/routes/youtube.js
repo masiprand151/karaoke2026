@@ -6,6 +6,7 @@ const YouTubeManager = require("../helpers/youtubeManager");
 // const ffmpegPath = require("ffmpeg-static");
 const { searchYoutube } = require("../helpers/youtubeSearch");
 const { streamYoutube } = require("../helpers/youtubeStream");
+const fs = require("fs");
 
 // init
 const ytDlpPath = path.join(__dirname, "..", "..", "bin", "yt-dlp.exe");
@@ -69,6 +70,35 @@ route.get("/stream", async (req, res, next) => {
     if (!res.headersSent) {
       next(error);
     }
+  }
+});
+
+route.get("/pitch-processor", (req, res) => {
+  try {
+    const file = path.join("../helpers/pitch-processor.js");
+
+    console.log("================================");
+    console.log("PACKAGED:", app.isPackaged);
+    console.log("DIRNAME:", __dirname);
+    console.log("PITCH FILE:", file);
+    console.log("EXISTS:", fs.existsSync(file));
+    console.log("================================");
+
+    if (!fs.existsSync(file)) {
+      return res.status(404).send("pitch-processor.js not found");
+    }
+
+    const code = fs.readFileSync(file, "utf8");
+
+    res.setHeader("Content-Type", "application/javascript; charset=utf-8");
+
+    res.setHeader("Access-Control-Allow-Origin", "*");
+
+    res.send(code);
+  } catch (error) {
+    console.error("PITCH PROCESSOR ERROR:", error);
+
+    res.status(500).send(error.message);
   }
 });
 

@@ -116,7 +116,21 @@ export default function useKaraokeAudio(
       // LOAD PITCH PROCESSOR
       // ========================================
 
-      await context.audioWorklet.addModule("/pitch-processor.js");
+      // await context.audioWorklet.addModule("/pitch-processor.js");
+      const pitchProcessorUrl = "http://127.0.0.1:8765/pitch-processor";
+
+      console.log("Loading pitch processor:", pitchProcessorUrl);
+
+      try {
+        await context.audioWorklet.addModule(pitchProcessorUrl);
+
+        console.log("PITCH PROCESSOR LOADED");
+      } catch (error) {
+        console.error("PITCH PROCESSOR LOAD ERROR:", error);
+
+        // Jangan lanjut membuat AudioWorkletNode
+        return;
+      }
 
       // ========================================
       // VIDEO SOURCE

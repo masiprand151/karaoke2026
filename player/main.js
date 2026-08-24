@@ -23,7 +23,13 @@ function createWindow() {
     },
   });
 
-  win.loadURL("http://localhost:5174");
+  if (!app.isPackaged) {
+    win.loadURL("http://localhost:5174");
+  } else {
+    const indexPath = path.join(app.getAppPath(), "dist", "index.html");
+
+    win.loadFile(indexPath);
+  }
 
   // Atur ukuran setelah konten siap
   win.once("ready-to-show", () => {

@@ -8,18 +8,11 @@ function getYtDlpPath() {
     return path.join(process.cwd(), "yt-dlp.exe");
   }
 
+  const base =
+    process.env.PORTABLE_EXECUTABLE_DIR || path.dirname(process.execPath);
+
   // PRODUCTION / sudah build
-  return path.join(
-    process.env.PROGRAMDATA || "C:\\ProgramData",
-    "player",
-    "yt-dlp.exe",
-  );
-
-  // if (process.env.NODE_ENV === "development") {
-  //   return path.join(process.cwd(), "yt-dlp.exe");
-  // }
-
-  // return path.join(process.resourcesPath, "yt-dlp.exe");
+  return path.join(base, "yt-dlp.exe");
 }
 
 function checkYtDlp() {

@@ -2,8 +2,6 @@ const express = require("express");
 const fs = require("fs");
 const path = require("path");
 const { spawn } = require("child_process");
-const ffmpegPath = require("ffmpeg-static");
-const ffprobePath = require("ffprobe-static").path;
 const mime = require("mime-types");
 const cors = require("cors");
 const { getConfig } = require("./lib");
@@ -13,12 +11,17 @@ const { streamYoutube } = require("./yt");
 let server = null;
 
 const wallpaper = app.isPackaged
-  ? path.join(
-      process.env.PROGRAMDATA || "C:\\ProgramData",
-      "KaraokePlayer",
-      "Animasi.mp4",
-    )
+  ? path.join(process.env.PORTABLE_EXECUTABLE_DIR, "Animasi.mp4")
   : path.join(process.cwd(), "Animasi.mp4");
+
+const ffmpegPath = app.isPackaged
+  ? path.join(process.env.PORTABLE_EXECUTABLE_DIR, "ffmpeg.exe")
+  : path.join(process.cwd(), "ffmpeg.exe");
+
+const ffprobePath = app.isPackaged
+  ? path.join(process.env.PORTABLE_EXECUTABLE_DIR, "ffprobe.exe")
+  : path.join(process.cwd(), "ffprobe.exe");
+
 function startLocalVideoServer() {
   if (server) return;
 
@@ -44,6 +47,37 @@ function startLocalVideoServer() {
         console.error("SEND FILE ERROR:", err);
       }
     });
+  });
+
+  app.get("/pitch-processor", (req, res) => {
+    try {
+      const file = app.isPackaged
+        ? path.join(app.getAppPath(), "dist", "pitch-processor.js")
+        : path.join(process.cwd(), "public", "pitch-processor.js");
+
+      console.log("================================");
+      console.log("PACKAGED:", app.isPackaged);
+      console.log("DIRNAME:", __dirname);
+      console.log("PITCH FILE:", file);
+      console.log("EXISTS:", fs.existsSync(file));
+      console.log("================================");
+
+      if (!fs.existsSync(file)) {
+        return res.status(404).send("pitch-processor.js not found");
+      }
+
+      const code = fs.readFileSync(file, "utf8");
+
+      res.setHeader("Content-Type", "application/javascript; charset=utf-8");
+
+      res.setHeader("Access-Control-Allow-Origin", "*");
+
+      res.send(code);
+    } catch (error) {
+      console.error("PITCH PROCESSOR ERROR:", error);
+
+      res.status(500).send(error.message);
+    }
   });
 
   app.get("/metadata", (req, res) => {
@@ -248,45 +282,6 @@ function transcode(file, req, res, start = 0) {
     "Cache-Control": "no-cache",
     "Transfer-Encoding": "chunked",
   });
-
-  // const args = [
-  //   "-hide_banner",
-  //   "-loglevel",
-  //   "error",
-
-  //   "-i",
-  //   file,
-
-  //   "-map",
-  //   "0:v:0",
-  //   "-map",
-  //   "0:a:0?",
-
-  //   "-c:v",
-  //   "libx264",
-  //   "-preset",
-  //   "veryfast",
-  //   "-pix_fmt",
-  //   "yuv420p",
-
-  //   "-c:a",
-  //   "aac",
-  //   "-b:a",
-  //   "192k",
-  //   "-ac",
-  //   "2",
-
-  //   "-movflags",
-  //   "frag_keyframe+empty_moov+default_base_moof",
-
-  //   "-f",
-  //   "mp4",
-  //   "pipe:1",
-  // ];
-
-  // const ffmpeg = spawn(ffmpegPath, args, {
-  //   windowsHide: true,
-  // });
 
   const ffmpeg = spawn(
     ffmpegPath,

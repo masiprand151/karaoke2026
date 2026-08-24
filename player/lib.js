@@ -30,12 +30,11 @@ function getConfigPath() {
     return path.join(process.cwd(), "setting.json");
   }
 
+  const base =
+    process.env.PORTABLE_EXECUTABLE_DIR || path.dirname(process.execPath);
+
   // PRODUCTION / sudah build
-  return path.join(
-    process.env.PROGRAMDATA || "C:\\ProgramData",
-    "player",
-    "setting.json",
-  );
+  return path.join(base, "setting.json");
 }
 
 function ensureConfig() {
@@ -59,8 +58,7 @@ function getConfig() {
     return JSON.parse(fs.readFileSync(configPath, "utf8"));
   } catch (error) {
     console.error("CONFIG ERROR:", error);
-
-    return getDefaultConfig();
+    return path.join(process.cwd(), "setting.json");
   }
 }
 

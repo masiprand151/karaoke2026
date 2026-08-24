@@ -17,7 +17,14 @@ function createWindow() {
     },
   });
 
-  win.loadURL("http://localhost:5173"); // Vite default port
+  if (!app.isPackaged) {
+    // DEVELOPMENT
+    win.loadURL("http://localhost:5173"); // Vite default port
+  } else {
+    // PRODUCTION / PORTABLE
+    win.loadFile(path.join(__dirname, "../dist/index.html"));
+  }
+
   win.on("close", (e) => {
     if (!isQuitting) {
       e.preventDefault();

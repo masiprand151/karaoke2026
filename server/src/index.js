@@ -17,6 +17,12 @@ const server = http.createServer(app);
 
 createIo(server);
 
+app.get("/test", (req, res, next) => {
+  res.status(200).json({
+    success: true,
+  });
+});
+
 app.use("/songs", require("./routes/songs"));
 app.use("/youtube", require("./routes/youtube"));
 

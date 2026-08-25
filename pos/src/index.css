@@ -11,6 +11,10 @@ body {
   font-size: 13px;
 }
 
+hr {
+  margin: 0 !important;
+}
+
 .app {
   min-height: 100vh;
   display: flex;
@@ -24,8 +28,7 @@ body {
   width: 220px;
   min-width: 220px;
   min-height: 100vh;
-  background: #101d2d;
-  color: #fff;
+  background: #101d2d !important;
   display: flex;
   flex-direction: column;
 }
@@ -111,8 +114,8 @@ body {
 
 .topbar {
   height: 50px;
-  background: #fff;
-  border-bottom: 1px solid #dee2e6;
+  background: #101d2d !important;
+  border-bottom: 1px solid #101011;
   display: flex;
   align-items: center;
   padding: 0 18px;
@@ -122,13 +125,12 @@ body {
 .user-box {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 5px;
 }
 
 .avatar {
   width: 40px;
   height: 40px;
-  background: #e9ecef;
   border-radius: 50%;
   display: flex;
   justify-content: center;

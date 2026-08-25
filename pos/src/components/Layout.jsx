@@ -171,8 +171,8 @@ export default function Layout() {
             </div>
 
             <div>
-              <div className="fw-semibold">{auth.user.username}</div>
-              <small>{auth.user.role}</small>
+              <div className="fw-semibold">{auth?.user?.username}</div>
+              <small>{auth?.user?.role}</small>
             </div>
 
             <i className="bi bi-chevron-down ms-3" />
@@ -180,10 +180,8 @@ export default function Layout() {
         </header>
 
         {/* PAGE CONTENT */}
-        <div className="page-content">
-          <div className="container-fluid py-3">
-            <Outlet />
-          </div>
+        <div className="page-content flex-grow-1 overflow-hidden">
+          <Outlet />
         </div>
       </main>
     </div>

@@ -91,14 +91,26 @@ body {
 /* =========================
    MAIN
 ========================= */
+.page-content {
+  flex: 1;
+  min-height: 0;
+  padding: 10px;
+  overflow: hidden;
+}
 
 .main-content {
   flex: 1;
   min-width: 0;
+  height: 98vh;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
 }
 
 .topbar {
-  height: 66px;
+  height: 50px;
   background: #fff;
   border-bottom: 1px solid #dee2e6;
   display: flex;
@@ -145,32 +157,51 @@ body {
 /* =========================
    ROOM
 ========================= */
-
 .room-card {
-  min-height: 180px;
-  border-color: #dfe3e8;
-  transition: 0.15s;
+  height: fit-content !important;
+  min-height: 0 !important;
+  align-self: start;
+
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
 }
 
-.room-card:hover {
+.room-card.standby:hover {
   border-color: #0d6efd;
-  transform: translateY(-1px);
+}
+
+.room-card.used:hover {
+  border-color: #1cd857;
+}
+
+.room-card .card-body {
+  padding: 8px !important;
 }
 
 .room-timer {
-  font-size: 20px;
+  font-size: 17px;
   font-weight: 600;
-  margin-top: 10px;
+  margin-top: 4px;
 }
 
 .room-empty {
-  height: 70px;
+  height: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #adb5bd;
 }
+.room-card .room-actions {
+  margin-top: 4px;
+  margin-bottom: 0;
+}
+.room-grid {
+  display: grid;
 
+  /* 5 ke kanan */
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+
+  gap: 8px;
+}
 /* =========================
    PRODUCT
 ========================= */

@@ -3,21 +3,22 @@ const API_URL = "http://localhost:8000";
 async function request(url, options = {}) {
   const { method = "GET", data, headers = {}, ...rest } = options;
 
-  const token = localStorage.getItem("token");
+  const token = window.localStorage.getItem("token");
 
   const config = {
     method,
     headers: {
       "Content-Type": "application/json",
-      ...headers,
+      ...(options.headers || {}),
+      Authorization: `Bearer ${token}`,
     },
     ...rest,
   };
 
-  // Authorization
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
+  // // Authorization
+  // if (token) {
+  //   config.headers.Authorization = `Bearer ${token}`;
+  // }
 
   // Body
   if (data !== undefined) {

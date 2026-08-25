@@ -23,7 +23,10 @@ export default function useStorage(keyName, defaultValue) {
 
   const setValue = (newValue) => {
     try {
-      window.localStorage.setItem(keyName, JSON.stringify(newValue));
+      window.localStorage.setItem(
+        keyName,
+        typeof newValue === "string" ? newValue : JSON.stringify(newValue),
+      );
     } catch (error) {
       console.log(error);
     }

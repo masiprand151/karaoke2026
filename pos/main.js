@@ -1,4 +1,4 @@
-const { BrowserWindow, app } = require("electron");
+const { BrowserWindow, app, ipcMain } = require("electron");
 const path = require("path");
 
 function createWindow() {
@@ -23,6 +23,11 @@ function createWindow() {
     // PRODUCTION / PORTABLE
     win.loadFile(path.join(__dirname, "../dist/index.html"));
   }
+
+  ipcMain.on("app:close", () => {
+    win.close();
+    process.exit(1);
+  });
 }
 
 app.whenReady().then(() => {

@@ -4,21 +4,26 @@ import {
   BsCupHot,
   BsDisplay,
   BsGear,
+  BsHeart,
   BsList,
   BsMicFill,
   BsMusicNoteList,
   BsPerson,
+  BsPower,
   BsReceipt,
   BsSpeedometer2,
 } from "react-icons/bs";
 import { Outlet, useNavigate, NavLink } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import { useEffect, useState } from "react";
+import useStorage from "../hooks/useStorage";
 
 export default function Layout() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const auth = useAuth();
   const navigate = useNavigate();
+  const [setting] = useStorage("setting");
+
   useEffect(() => {
     if (!auth.isAuthenticated) {
       navigate("/");
@@ -49,6 +54,8 @@ export default function Layout() {
     year: "numeric",
   });
 
+  const isAdmin = auth?.user?.role === "admin";
+
   return (
     <div className="app">
       {/* SIDEBAR */}
@@ -75,60 +82,97 @@ export default function Layout() {
             <span>Dashboard</span>
           </NavLink>
 
-          <NavLink
-            to="/transaction"
-            className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}
-          >
-            <BsReceipt />
-            <span>Transaction</span>
-          </NavLink>
+          {isAdmin && (
+            <>
+              <NavLink
+                to="/transaction"
+                className={({ isActive }) =>
+                  `nav-link ${isActive ? "active" : ""}`
+                }
+              >
+                <BsReceipt />
+                <span>Transaction</span>
+              </NavLink>
+
+              <NavLink
+                to="/fnb"
+                className={({ isActive }) =>
+                  `nav-link ${isActive ? "active" : ""}`
+                }
+              >
+                <BsCupHot />
+                <span>F&B</span>
+              </NavLink>
+
+              <NavLink
+                to="/companion"
+                className={({ isActive }) =>
+                  `nav-link ${isActive ? "active" : ""}`
+                }
+              >
+                <BsHeart />
+                <span>Companion</span>
+              </NavLink>
+              <NavLink
+                to="/user"
+                className={({ isActive }) =>
+                  `nav-link ${isActive ? "active" : ""}`
+                }
+              >
+                <BsPerson />
+                <span>User</span>
+              </NavLink>
+
+              <NavLink
+                to="/package"
+                className={({ isActive }) =>
+                  `nav-link ${isActive ? "active" : ""}`
+                }
+              >
+                <BsBoxSeam />
+                <span>Package</span>
+              </NavLink>
+
+              <NavLink
+                to="/songs"
+                className={({ isActive }) =>
+                  `nav-link ${isActive ? "active" : ""}`
+                }
+              >
+                <BsMusicNoteList />
+                <span>Songs</span>
+              </NavLink>
+
+              <NavLink
+                to="/report"
+                className={({ isActive }) =>
+                  `nav-link ${isActive ? "active" : ""}`
+                }
+              >
+                <BsBarChart />
+                <span>Report</span>
+              </NavLink>
+
+              <NavLink
+                to="/settings"
+                className={({ isActive }) =>
+                  `nav-link ${isActive ? "active" : ""}`
+                }
+              >
+                <BsGear />
+                <span>Settings</span>
+              </NavLink>
+            </>
+          )}
 
           <NavLink
-            to="/fnb"
-            className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}
+            to="/logout"
+            className={({ isActive }) =>
+              `nav-link ${isActive ? "active" : ""} text-danger`
+            }
           >
-            <BsCupHot />
-            <span>F&B</span>
-          </NavLink>
-
-          <NavLink
-            to="/companion"
-            className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}
-          >
-            <BsPerson />
-            <span>Companion</span>
-          </NavLink>
-
-          <NavLink
-            to="/package"
-            className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}
-          >
-            <BsBoxSeam />
-            <span>Package</span>
-          </NavLink>
-
-          <NavLink
-            to="/songs"
-            className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}
-          >
-            <BsMusicNoteList />
-            <span>Songs</span>
-          </NavLink>
-
-          <NavLink
-            to="/report"
-            className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}
-          >
-            <BsBarChart />
-            <span>Report</span>
-          </NavLink>
-
-          <NavLink
-            to="/settings"
-            className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}
-          >
-            <BsGear />
-            <span>Settings</span>
+            <BsPower />
+            <span>Logout</span>
           </NavLink>
         </nav>
 
@@ -139,9 +183,15 @@ export default function Layout() {
             Server Info
           </div>
 
-          <div className="small ms-2 mb-2">192.168.1.10</div>
+          <div className="small ms-2 mb-2">
+            {String(setting?.server)
+              ?.replace("http://", "")
+              .replace("https://")}
+          </div>
 
-          <div className="small ms-2">Versi: 1.0.0</div>
+          <div className="small ms-2">
+            Versi: {setting?.version || "Beta Test"}
+          </div>
         </div>
       </aside>
 
@@ -149,10 +199,6 @@ export default function Layout() {
       <main className="main-content">
         {/* TOPBAR */}
         <header className="topbar">
-          <button type="button" className="btn btn-link text-dark fs-4">
-            <BsList />
-          </button>
-
           <div className="fw-semibold">Room Status</div>
 
           <div className="text-success small">

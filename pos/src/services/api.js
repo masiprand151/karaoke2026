@@ -1,9 +1,10 @@
-const API_URL = "http://localhost:8000";
-
 async function request(url, options = {}) {
   const { method = "GET", data, headers = {}, ...rest } = options;
 
   const token = window.localStorage.getItem("token");
+  const setting = JSON.parse(window.localStorage.getItem("setting"));
+
+  const API_URL = setting?.server.trim("/");
 
   const config = {
     method,

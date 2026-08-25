@@ -1,8 +1,12 @@
+import { useEffect, useState } from "react";
 import { BsDoorOpen, BsGear } from "react-icons/bs";
+import { formatDuration, getRemainingTime } from "../../helpers/Time";
 
 export default function RoomCard({ room, onDetail, onCheckin }) {
-  const { name, status, customer, timer, checkIn, duration, reservation } =
-    room;
+  const { name, status, sessions = [] } = room;
+  const [timer, setTimer] = useState(0);
+  const [customerName, setCustomerName] = useState("");
+  const [isWarn, setIsWarn] = useState(false);
 
   const isOccupied = status === "used";
 
@@ -27,10 +31,31 @@ export default function RoomCard({ room, onDetail, onCheckin }) {
     },
   };
 
+  // remaining atau timer saat checkin
+  useEffect(() => {
+    if (!isOccupied) return;
+    const session = sessions?.[0];
+    setCustomerName(session?.customerName);
+    const interval = setInterval(() => {
+      if (session?.closed) {
+        clearInterval(interval);
+        return;
+      }
+
+      const times = getRemainingTime(session?.start, session?.end);
+
+      setTimer(times?.remainingText);
+      setIsWarn(times?.warning);
+    }, 1000);
+    return () => {
+      clearInterval(interval);
+    };
+  }, [room]);
+
   const config = statusConfig[status];
 
   return (
-    <div className={`card room-card ${status}`}>
+    <div className={`card room-card ${isWarn ? "warning" : status}`}>
       <div className="card-body p-1">
         {/* HEADER */}
         <div className="d-flex justify-content-between align-items-center">
@@ -44,13 +69,12 @@ export default function RoomCard({ room, onDetail, onCheckin }) {
         {/* OCCUPIED */}
         {isOccupied && (
           <>
-            <div className="fw-semibold room-customer">{customer}</div>
-
-            <div className={`room-timer text-${config.color}`}>{timer}</div>
-
-            <div className="room-info text-secondary">Check In: {checkIn}</div>
-
-            <div className="room-info text-secondary">{duration}</div>
+            <div className="fw-semibold room-customer">
+              Customer: {customerName}
+            </div>
+            <div className={`room-timer text-${config.color}`}>
+              Remaining: {timer || "00:00:00"}
+            </div>
 
             <div className="room-actions">
               <button
@@ -58,7 +82,7 @@ export default function RoomCard({ room, onDetail, onCheckin }) {
                 className="btn btn-outline-success btn-sm w-100"
                 onClick={() => onDetail?.(room)}
               >
-                Detail
+                DETAIL
               </button>
             </div>
           </>
@@ -79,7 +103,7 @@ export default function RoomCard({ room, onDetail, onCheckin }) {
                 className="btn btn-outline-primary btn-sm w-100"
                 onClick={() => onCheckin?.(room)}
               >
-                Checkin
+                OPEN
               </button>
             </div>
           </>

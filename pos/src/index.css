@@ -174,6 +174,10 @@ body {
   border-color: #1cd857;
 }
 
+.room-card.warning:hover {
+  border-color: #d7e81f;
+}
+
 .room-card .card-body {
   padding: 8px !important;
 }
@@ -182,6 +186,7 @@ body {
   font-size: 17px;
   font-weight: 600;
   margin-top: 4px;
+  margin-bottom: 25px;
 }
 
 .room-empty {

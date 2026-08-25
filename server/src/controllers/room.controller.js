@@ -5,6 +5,7 @@ const getAllRooms = async (req, res, next) => {
   try {
     const rooms = await prisma.room.findMany({
       include: {
+        pricings: true,
         sessions: {
           where: {
             closed: false,
